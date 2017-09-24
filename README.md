@@ -1,0 +1,2 @@
+# NESCore
+NES Emulator
