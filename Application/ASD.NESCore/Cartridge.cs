@@ -1,6 +1,6 @@
 ﻿namespace ASD.NESCore {
 
-    public sealed class NES {
+    public sealed class Cartridge {
 
     }
 }
