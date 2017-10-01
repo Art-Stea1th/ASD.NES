@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="Helpers\Observable.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
+    <Compile Include="Services\OpenFileService.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="Views\ShellView.xaml.cs">
       <DependentUpon>ShellView.xaml</DependentUpon>
@@ -70,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Compile Include="ViewModels\ShellViewModel.SimpleFSM.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ASD.NESCore\ASD.NESCore.csproj">

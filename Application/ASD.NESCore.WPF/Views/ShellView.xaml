@@ -10,14 +10,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         
-        Title="NESCore :: Shell"
+        Title="{Binding Title}"
         Width="708" Height="718"
-        WindowStartupLocation="CenterScreen">
-    
+        WindowStartupLocation="CenterScreen"
+        Background="#1F1F1F">
+
     <Window.DataContext>
         <vm:ShellViewModel/>
     </Window.DataContext>
-    
+
     <DockPanel LastChildFill="True">
 
         <DockPanel.Resources>
@@ -26,29 +27,41 @@
                 <Setter Property="Margin" Value="0,0,4,0"/>
             </Style>
         </DockPanel.Resources>
-        
+
         <Menu
             DockPanel.Dock="Top"
             Padding="4">
-            
-            <MenuItem Header="FILE">                
-                <MenuItem Header="Open"/>
+
+            <MenuItem Header="FILE">
+                <MenuItem
+                    Header="Open"
+                    Command="{Binding OpenFile}"/>
                 <Separator/>
-                <MenuItem Header="Exit"/>
+                <MenuItem
+                    Header="Exit"
+                    Command="{Binding Exit}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource
+                    Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
             </MenuItem>
 
             <MenuItem Header="VIEW">
-                <MenuItem Header="Pause"/>
-                <MenuItem Header="Reset"/>
+                <MenuItem
+                    Header="{Binding PauseResume.Name}"
+                    Command="{Binding PauseResume}"/>
+                <MenuItem
+                    Header="{Binding Reset.Name}"
+                    Command="{Binding Reset}"/>
                 <Separator/>
-                <MenuItem Header="Shutdown"/>
+                <MenuItem
+                    Header="{Binding TurnOnOff.Name}"
+                    Command="{Binding TurnOnOff}"/>
             </MenuItem>
             <MenuItem Header="TOOLS">
                 <MenuItem Header="Options"/>
             </MenuItem>
         </Menu>
-        <Viewbox DockPanel.Dock="Bottom">
-            <Image Source="{Binding Screen}"/>
-        </Viewbox>
+        <Image
+            DockPanel.Dock="Bottom"
+            Source="{Binding Screen}"/>
     </DockPanel>
 </Window>
