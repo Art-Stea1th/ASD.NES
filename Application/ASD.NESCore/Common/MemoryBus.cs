@@ -8,15 +8,15 @@ namespace ASD.NESCore.Common {
 
         private const int bytes = ushort.MaxValue + 1; // 64kb
 
-        private Cell[] cpuRam = new Cell[bytes / 32].Default();   // 2 kb (mirror x4)
-        private Cell[] ppuRam = new Cell[bytes / 8192].Default(); // 8  b (mirror x1024)
-        private Cell[] apuRam = new Cell[bytes / 16].Default();   // 4 kb
-        private Cell[] mmc5 = new Cell[bytes / 16].Default();     // 4 kb
-        private Cell[] save = new Cell[bytes / 8].Default();      // 8 kb
-        private Cell[] prg1 = new Cell[bytes / 4].Default();      // 16kb
-        private Cell[] prg0 = new Cell[bytes / 4].Default();      // 16kb
+        private RByte[] cpuRam = new RByte[bytes / 32].Default();   // 2 kb (mirror x4)
+        private RByte[] ppuRam = new RByte[bytes / 8192].Default(); // 8  b (mirror x1024)
+        private RByte[] apuRam = new RByte[bytes / 16].Default();   // 4 kb
+        private RByte[] mmc5 = new RByte[bytes / 16].Default();     // 4 kb
+        private RByte[] save = new RByte[bytes / 8].Default();      // 8 kb
+        private RByte[] prg1 = new RByte[bytes / 4].Default();      // 16kb
+        private RByte[] prg0 = new RByte[bytes / 4].Default();      // 16kb
 
-        private static Cell[] memory = new Cell[bytes].Default();
+        private static RByte[] memory = new RByte[bytes].Default();
 
         public static MemoryBus Instance => instance.Value;
         public byte this[int address] {
@@ -40,7 +40,7 @@ namespace ASD.NESCore.Common {
             Bind(prg0, startAddress += prg1.Length);
         }
 
-        private void Bind(Cell[] bank, int start, int repeat = 1) {
+        private void Bind(RByte[] bank, int start, int repeat = 1) {
             for (var i = 0; i < bank.Length; i++) {
                 for (var j = 0; j < repeat; j++) {
                     var pos = start + bank.Length * j;
@@ -48,15 +48,13 @@ namespace ASD.NESCore.Common {
                 }
             }
         }
-
-        private sealed class Cell { public byte Value; }
     }
 
     internal static class LocalExtensions {
 
-        public static T[] Default<T>(this T[] n) where T : new() {
+        public static RByte[] Default(this RByte[] n) {
             for (var i = 0; i < n.Length; i++) {
-                n[i] = new T();
+                n[i] = RByte.Wrap(0);
             }
             return n;
         }

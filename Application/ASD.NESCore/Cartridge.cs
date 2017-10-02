@@ -1,24 +1,35 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ASD.NESCore {
 
+    using CartridgeParts;
     using Common;
     using Helpers;
-    using CartridgeParts;
 
     public sealed class Cartridge {
 
         private MemoryBus memory = MemoryBus.Instance;
 
+        private Header header;
         private byte[] data;
 
-        private Cartridge() { }
+        private List<byte[]> d;
 
         public static Cartridge Create(byte[] data) {
+            return new Cartridge(Header.Create(data), data.Skip(16).ToArray());
+        }
 
-            var header = new Header(data);
+        private Cartridge(Header header, byte[] data) {
 
-            throw new Information($"Rom is Valid: {header.IsValid}");
+            this.header = header; this.data = data;
+
+            throw new Information(
+                $"File Type: {header.FileType}\n" +
+                $"PRGCount: {header.PRGROMCount}\n" +
+                $"CHRCount: {header.CHRROMCount}\n" +
+                $"Mirroring: {header.Mirroring}\n" +
+                $"Mapper: {header.MapperNumber}");
         }
     }
 }
