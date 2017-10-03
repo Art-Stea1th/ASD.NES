@@ -5,7 +5,7 @@
     internal sealed class RByte : Reference<byte> {
 
         public bool this[int bit] {
-            get => Value.IsSetBit(bit);
+            get => Value.HasBit(bit);
             set => Value = Value.SetBit(bit, value);
         }
 

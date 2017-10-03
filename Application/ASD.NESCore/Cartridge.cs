@@ -25,11 +25,28 @@ namespace ASD.NESCore {
             this.header = header; this.data = data;
 
             throw new Information(
-                $"File Type: {header.FileType}\n" +
-                $"PRGCount: {header.PRGROMCount}\n" +
-                $"CHRCount: {header.CHRROMCount}\n" +
+
+                $"File Type: {header.DataFormat}\n\n" +
+
+                $"PRGROMs: {header.PRGROMSize}\n" +
+                $"CHRROMs: {header.CHRROMSize}\n\n" +
+
+                $"PRGRAMs: {header.PRGRAMSize}\n" +
+                $"PRGRAMBs: {header.PRGRAMWithBatterySize}\n\n" +
+
+                $"CHRRAMs: {header.CHRRAMSize}\n" +
+                $"CHRRAMBs: {header.CHRRAMWithBatterySize}\n\n" +
+
+                $"HasTrainer: {header.HasTrainer}\n\n" +
+
+                $"Mapper: {header.MapperNumber}\n" +
+                $"SubMapper: {header.SubmapperNumber}\n\n" +
+
                 $"Mirroring: {header.Mirroring}\n" +
-                $"Mapper: {header.MapperNumber}");
+                $"TvSystem: {header.TvSystem}\n\n" +
+
+                $"Bus Conflicts: {header.HasBusConflicts}"
+                );
         }
     }
 }

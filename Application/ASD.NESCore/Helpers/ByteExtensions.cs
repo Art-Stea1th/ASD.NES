@@ -4,13 +4,13 @@
 
         // public
 
-        public static byte HigBits(this byte @byte)
+        public static byte HNybble(this byte @byte)
             => (byte)((0b1111_0000 & @byte) >> 4);
 
-        public static byte LowBits(this byte @byte)
+        public static byte LNybble(this byte @byte)
             => (byte)(0b0000_1111 & @byte);
 
-        public static bool IsSetBit(this byte @byte, int bit)
+        public static bool HasBit(this byte @byte, int bit)
             => ((@byte >> bit) & 1) == 1;
 
         public static byte SetBit(this byte @byte, int bit, bool value)
