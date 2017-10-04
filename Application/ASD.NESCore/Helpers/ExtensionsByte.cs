@@ -1,6 +1,6 @@
 ﻿namespace ASD.NESCore.Helpers {
 
-    internal static partial class ByteExtensions {
+    internal static partial class ExtensionsByte {
 
         // public
 
@@ -24,5 +24,5 @@
         private static byte WithoutBit(byte @byte, int bit)
             => (byte)(@byte & ~(1 << bit));
 
-    }    
+    }
 }

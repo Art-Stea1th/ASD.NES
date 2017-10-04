@@ -8,17 +8,17 @@ namespace ASD.NESCore.CartridgeParts {
 
         public abstract DataFormat DataFormat { get; }
 
-        public virtual int PRGROMSize { get; }
-        public virtual int CHRROMSize { get; }
+        public virtual int PRGROMs { get; }
+        public virtual int CHRROMs { get; }
 
-        public virtual int PRGRAMSize { get; }
-        public virtual int PRGRAMWithBatterySize { get; }
-        public virtual int CHRRAMSize { get; }
-        public virtual int CHRRAMWithBatterySize { get; }
+        public virtual int PRGRAMs { get; }
+        public virtual int PRGRAMsWithBattery { get; }
+        public virtual int CHRRAMs { get; }
+        public virtual int CHRRAMsWithBattery { get; }
 
         public virtual bool HasTrainer { get; }
-        public virtual bool IsVSUnisystem { get; }
-        public virtual int INSTROMSize { get; }
+        public virtual bool HasVSUnisystem { get; }
+        public virtual int HasPlayChoice { get; }
 
         public virtual int MapperNumber { get; }
         public virtual int SubmapperNumber { get; }

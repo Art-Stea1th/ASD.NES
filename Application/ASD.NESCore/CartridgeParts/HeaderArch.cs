@@ -7,11 +7,11 @@
         public override DataFormat DataFormat => DataFormat.ArchNES;
         public HeaderArch(byte[] header) : base(header) { }
 
-        public override int PRGROMSize => header[4] * 0x4000;
-        public override int CHRROMSize => header[5] * 0x2000;
+        public override int PRGROMs => header[4];
+        public override int CHRROMs => header[5];
 
-        public override int PRGRAMSize => header[6].HasBit(1) || header[10].HasBit(4) ? 0x2000 : 0;
-        public override int CHRRAMSize => CHRROMSize == 0 ? 0x2000 : 0;
+        public override int PRGRAMs => header[6].HasBit(1) || header[10].HasBit(4) ? 1 : 0;
+        public override int CHRRAMs => CHRROMs == 0 ? 1 : 0;
 
         public override bool HasTrainer => header[6].HasBit(2); // 512-byte at $7000-$71FF (stored before PRG data)
 

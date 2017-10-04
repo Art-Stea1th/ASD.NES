@@ -1,7 +1,9 @@
 ﻿using System;
+    using System.Collections.Generic;
 
 namespace ASD.NESCore {
 
+    using Common;
     using ConsoleParts;
 
     public enum State { Off = 0x00, On = 0x01, Paused = 0x10, Busy = 0x11 }
@@ -10,6 +12,12 @@ namespace ASD.NESCore {
 
         private CentralProcessor cpu;
         private PixelProcessor ppu;
+        private MemoryBus memory;
+
+        internal IReadOnlyCollection<RInt8> CpuRam { get; private set; }
+        internal IReadOnlyCollection<RInt8> PpuRam { get; private set; }
+        internal IReadOnlyCollection<RInt8> ApuRam { get; private set; }
+
         private Cartridge cartridge;
 
         public State State { get; private set; }
@@ -18,7 +26,9 @@ namespace ASD.NESCore {
         public event Func<uint[]> NextFrameReady;
 
         public Console() {
-
+            CpuRam = new MemoryBank(2048, 4);
+            PpuRam = new MemoryBank(8, 1024);
+            ApuRam = new MemoryBank(4096, 1);
         }
 
         public Console(Cartridge cartridge) {

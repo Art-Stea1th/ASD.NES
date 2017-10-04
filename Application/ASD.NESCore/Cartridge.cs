@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ASD.NESCore {
@@ -7,46 +8,45 @@ namespace ASD.NESCore {
     using Common;
     using Helpers;
 
+
+
     public sealed class Cartridge {
 
-        private MemoryBus memory = MemoryBus.Instance;
+        internal IReadOnlyCollection<MemoryBank> PRGROM { get; private set; }
+        internal IReadOnlyCollection<MemoryBank> CHRROM { get; private set; }
 
-        private Header header;
-        private byte[] data;
-
-        private List<byte[]> d;
+        internal IReadOnlyCollection<MemoryBank> PRGRAM { get; private set; }
+        internal IReadOnlyCollection<MemoryBank> CHRRAM { get; private set; }
 
         public static Cartridge Create(byte[] data) {
             return new Cartridge(Header.Create(data), data.Skip(16).ToArray());
         }
 
         private Cartridge(Header header, byte[] data) {
-
-            this.header = header; this.data = data;
-
-            throw new Information(
-
-                $"File Type: {header.DataFormat}\n\n" +
-
-                $"PRGROMs: {header.PRGROMSize}\n" +
-                $"CHRROMs: {header.CHRROMSize}\n\n" +
-
-                $"PRGRAMs: {header.PRGRAMSize}\n" +
-                $"PRGRAMBs: {header.PRGRAMWithBatterySize}\n\n" +
-
-                $"CHRRAMs: {header.CHRRAMSize}\n" +
-                $"CHRRAMBs: {header.CHRRAMWithBatterySize}\n\n" +
-
-                $"HasTrainer: {header.HasTrainer}\n\n" +
-
-                $"Mapper: {header.MapperNumber}\n" +
-                $"SubMapper: {header.SubmapperNumber}\n\n" +
-
-                $"Mirroring: {header.Mirroring}\n" +
-                $"TvSystem: {header.TvSystem}\n\n" +
-
-                $"Bus Conflicts: {header.HasBusConflicts}"
-                );
+            switch (header) {
+                case HeaderNES2 h: FillData(h, data); break;
+                case HeaderINES h: FillData(h, data); break;
+                case HeaderArch h: FillData(h, data); break;
+            }
         }
+
+        private void FillData(HeaderNES2 header, byte[] data) {
+            throw IsNotYetSupported("NES 2.0 files format");
+        }
+
+        private void FillData(HeaderINES header, byte[] data) {
+
+        }
+
+        private void FillData(HeaderArch header, byte[] data) {
+            throw IsNotYetSupported("Archaic iNES files format");
+        }        
+
+        private Exception IsNotYetSupported(string target)
+            => new Information($"{target} is not yet supported.");
+
+
+        
+
     }
 }

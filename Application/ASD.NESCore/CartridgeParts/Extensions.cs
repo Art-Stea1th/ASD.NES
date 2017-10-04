@@ -12,7 +12,6 @@ namespace ASD.NESCore.CartridgeParts {
         public static DataFormat GetFormat(this byte[] data) {
 
             var expectedPRG = BitOperations.MakeInt16(data[9].LNybble(), data[4]);
-            var expectedCHR = BitOperations.MakeInt16(data[9].HNybble(), data[5]);
 
             if (data[7].HasBit(3) && expectedPRG < data.Length) {
                 return DataFormat.NES20;
