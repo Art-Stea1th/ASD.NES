@@ -1,0 +1,77 @@
+﻿<Window x:Class="ASD.NES.WPF.Views.ShellView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ASD.NES.WPF.ViewModels"
+        
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        d:DataContext="{d:DesignInstance Type=vm:ShellViewModel,
+        IsDesignTimeCreatable=True}"
+        
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        
+        Title="{Binding Title}"
+        Width="708" Height="718"
+        WindowStartupLocation="CenterScreen"
+        Background="#0F0F0F">
+
+    <Window.DataContext>
+        <vm:ShellViewModel/>
+    </Window.DataContext>
+    <Window.InputBindings>
+        <KeyBinding
+            Key="Esc"
+            Command="{Binding Exit}"
+            CommandParameter="{Binding RelativeSource={RelativeSource
+            Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+    </Window.InputBindings>
+
+    <DockPanel LastChildFill="True">
+
+        <DockPanel.Resources>
+            <Style TargetType="{x:Type MenuItem}">
+                <Setter Property="Padding" Value="4,2"/>
+                <Setter Property="Margin" Value="0,0,4,0"/>
+            </Style>
+        </DockPanel.Resources>
+
+        <Menu
+            DockPanel.Dock="Top"
+            Padding="4">
+
+            <MenuItem Header="FILE">
+                <MenuItem
+                    Header="Open"
+                    Command="{Binding OpenFile}"/>
+                <Separator/>
+                <MenuItem
+                    Header="Exit"
+                    Command="{Binding Exit}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource
+                    Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+            </MenuItem>
+
+            <MenuItem Header="VIEW">
+                <MenuItem
+                    Header="{Binding PauseResume.Name}"
+                    Command="{Binding PauseResume}"/>
+                <MenuItem
+                    Header="{Binding Reset.Name}"
+                    Command="{Binding Reset}"/>
+                <Separator/>
+                <MenuItem
+                    Header="{Binding TurnOnOff.Name}"
+                    Command="{Binding TurnOnOff}"/>
+            </MenuItem>
+            <MenuItem Header="TOOLS">
+                <MenuItem Header="Options"/>
+            </MenuItem>
+        </Menu>
+
+        <Image
+            DockPanel.Dock="Bottom"
+            Source="{Binding Screen}"
+            RenderOptions.BitmapScalingMode="NearestNeighbor"/>        
+        
+    </DockPanel>
+</Window>
