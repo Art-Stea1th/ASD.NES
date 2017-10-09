@@ -4,97 +4,87 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
     using Helpers;
 
+    /// <summary> "Indirect Y" addressing mode</summary>
+    internal sealed class INY : AddressingMode {
+        protected override int Address => BitOperations.MakeInt16(bus.Read(ArgOne + 1), bus.Read(ArgOne)) + r.Y;
+        public override byte M => bus.Read(Address);
+        public override bool PageCrossed => (Address & 0x0000_FF00) != ((Address - r.Y) & 0x0000_FF00);
+        public INY(Registers registers) : base(registers) { }
+    }
+
+    /// <summary> "Indirect X" addressing mode</summary>
+    internal sealed class INX : AddressingMode {
+        protected override int Address => BitOperations.MakeInt16(bus.Read(ArgOne + r.X + 1), bus.Read(ArgOne + r.X));
+        public override byte M => bus.Read(Address);
+        public INX(Registers registers) : base(registers) { }
+    }
+
     /// <summary> "Absolute Y" addressing mode</summary>
     internal sealed class ABY : ABS {
         protected override int Address => base.Address + r.Y;
-        public override int M => bus.Read(Address);
+        public override bool PageCrossed => (Address & 0x0000_FF00) != (base.Address & 0x0000_FF00);
+        public ABY(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Absolute X" addressing mode</summary>
     internal sealed class ABX : ABS {
         protected override int Address => base.Address + r.X;
-        public override int M => bus.Read(Address);
+        public override bool PageCrossed => (Address & 0x0000_FF00) != (base.Address & 0x0000_FF00);
+        public ABX(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Absolute" addressing mode</summary>
     internal class ABS : AddressingMode {
-        protected override int Address => BitOperations.MakeInt16(bus.Read(r.PC + 1), bus.Read(r.PC + 2));
-        public override int M => bus.Read(Address);
+        protected override int Address => BitOperations.MakeInt16(ArgOne, ArgTwo);
+        public override byte M { get => bus.Read(Address); set => bus.Write(Address, value); }
+        public ABS(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Zero page Y" addressing mode</summary>
     internal sealed class ZPY : ZPG {
         protected override int Address => base.Address + r.Y;
-        public override int M => bus.Read(Address);
+        public ZPY(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Zero page X" addressing mode</summary>
     internal sealed class ZPX : ZPG {
         protected override int Address => base.Address + r.X;
-        public override int M => bus.Read(Address);
+        public ZPX(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Zero page" addressing mode</summary>
     internal class ZPG : AddressingMode {
-        protected override int Address => bus.Read(r.PC + 1);
-        public override int M => bus.Read(Address);
-    }
+        protected override int Address => ArgOne;
+        public override byte M { get => bus.Read(Address); set => bus.Write(Address, value); }
+        public ZPG(Registers registers) : base(registers) { }
+    }    
 
     /// <summary> "Immediate" addressing mode</summary>
-    internal sealed class IMM : AddressingMode {
-        protected override int Address => r.PC + 1;
-        public override int M => bus.Read(Address);
+    internal class IMM : AddressingMode {
+        public override byte M => ArgOne;
+        public IMM(Registers registers) : base(registers) { }
+    }
+
+    /// <summary> "Accumulator" addressing mode</summary>
+    internal class ACC : AddressingMode {
+        public override byte M { get => r.A; set => r.A = value; }
+        public ACC(Registers registers) : base(registers) { }
     }
 
     internal abstract class AddressingMode {
 
-        protected OldMemoryBus bus = OldMemoryBus.Instance;
-        protected Registers r;
+        protected readonly OldMemoryBus bus = OldMemoryBus.Instance;
+        protected readonly Registers r;
+
+        protected virtual byte ArgOne => bus.Read(r.PC + 1);
+        protected virtual byte ArgTwo => bus.Read(r.PC + 2);
 
         protected virtual int Address => 0;
-        public virtual int M => 0;
         public virtual bool PageCrossed => false;
+        public virtual byte M { get; set; }
 
-        //public byte Immediate(byte argOne) {
-        //    return argOne;
-        //}
-        //public byte ZeroPage(ushort argOne) {
-        //    return bus.Read(argOne);
-        //}
-        //public byte ZeroPageX(ushort argOne) {
-        //    return bus.Read(argOne + r.X);
-        //}
-        //public byte ZeroPageY(ushort argOne) {
-        //    return bus.Read(argOne + r.Y);
-        //}
-        //public byte Absolute(byte argOne, byte argTwo) {
-        //    return bus.Read(MakeAddress(argOne, argTwo));
-        //}
-        //public byte AbsoluteX(byte argOne, byte argTwo) {
-        //    return bus.Read(MakeAddress(argOne, argTwo) + r.X);
-        //}
-        //public byte AbsoluteY(byte argOne, byte argTwo) {
-        //    return bus.Read(MakeAddress(argOne, argTwo) + r.Y);
-        //}
-        public byte IndirectX(byte argOne) {
-            return bus.Read(ReadX2(bus.Read(argOne + r.X)));
-        }
-        public byte IndirectY(byte argOne) {
-            var a = r.PC + 1;
-            var address = BitOperations.MakeInt16(bus.Read(a), bus.Read(a + 1));
-            return bus.Read(ReadX2(argOne) + r.Y);
-        }
-
-
-        // ------------------------
-
-        public ushort MakeAddress(byte argOne, byte argTwo)
-            => (ushort)((argTwo << 8) & argOne);
-        public bool SamePage(ushort addressOne, ushort addressTwo) {
-            return (addressOne & 0xFF00) == (addressTwo & 0xFF00);
-        }
-        public ushort ReadX2(ushort address) {
-            return (ushort)((bus.Read((ushort)(address + 1)) << 8) | bus.Read(address));
+        public AddressingMode(Registers registers) {
+            r = registers;
         }
     }
 }
