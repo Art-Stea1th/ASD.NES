@@ -40,12 +40,11 @@ namespace ASD.NES.Core.ConsoleComponents {
             irq = brk = bus.GetReference(0xFFFE);
 
             registers = new Registers();
-            stack = bus.GetReferenceRange(0x100, 0x100);
 
             core = new Core(registers);
 
             // -------------
-            oldCpu = new OldCPU(core, registers, stack);
+            oldCpu = new OldCPU(core, registers, stack, zeroPage);
             // -------------
         }
 

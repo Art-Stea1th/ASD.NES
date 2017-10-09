@@ -13,7 +13,7 @@ namespace ASD.NES.Core.ConsoleComponents {
 
         // -------------
 
-        public void Write(ushort addr, byte val) {
+        public void Write(int addr, byte val) {
             oldPpu.Write(addr, val);
         }
 
