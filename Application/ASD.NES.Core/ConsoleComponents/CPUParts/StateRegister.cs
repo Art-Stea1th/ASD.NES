@@ -8,7 +8,7 @@
         private readonly RInt8 register = RInt8.Wrap(0x00);
         private readonly StateFlag s, v, u, b, d, i, z, c;
 
-        /// <summary> "Sign" - set when the previous operation resulted in a negative value. </summary>
+        /// <summary> "Signed" - set when the previous operation resulted in a negative value. </summary>
         public StateFlag S => s;
 
         /// <summary> "Overflow" - set when the previous caused a signed overflow. </summary>

@@ -27,8 +27,6 @@ namespace ASD.NES.Core.ConsoleComponents {
             Initialize();
         }
 
-        
-
         private void Initialize() {
 
             zeroPage = bus.GetReferenceRange(0, 0x100);
