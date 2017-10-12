@@ -8,28 +8,28 @@
         private readonly RInt8 register = RInt8.Wrap(0x00);
         private readonly StateFlag s, v, u, b, d, i, z, c;
 
-        /// <summary> "Signed" - set when the previous operation resulted in a negative value. </summary>
+        /// <summary> "Signed" (bit 7) - set when the previous operation resulted in a negative value. </summary>
         public StateFlag S => s;
 
-        /// <summary> "Overflow" - set when the previous caused a signed overflow. </summary>
+        /// <summary> "Overflow" (bit 6) - set when the previous caused a signed overflow. </summary>
         public StateFlag V => v;
 
-        /// <summary> "Unused" - not used. Supposed to be logical 1 at all times. </summary>
+        /// <summary> "Unused" (bit 5) - not used. Supposed to be logical 1 at all times. </summary>
         public StateFlag U => u;
 
-        /// <summary> "Break" - set when a software interrupt (BRK instruction) is executed. </summary>
+        /// <summary> "Break" (bit 4) - set when a software interrupt (BRK instruction) is executed. </summary>
         public StateFlag B => b;
 
-        /// <summary> "Decimal" - set when the Decimal Mode is enabled. </summary>
+        /// <summary> "Decimal" (bit 3) - set when the Decimal Mode is enabled. </summary>
         public StateFlag D => d;
 
-        /// <summary> "Interrupt disable" - set: only NMI interrupts will get through (unset: IRQ and NMI will get through) </summary>
+        /// <summary> "Interrupt disable" (bit 2) - set: only NMI interrupts will get through (unset: IRQ and NMI will get through) </summary>
         public StateFlag I => i;
 
-        /// <summary> "Zero" - set when the last operation resulted in a zero. </summary>
+        /// <summary> "Zero" (bit 1) - set when the last operation resulted in a zero. </summary>
         public StateFlag Z => z;
 
-        /// <summary> "Carry" - set when the last addition or shift resulted in a carry, or last subtraction resulted in no borrow. </summary>
+        /// <summary> "Carry" (bit 0) - set when the last addition or shift resulted in a carry, or last subtraction resulted in no borrow. </summary>
         public StateFlag C => c;
 
         public StateRegister() {

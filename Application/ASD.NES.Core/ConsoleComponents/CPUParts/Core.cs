@@ -28,90 +28,90 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
             r = registers;
 
-            IMP = new IMP(r); IMM = new IMM(r); 
+            IMP = new IMP(r); IMM = new IMM(r);
             ZPG = new ZPG(r); ZPX = new ZPX(r); ZPY = new ZPY(r);
             ABS = new ABS(r); ABX = new ABX(r); ABY = new ABY(r);
             IND = new IND(r); IDX = new IDX(r); IDY = new IDY(r);
-            REL = new REL(r); ACC = new ACC(r); 
+            REL = new REL(r); ACC = new ACC(r);
 
             /// must be serialized
             addressing = new AddressingMode[] {
-                IMP, ___, ___, ___, ___, ___, ZPG, ___, ___, ___, ACC, ___, ___, ___, ABS, ___,
-                REL, ___, ___, ___, ___, ___, ZPX, ___, IMP, ___, ___, ___, ___, ___, ABX, ___,
-                ABS, IDX, ___, ___, ZPG, ZPG, ___, ___, ___, IMM, ___, ___, ABS, ABS, ___, ___,
-                REL, IDY, ___, ___, ___, ZPX, ___, ___, ___, ABY, ___, ___, ___, ABX, ___, ___,
-                ___, IDX, ___, ___, ___, ZPG, ___, ___, ___, IMM, ___, ___, ABS, ABS, ___, ___,
-                REL, IDY, ___, ___, ___, ZPX, ___, ___, IMP, ABY, ___, ___, ___, ABX, ___, ___,
-                ___, IDX, ___, ___, ___, ZPG, ___, ___, ___, IMM, ___, ___, IND, ABS, ___, ___,
-                REL, IDY, ___, ___, ___, ZPX, ___, ___, ___, ABY, ___, ___, ___, ABX, ___, ___,
-                ___, ___, ___, ___, ___, ___, ___, ___, IMP, ___, ___, ___, ___, ___, ___, ___,
-                REL, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___,
-                ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___,
-                REL, ___, ___, ___, ___, ___, ___, ___, IMP, ___, ___, ___, ___, ___, ___, ___,
+                IMP, IDX, ___, ___, ___, ZPG, ZPG, ___, IMP, IMM, ACC, ___, ___, ABS, ABS, ___,
+                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
+                ABS, IDX, ___, ___, ZPG, ZPG, ZPG, ___, IMP, IMM, ACC, ___, ABS, ABS, ABS, ___,
+                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
+                IMP, IDX, ___, ___, ___, ZPG, ZPG, ___, IMP, IMM, ACC, ___, ABS, ABS, ABS, ___,
+                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
+                IMP, IDX, ___, ___, ___, ZPG, ZPG, ___, IMP, IMM, ACC, ___, IND, ABS, ABS, ___,
+                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
+                ___, IDX, ___, ___, ZPG, ZPG, ZPG, ___, IMP, ___, IMP, ___, ABS, ABS, ABS, ___,
+                REL, IDY, ___, ___, ZPX, ZPX, ZPY, ___, IMP, ABY, IMP, ___, ___, ABX, ___, ___,
+                IMM, IDX, IMM, ___, ZPG, ZPG, ZPG, ___, IMP, IMM, IMP, ___, ABS, ABS, ABS, ___,
+                REL, IDY, ___, ___, ZPX, ZPX, ZPY, ___, IMP, ABY, IMP, ___, ABX, ABX, ABY, ___,
                 IMM, IDX, ___, ___, ZPG, ZPG, ZPG, ___, IMP, IMM, IMP, ___, ABS, ABS, ABS, ___,
                 REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
-                IMM, ___, ___, ___, ZPG, ___, ZPG, ___, IMP, ___, ___, ___, ABS, ___, ABS, ___,
-                REL, ___, ___, ___, ___, ___, ZPX, ___, ___, ___, ___, ___, ___, ___, ABX, ___,
+                IMM, IDX, ___, ___, ZPG, ZPG, ZPG, ___, IMP, IMM, IMP, ___, ABS, ABS, ABS, ___,
+                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
             };
 
             /// must be serialized
             instruction = new Func<int>[] {
-                BRK,  null, null, null, null, null, ASL,  null, null, null, ASL,  null, null, null, ASL,  null,
-                BPL,  null, null, null, null, null, ASL,  null, CLC,  null, null, null, null, null, ASL,  null,
-                JSR,  AND,  null, null, BIT,  AND,  null, null, null, AND,  null, null, BIT,  AND,  null, null,
-                BMI,  AND,  null, null, null, AND,  null, null, null, AND,  null, null, null, AND,  null, null,
-                null, EOR,  null, null, null, EOR,  null, null, null, EOR,  null, null, JMP,  EOR,  null, null,
-                BVC,  EOR,  null, null, null, EOR,  null, null, CLI,  EOR,  null, null, null, EOR,  null, null,
-                null, ADC,  null, null, null, ADC,  null, null, null, ADC,  null, null, JMP,  ADC,  null, null,
-                BVS,  ADC,  null, null, null, ADC,  null, null, null, ADC,  null, null, null, ADC,  null, null,
-                null, null, null, null, null, null, null, null, DEY,  null, null, null, null, null, null, null,
-                BCC,  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                BCS,  null, null, null, null, null, null, null, CLV,  null, null, null, null, null, null, null,
+                BRK,  ORA,  null, null, null, ORA,  ASL,  null, PHP,  ORA,  ASL,  null, null, ORA,  ASL,  null,
+                BPL,  ORA,  null, null, null, ORA,  ASL,  null, CLC,  ORA,  null, null, null, ORA,  ASL,  null,
+                JSR,  AND,  null, null, BIT,  AND,  ROL,  null, PLP,  AND,  ROL,  null, BIT,  AND,  ROL,  null,
+                BMI,  AND,  null, null, null, AND,  ROL,  null, SEC,  AND,  null, null, null, AND,  ROL,  null,
+                RTI,  EOR,  null, null, null, EOR,  LSR,  null, PHA,  EOR,  LSR,  null, JMP,  EOR,  LSR,  null,
+                BVC,  EOR,  null, null, null, EOR,  LSR,  null, CLI,  EOR,  null, null, null, EOR,  LSR,  null,
+                RTS,  ADC,  null, null, null, ADC,  ROR,  null, PLA,  ADC,  ROR,  null, JMP,  ADC,  ROR,  null,
+                BVS,  ADC,  null, null, null, ADC,  ROR,  null, SEI,  ADC,  null, null, null, ADC,  ROR,  null,
+                null, STA,  null, null, STY,  STA,  STX,  null, DEY,  null, TXA,  null, STY,  STA,  STX,  null,
+                BCC,  STA,  null, null, STY,  STA,  STX,  null, TYA,  STA,  TXS,  null, null, STA,  null, null,
+                LDY,  LDA,  LDX,  null, LDY,  LDA,  LDX,  null, TAY,  LDA,  TAX,  null, LDY,  LDA,  LDX,  null,
+                BCS,  LDA,  null, null, LDY,  LDA,  LDX,  null, CLV,  LDA,  TSX,  null, LDY,  LDA,  LDX,  null,
                 CPY,  CMP,  null, null, CPY,  CMP,  DEC,  null, INY,  CMP,  DEX,  null, CPY,  CMP,  DEC,  null,
                 BNE,  CMP,  null, null, null, CMP,  DEC,  null, CLD,  CMP,  null, null, null, CMP,  DEC,  null,
-                CPX,  null, null, null, CPX,  null, INC,  null, INX,  null, null, null, CPX,  null, INC,  null,
-                BEQ,  null, null, null, null, null, INC,  null, null, null, null, null, null, null, INC,  null,
+                CPX,  SBC,  null, null, CPX,  SBC,  INC,  null, INX,  SBC,  NOP,  null, CPX,  SBC,  INC,  null,
+                BEQ,  SBC,  null, null, null, SBC,  INC,  null, SED,  SBC,  null, null, null, SBC,  INC,  null,
             };
 
             /// must be serialized
             bytes = new ushort[] {
-                1, _, _, _, _, _, 2, _, _, _, 1, _, _, _, 3, _,
-                0, _, _, _, _, _, 2, _, 1, _, _, _, _, _, 3, _,
-                0, 2, _, _, 2, 2, _, _, _, 2, _, _, 3, 3, _, _,
-                0, 2, _, _, _, 2, _, _, _, 3, _, _, _, 3, _, _,
-                _, 2, _, _, _, 2, _, _, _, 2, _, _, 0, 3, _, _,
-                0, 2, _, _, _, 2, _, _, 1, 3, _, _, _, 3, _, _,
-                _, 2, _, _, _, 2, _, _, _, 2, _, _, 0, 3, _, _,
-                0, 2, _, _, _, 2, _, _, _, 3, _, _, _, 3, _, _,
-                _, _, _, _, _, _, _, _, 1, _, _, _, _, _, _, _,
-                0, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-                _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-                0, _, _, _, _, _, _, _, 1, _, _, _, _, _, _, _,
+                1, 2, _, _, _, 2, 2, _, 1, 2, 1, _, _, 3, 3, _,
+                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
+                0, 2, _, _, 2, 2, 2, _, 1, 2, 1, _, 3, 3, 3, _,
+                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
+                0, 2, _, _, _, 2, 2, _, 1, 2, 1, _, 0, 3, 3, _,
+                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
+                1, 2, _, _, _, 2, 2, _, 1, 2, 1, _, 0, 3, 3, _,
+                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
+                _, 2, _, _, 2, 2, 2, _, 1, _, 1, _, 3, 3, 3, _,
+                0, 2, _, _, 2, 2, 2, _, 1, 3, 1, _, _, 3, _, _,
+                2, 2, 2, _, 2, 2, 2, _, 1, 2, 1, _, 3, 3, 3, _,
+                0, 2, _, _, 2, 2, 2, _, 1, 3, 1, _, 3, 3, 3, _,
                 2, 2, _, _, 2, 2, 2, _, 1, 2, 1, _, 3, 3, 3, _,
                 0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
-                2, _, _, _, 2, _, 2, _, 1, _, _, _, 3, _, 3, _,
-                0, _, _, _, _, _, 2, _, _, _, _, _, _, _, 3, _,
+                2, 2, _, _, 2, 2, 2, _, 1, 2, 1, _, 3, 3, 3, _,
+                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
             };
 
             /// must be serialized
             cycles = new int[] {
-                7, _, _, _, _, _, 5, _, _, _, 2, _, _, _, 6, _,
-                2, _, _, _, _, _, 6, _, 2, _, _, _, _, _, 7, _,
-                6, 6, _, _, 3, 3, _, _, _, 2, _, _, 4, 4, _, _,
-                2, 5, _, _, _, 4, _, _, _, 4, _, _, _, 4, _, _,
-                _, 6, _, _, _, 3, _, _, _, 2, _, _, 3, 4, _, _,
-                2, 5, _, _, _, 4, _, _, 2, 4, _, _, _, 4, _, _,
-                _, 6, _, _, _, 3, _, _, _, 2, _, _, 5, 4, _, _,
-                2, 5, _, _, _, 4, _, _, _, 4, _, _, _, 4, _, _,
-                _, _, _, _, _, _, _, _, 2, _, _, _, _, _, _, _,
-                2, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-                _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-                2, _, _, _, _, _, _, _, 2, _, _, _, _, _, _, _,
+                7, 6, _, _, _, 3, 5, _, 3, 2, 2, _, _, 4, 6, _,
+                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
+                6, 6, _, _, 3, 3, 5, _, 4, 2, 2, _, 4, 4, 6, _,
+                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
+                6, 6, _, _, _, 3, 5, _, 3, 2, 2, _, 3, 4, 6, _,
+                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
+                6, 6, _, _, _, 3, 5, _, 4, 2, 2, _, 5, 4, 6, _,
+                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
+                _, 6, _, _, 3, 3, 3, _, 2, _, 2, _, 4, 4, 4, _,
+                2, 6, _, _, 4, 4, 4, _, 2, 5, 2, _, _, 5, _, _,
+                2, 6, 2, _, 3, 3, 3, _, 2, 2, 2, _, 4, 4, 4, _,
+                2, 5, _, _, 4, 4, 4, _, 2, 4, 2, _, 4, 4, 4, _,
                 2, 6, _, _, 3, 3, 5, _, 2, 2, 2, _, 4, 4, 6, _,
                 2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
-                2, _, _, _, 3, _, 5, _, 2, _, _, _, 4, _, 6, _,
-                2, _, _, _, _, _, 6, _, _, _, _, _, _, _, 7, _,
+                2, 6, _, _, 3, 3, 5, _, 2, 2, 2, _, 4, 4, 6, _,
+                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
             };
         }
 
@@ -144,12 +144,118 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             return PageCrossed ? 1 : 0;
         }
 
-        /// <summary> Logical AND (Memory with Accumulator) </summary>
-        private int AND() {
+        /// <summary> Subtract Memory from Accumulator with Carry </summary>
+        private int SBC() {
 
-            var result = r.A & M;
+            var result = r.A + (M ^ 0xFF) + r.PS.C;
+
+            r.PS.UpdateOverflow(result);
+            r.PS.UpdateCarry(result);
 
             r.A = (byte)(result);
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+
+            return PageCrossed ? 1 : 0;
+        }
+        #endregion
+        #region Arithmetic: Increment / Decrement
+
+        /// <summary> Increment Memory </summary>
+        private int INC() {
+
+            M++;
+
+            r.PS.UpdateSigned(M);
+            r.PS.UpdateZero(M);
+
+            return 0;
+        }
+
+        /// <summary> Increment Index Register X </summary>
+        private int INX() {
+
+            r.X++;
+
+            r.PS.UpdateSigned(r.X);
+            r.PS.UpdateZero(r.X);
+
+            return 0;
+        }
+
+        /// <summary> Increment Index Register Y </summary>
+        private int INY() {
+
+            r.Y++;
+
+            r.PS.UpdateSigned(r.Y);
+            r.PS.UpdateZero(r.Y);
+
+            return 0;
+        }
+
+        /// <summary> Decrement Memory </summary>
+        private int DEC() {
+
+            M--;
+
+            r.PS.UpdateSigned(M);
+            r.PS.UpdateZero(M);
+
+            return 0;
+        }
+
+        /// <summary> Decrement Index Register X </summary>
+        private int DEX() {
+
+            r.X--;
+
+            r.PS.UpdateSigned(r.X);
+            r.PS.UpdateZero(r.X);
+
+            return 0;
+        }
+
+        /// <summary> Decrement Index Register Y </summary>
+        private int DEY() {
+
+            r.Y--;
+
+            r.PS.UpdateSigned(r.Y);
+            r.PS.UpdateZero(r.Y);
+
+            return 0;
+        }
+        #endregion
+        #region Arithmetic: Bit Operations
+
+        /// <summary> AND Memory with Accumulator </summary>
+        private int AND() {
+
+            r.A &= M;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+
+            return PageCrossed ? 1 : 0;
+        }
+
+        /// <summary> OR Memory with Accumulator </summary>
+        private int ORA() {
+
+            r.A |= M;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+
+            return PageCrossed ? 1 : 0;
+        }
+
+        /// <summary> XOR Memory with Accumulator </summary>
+        private int EOR() {
+
+            r.A ^= M;
 
             r.PS.UpdateSigned(r.A);
             r.PS.UpdateZero(r.A);
@@ -160,14 +266,63 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Arithmetic Shift Left one bit (Memory or Accumulator) </summary>
         private int ASL() {
 
-            var result = M << 1;
+            r.PS.C.Set(M.HasBit(7));
 
-            r.PS.UpdateCarry(result);
+            M <<= 1;
 
-            M = (byte)(result);
+            r.PS.UpdateSigned(M);
+            r.PS.UpdateZero(M);
 
-            r.PS.UpdateSigned(r.A);
-            r.PS.UpdateZero(r.A);
+            return 0;
+        }
+
+        /// <summary> Logical Shift Right one bit (Memory or Accumulator) </summary>
+        private int LSR() {
+
+            r.PS.C.Set(M.HasBit(0));
+
+            M >>= 1;
+
+            r.PS.UpdateSigned(M);
+            r.PS.UpdateZero(M);
+
+            return 0;
+        }
+
+        /// <summary> Rotate Left one bit (Memory or Accumulator) </summary>
+        private int ROL() {
+
+            var carry = M.HasBit(7);
+
+            M = (byte)((M << 1) | r.PS.C);
+
+            r.PS.C.Set(carry);
+            r.PS.UpdateSigned(M);
+            r.PS.UpdateZero(M);
+
+            return 0;
+        }
+
+        /// <summary> Rotate Right one bit (Memory or Accumulator) </summary>
+        private int ROR() {
+
+            var carry = M.HasBit(0);
+
+            M = (byte)((M >> 1) | (r.PS.C << 7));
+
+            r.PS.C.Set(carry);
+            r.PS.UpdateSigned(M);
+            r.PS.UpdateZero(M);
+
+            return 0;
+        }
+
+        /// <summary> Test bits in Memory with Accumulator </summary>
+        private int BIT() {
+
+            r.PS.V.Set(r.A.HasBit(6));
+            r.PS.UpdateSigned(M);
+            r.PS.UpdateZero(r.A & M);
 
             return 0;
         }
@@ -208,99 +363,6 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             r.PS.UpdateZero(result);
 
             return 0;
-        }
-        #endregion
-        #region Arithmetic: Decrement
-
-        /// <summary> Decrement Memory </summary>
-        private int DEC() {
-
-            M--;
-
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
-
-            return 0;
-        }
-
-        /// <summary> Decrement Index Register X </summary>
-        private int DEX() {
-
-            r.X--;
-
-            r.PS.UpdateSigned(r.X);
-            r.PS.UpdateZero(r.X);
-
-            return 0;
-        }
-
-        /// <summary> Decrement Index Register Y </summary>
-        private int DEY() {
-
-            r.Y--;
-
-            r.PS.UpdateSigned(r.Y);
-            r.PS.UpdateZero(r.Y);
-
-            return 0;
-        }
-        #endregion
-        #region Arithmetic: Increment
-
-        /// <summary> Increment Memory </summary>
-        private int INC() {
-
-            M++;
-
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
-
-            return 0;
-        }
-
-        /// <summary> Increment Index Register X </summary>
-        private int INX() {
-
-            r.X++;
-
-            r.PS.UpdateSigned(r.X);
-            r.PS.UpdateZero(r.X);
-
-            return 0;
-        }
-
-        /// <summary> Increment Index Register Y </summary>
-        private int INY() {
-
-            r.Y++;
-
-            r.PS.UpdateSigned(r.Y);
-            r.PS.UpdateZero(r.Y);
-
-            return 0;
-        }
-        #endregion
-        #region Bit Operations
-
-        /// <summary> Test bits in Memory with Accumulator </summary>
-        private int BIT() {
-
-            r.PS.V.Set(r.A.HasBit(6));
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(r.A & M);
-
-            return 0;
-        }
-
-        /// <summary> Exclusive Or Memory with Accumulator </summary>
-        private int EOR() {
-
-            r.A ^= M;
-
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
-
-            return PageCrossed ? 1 : 0;
         }
         #endregion
         #region Branch
@@ -371,16 +433,33 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             r.PS.V.Set(false);
             return 0;
         }
+
+
+        /// <summary> Set Carry flag </summary>
+        private int SEC() {
+            r.PS.C.Set(true);
+            return 0;
+        }
+
+        /// <summary> Set Decimal flag </summary>
+        private int SED() {
+            r.PS.D.Set(true);
+            return 0;
+        }
+
+        /// <summary> Set Interrupt Disable flag </summary>
+        private int SEI() {
+            r.PS.I.Set(true);
+            return 0;
+        }
         #endregion
         #region Jumps
 
         /// <summary> Force Break </summary>
         private int BRK() {
 
-            PushStack16(r.PC);
-            // r.PS.B.Set(true); // ?
-            PushStack(r.PS);
-            // r.PS.I.Set(true); // ?
+            Push16(r.PC); // r.PS.B.Set(true); // ?
+            Push(r.PS);   // r.PS.I.Set(true); // ?
 
             r.PC = BitOperations.MakeInt16(bus.Read(0xFFFF), bus.Read(0xFFFE));
             return 0;
@@ -388,29 +467,200 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
         /// <summary> Jump to new location </summary>
         private int JMP() { // Not impl.: JMP.IND has a bug where the indirect address wraps the page boundary
-            r.PC = Address;            
+            r.PC = Address;
             return 0;
         }
 
         /// <summary> Jump to Subroutine (and saving return address) </summary>
         private int JSR() {
-            PushStack16((ushort)(r.PC + 2));
+            Push16((ushort)(r.PC + 2));
             r.PC = Address;
+            return 0;
+        }
+
+        /// <summary> Return from Interrupt </summary>
+        private int RTI() {
+            r.PS.SetNew(Pull());
+            r.PC = Pull16();
+            return 0;
+        }
+
+        /// <summary> Return from Subroutine </summary>
+        private int RTS() {
+            r.PC = Pull16();
+            return 0;
+        }
+
+        /// <summary> No Operation </summary>
+        private int NOP() {
+            return 0;
+        }
+        #endregion
+        #region Load / Store
+
+        /// <summary> Load Accumulator from Memory </summary>
+        private int LDA() {
+
+            r.A = M;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+
+            return PageCrossed ? 1 : 0;
+        }
+
+        /// <summary> Load Index Register X from Memory </summary>
+        private int LDX() {
+
+            r.X = M;
+
+            r.PS.UpdateSigned(r.X);
+            r.PS.UpdateZero(r.X);
+
+            return PageCrossed ? 1 : 0;
+        }
+
+        /// <summary> Load Index Register Y from Memory </summary>
+        private int LDY() {
+
+            r.Y = M;
+
+            r.PS.UpdateSigned(r.Y);
+            r.PS.UpdateZero(r.Y);
+
+            return PageCrossed ? 1 : 0;
+        }
+
+
+        /// <summary> Store Accumulator to Memory </summary>
+        private int STA() {
+            M = r.A;
+            return 0;
+        }
+
+        /// <summary> Store Index Register X to Memory </summary>
+        private int STX() {
+            M = r.X;
+            return 0;
+        }
+
+        /// <summary> Store Index Register Y to Memory </summary>
+        private int STY() {
+            M = r.Y;
+            return 0;
+        }
+        #endregion
+        #region Transfer
+
+        /// <summary> Transfer Accumulator to Index Register X </summary>
+        private int TAX() {
+
+            r.X = r.A;
+
+            r.PS.UpdateSigned(r.X);
+            r.PS.UpdateZero(r.X);
+
+            return 0;
+        }
+
+        /// <summary> Transfer Accumulator to Index Register Y </summary>
+        private int TAY() {
+
+            r.Y = r.A;
+
+            r.PS.UpdateSigned(r.Y);
+            r.PS.UpdateZero(r.Y);
+
+            return 0;
+        }
+
+        /// <summary> Transfer Stack Pointer to Index Register X </summary>
+        private int TSX() {
+
+            r.X = r.SP;
+
+            r.PS.UpdateSigned(r.X);
+            r.PS.UpdateZero(r.X);
+
+            return 0;
+        }
+
+
+        /// <summary> Transfer Index Register X to Accumulator</summary>
+        private int TXA() {
+
+            r.A = r.X;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+
+            return 0;
+        }
+
+        /// <summary> Transfer Index Register Y to Accumulator</summary>
+        private int TYA() {
+
+            r.A = r.Y;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+
+            return 0;
+        }
+
+        /// <summary> Transfer Index Register X to Stack Pointer</summary>
+        private int TXS() {
+
+            r.SP = r.X;
             return 0;
         }
         #endregion
         #region Stack        
 
-        /// <summary> Isn't instruction </summary>
-        private void PushStack16(ushort value) {
-            PushStack(value.HOctet());
-            PushStack(value.LOctet());
+        /// <summary> Push Accumulator on Stack </summary>
+        private int PHA() {
+            Push(r.A);
+            return 0;
+        }
+
+        /// <summary> Push Processor Status on Stack </summary>
+        private int PHP() {
+            Push(r.PS);
+            return 0;
+        }
+
+        /// <summary> Pull Accumulator on Stack </summary>
+        private int PLA() {
+            r.A = Pull(); // r.PS.UpdateSigned(r.A); r.PS.UpdateZero(r.A); // ???
+            return 0;
+        }
+
+        /// <summary> Pull Processor Status on Stack </summary>
+        private int PLP() {
+            r.PS.SetNew(Pull());
+            return 0;
         }
 
         /// <summary> Isn't instruction </summary>
-        private void PushStack(byte value) {
+        private void Push16(ushort value) {
+            Push(value.HOctet()); Push(value.LOctet());
+        }
+
+        /// <summary> Isn't instruction </summary>
+        private ushort Pull16() {
+            return (ushort)(Pull() | Pull() << 8);
+        }
+
+        /// <summary> Isn't instruction </summary>
+        private void Push(byte value) {
             bus.Write((ushort)(0x100 + r.SP), value);
             r.SP -= 1;
+        }
+
+        /// <summary> Isn't instruction </summary>
+        private byte Pull() {
+            r.SP += 1;
+            return bus.Read((ushort)(0x100 + r.SP));
         }
         #endregion
         #endregion

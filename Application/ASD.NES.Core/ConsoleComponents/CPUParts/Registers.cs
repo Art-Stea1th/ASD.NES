@@ -19,7 +19,7 @@
         /// <summary> Stack Pointer register - points to the current point in the stack in 256 bytes of stack space. </summary>
         internal byte SP = 0x00;
 
-        /// <summary> Processor State register </summary>
+        /// <summary> Processor Status register </summary>
         internal readonly StateRegister PS = new StateRegister();
     }
 }

@@ -2,25 +2,25 @@
 
     using Helpers;
 
-    /// <summary> "Indirect Y" addressing mode </summary>
+    /// <summary> "Indirect Y" (Post-Indexed Indirect) addressing mode </summary>
     internal sealed class IDY : AddressingMode {
         public override ushort Address => (ushort)(BitOperations.MakeInt16(bus.Read((ushort)(ArgOne + 1)), bus.Read(ArgOne)) + r.Y);
-        public override byte M => bus.Read(Address);
+        public override byte M { get => bus.Read(Address); set => bus.Write(Address, value); }
         public override bool PageCrossed => !SamePage(Address, (ushort)(Address - r.Y));
         public IDY(Registers registers) : base(registers) { }
     }
 
-    /// <summary> "Indirect X" (Pre-indexed indirect) addressing mode </summary>
+    /// <summary> "Indirect X" (Pre-Indexed Indirect) addressing mode </summary>
     internal sealed class IDX : AddressingMode {
         public override ushort Address => BitOperations.MakeInt16(bus.Read((ushort)(ArgOne + 1 + r.X)), bus.Read((ushort)(ArgOne + r.X)));
-        public override byte M => bus.Read(Address);
+        public override byte M { get => bus.Read(Address); set => bus.Write(Address, value); }
         public IDX(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Indirect" addressing mode </summary>
-    internal class IND : AddressingMode {
+    internal sealed class IND : AddressingMode {
         public override ushort Address => BitOperations.MakeInt16(bus.Read((ushort)(ArgOne + 1)), bus.Read(ArgOne));
-        public override byte M => bus.Read(Address);
+        public override byte M { get => bus.Read(Address); set => bus.Write(Address, value); }
         public IND(Registers registers) : base(registers) { }
     }
 
@@ -45,13 +45,13 @@
         public ABS(Registers registers) : base(registers) { }
     }
 
-    /// <summary> "Zero page Y" addressing mode </summary>
+    /// <summary> "Zero page (Post-Indexed) Y" addressing mode </summary>
     internal sealed class ZPY : ZPG {
         public override ushort Address => (ushort)(base.Address + r.Y);
         public ZPY(Registers registers) : base(registers) { }
     }
 
-    /// <summary> "Zero page X" addressing mode </summary>
+    /// <summary> "Zero page (Post-Indexed) X" addressing mode </summary>
     internal sealed class ZPX : ZPG {
         public override ushort Address => (ushort)(base.Address + r.X);
         public ZPX(Registers registers) : base(registers) { }
@@ -65,25 +65,25 @@
     }
 
     /// <summary> "Relative" addressing mode </summary>
-    internal class REL : AddressingMode {
+    internal sealed class REL : AddressingMode {
         public override ushort Address { get => r.PC; set => r.PC = value; }
         public REL(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Immediate" addressing mode </summary>
-    internal class IMM : AddressingMode {
+    internal sealed class IMM : AddressingMode {
         public override byte M => ArgOne;
         public IMM(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Accumulator" addressing mode </summary>
-    internal class ACC : AddressingMode {
+    internal sealed class ACC : AddressingMode {
         public override byte M { get => r.A; set => r.A = value; }
         public ACC(Registers registers) : base(registers) { }
     }
 
     /// <summary> "Implied" addressing mode </summary>
-    internal class IMP : AddressingMode {
+    internal sealed class IMP : AddressingMode {
         public IMP(Registers registers) : base(registers) { }
     }
 
