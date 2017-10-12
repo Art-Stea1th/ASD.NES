@@ -9,7 +9,7 @@ namespace ASD.NES.Core.ConsoleComponents {
         private OldPPU oldPpu = new OldPPU();
 
         public long FrameCount => oldPpu.FrameCount;
-        public IEnumerable<uint> ImageData => oldPpu.ImageData;
+        public uint[] ImageData => oldPpu.ImageData;
 
         // -------------
 

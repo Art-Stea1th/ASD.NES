@@ -71,7 +71,6 @@
         <Image
             DockPanel.Dock="Bottom"
             Source="{Binding Screen}"
-            RenderOptions.BitmapScalingMode="NearestNeighbor"/>        
-        
+            RenderOptions.BitmapScalingMode="NearestNeighbor"/>
     </DockPanel>
 </Window>

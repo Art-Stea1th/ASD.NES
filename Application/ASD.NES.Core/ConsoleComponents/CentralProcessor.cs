@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using OldCode;
+﻿using OldCode;
 
 namespace ASD.NES.Core.ConsoleComponents {
 
-    using Shared;
     using CPUParts;
+    using Shared;
 
     internal sealed class CentralProcessor {
-
-        // -------------
-        private OldCPU oldCpu;
-        // -------------
 
         private static readonly OldMemoryBus bus = OldMemoryBus.Instance;
 
@@ -40,23 +32,69 @@ namespace ASD.NES.Core.ConsoleComponents {
             registers = new Registers();
 
             core = new Core(registers);
-
-            // -------------
-            oldCpu = new OldCPU(core, registers, stack, zeroPage);
-            // -------------
         }
 
         public int Step() {
-            return oldCpu.Step();
+
+            if (nmi[0]) {
+                nmi[0] = false;
+                JumpToNMIVector();
+                return 1;
+            }
+
+            var opcode = bus.Read(registers.PC);
+            return core.Execute(opcode);
         }
 
         public void ColdBoot() {
-            oldCpu.ColdBoot();
+
+            registers.PS.B.Set(true);
+            registers.PS.I.Set(true);
+            registers.PS.U.Set(true);
+            registers.A = registers.X = registers.Y = 0;
+            registers.SP = 0xFD;
+
+            JumpToResetVector();
+
+            bus.Write(0x4017, 0x00);
+            bus.Write(0x4015, 0x00);
         }
 
         public void WarmBoot() {
-            oldCpu.WarmBoot();
+
+            JumpToResetVector();
+
+            registers.SP -= 3;
+            registers.PS.I.Set(true);
+            bus.Write(0x4015, 0x00);
         }
 
+        private void JumpToResetVector() {
+            registers.PC = ReadX2(0xFFFC);
+        }
+
+        private void JumpToNMIVector() {
+
+            PushStack16(registers.PC);
+            PushStack(registers.PS);
+
+            registers.PC = ReadX2(0xFFFA);
+        }
+
+        #region Helpers
+        public ushort ReadX2(ushort address) {
+            return (ushort)((bus.Read((ushort)(address + 1)) << 8) | bus.Read(address));
+        }
+        private void PushStack(byte val) {
+            stack[registers.SP].Value = val;
+            registers.SP -= 1;
+        }
+        private void PushStack16(ushort val) {
+            stack[registers.SP].Value = (byte)(val >> 8);
+            registers.SP -= 1;
+            stack[registers.SP].Value = (byte)val;
+            registers.SP -= 1;
+        }
+        #endregion
     }
 }

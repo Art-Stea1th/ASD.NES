@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 using OldCode;
 
 namespace ASD.NES.Core {
 
-    using Shared;
     using ConsoleComponents;
+    using Shared;
 
     public enum State { Off = 0x00, On = 0x01, Paused = 0x10, Busy = 0x11 }
 
@@ -26,7 +25,7 @@ namespace ASD.NES.Core {
 
         public Console(IController controller) {
             process = new Timer(
-                TimeSpan.FromMilliseconds(1000.0 / 100),
+                TimeSpan.FromMilliseconds(1000.0 / 159.610272),
                 () => NextFrameReady?.Invoke(Update()));
             State = State.Off;
             OldMemoryBus.Instance.Console = this;
@@ -35,38 +34,24 @@ namespace ASD.NES.Core {
             ColdBoot();
         }
 
-        
-
         private void SendEmptyFrame() {
             NextFrameReady?.Invoke(new uint[256 * 240]);
         }
 
-        public void InsertCartridge(Cartridge cartridge) {
-            //Initialize();
-            //PowerOn();
-        }
+        public void InsertCartridge(Cartridge cartridge) { }
 
         public uint[] Update() {
 
             var startingFrame = Ppu.FrameCount;
-            var steps = 0;
 
-            while (true) {
-                Step();
-                steps++;
-                if (startingFrame != Ppu.FrameCount) {
-                    break;
+            while (startingFrame == Ppu.FrameCount) {
+
+                var cycles = Cpu.Step();
+                for (var i = 0; i < cycles * 3; ++i) {
+                    Ppu.Step();
                 }
             }
-            return Ppu.ImageData.Select(p => p >> 8).ToArray();
-        }
-
-        public void Step() {
-            var cycles = Cpu.Step();
-            cpuCycle += cycles;
-            for (var i = 0; i < cycles * 3; ++i) {
-                Ppu.Step();
-            }
+            return Ppu.ImageData;
         }
 
         public void PowerOn() {
@@ -98,10 +83,27 @@ namespace ASD.NES.Core {
         }
 
         public void Reset() {
-            PowerOff();
-            Initialize();
-            ColdBoot();
-            PowerOn();
+
+            if (State == State.On) {
+                WarmBoot();
+            }
+
+            if (State == State.Off) {
+                PowerOn();
+                Initialize();
+                ColdBoot();
+            }
+            else if (State == State.Paused) {
+                try {
+                    Resume();
+                    WarmBoot();
+                }
+                catch {
+                    PowerOn();
+                    Initialize();
+                    ColdBoot();
+                }
+            }
         }
 
         private void Initialize() {

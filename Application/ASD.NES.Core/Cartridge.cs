@@ -5,6 +5,8 @@ using OldCode;
 
 namespace ASD.NES.Core {
 
+    using Helpers;
+
     public sealed class Cartridge {
 
         private int PRGROM { get; set; }
@@ -12,9 +14,7 @@ namespace ASD.NES.Core {
 
         static readonly uint iNES_FILE_SIGNATURE = 0x1A53454E;
 
-        public static Cartridge Create(byte[] data) {
-            return new Cartridge(data);
-        }
+        public static Cartridge Create(byte[] data) => new Cartridge(data);
 
         private Cartridge(byte[] data) {
 
@@ -25,16 +25,16 @@ namespace ASD.NES.Core {
                 throw new InvalidDataException();
             }
 
+            var mapperNumder = BitOperations.MakeInt8(header[7].HNybble(), header[6].HNybble());
+            if (mapperNumder != 0) {
+                throw new Information($"Mapper {mapperNumder} - Unsupported Mapper. Only Mapper 0 is supported.");
+            }
+
             PRGROM = header[4];
             CHRROM = header[5];
 
-            int flag6 = header[6];
-            int flag7 = header[7];
-            int flag9 = header[9];
-            int flag10 = header[10];
-
             OldMemoryBus.Instance.NametableMirroring
-                = (flag6 & 1) == 1
+                = header[6].HasBit(1)
                 ? NametableMirroringMode.Vertical
                 : NametableMirroringMode.Horizontal;
 
