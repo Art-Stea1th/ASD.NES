@@ -6,7 +6,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
     using Helpers;
 
     /// <summary> Emulation NMOS 6502 component of the CPU RP2A03 (Ricoh Processor 2A03) </summary>
-    internal sealed class Core {
+    internal sealed class Core { // all core instructions must be rewritten into classes
 
         private const int _ = 0;
 

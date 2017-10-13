@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="BasicComponents\" />
     <Folder Include="CartridgeComponents\" />
   </ItemGroup>
 
