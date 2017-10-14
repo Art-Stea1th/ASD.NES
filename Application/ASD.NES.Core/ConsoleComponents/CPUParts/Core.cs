@@ -2,7 +2,7 @@
 using OldCode;
 
 namespace ASD.NES.Core.ConsoleComponents.CPUParts {
-
+    using ASD.NES.Core.Shared;
     using Helpers;
 
     /// <summary> Emulation NMOS 6502 component of the CPU RP2A03 (Ricoh Processor 2A03) </summary>
@@ -11,7 +11,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         private const int _ = 0;
 
         private readonly OldMemoryBus bus = OldMemoryBus.Instance;
-        private readonly Registers r;
+        private readonly RegistersCPU r;
 
         private readonly Func<int>[] instruction;
         private readonly AddressingMode[] addressing;
@@ -20,11 +20,11 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
         private AddressingMode mode, ACC, IMM, ZPG, ZPX, ZPY, ABS, ABX, ABY, IND, IDX, IDY, REL, IMP, ___ = null;
 
-        private ushort Address { get => mode.Address; set => mode.Address = value; }
-        private byte M { get => mode.M; set => mode.M = value; }
+        private Hextet Address { get => mode.Address; set => mode.Address = value; }
+        private Octet M { get => mode.M; set => mode.M = value; }
         private bool PageCrossed => mode.PageCrossed;
 
-        public Core(Registers registers) {
+        public Core(RegistersCPU registers) {
 
             r = registers;
 
@@ -74,7 +74,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
                 BEQ,  SBC,  null, null, null, SBC,  INC,  null, SED,  SBC,  null, null, null, SBC,  INC,  null,
             };
 
-            /// must be serialized
+            /// must be auto-count
             bytes = new ushort[] {
                 1, 2, _, _, _, 2, 2, _, 1, 2, 1, _, _, 3, 3, _,
                 0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
@@ -94,7 +94,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
                 0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
             };
 
-            /// must be serialized
+            /// must be auto-count
             cycles = new int[] {
                 7, 6, _, _, _, 3, 5, _, 3, 2, 2, _, _, 4, 6, _,
                 2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
@@ -266,7 +266,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Arithmetic Shift Left one bit (Memory or Accumulator) </summary>
         private int ASL() {
 
-            r.PS.C.Set(M.HasBit(7));
+            r.PS.C.Set(M[7]);
 
             M <<= 1;
 
@@ -279,7 +279,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Logical Shift Right one bit (Memory or Accumulator) </summary>
         private int LSR() {
 
-            r.PS.C.Set(M.HasBit(0));
+            r.PS.C.Set(M[0]);
 
             M >>= 1;
 
@@ -292,7 +292,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Rotate Left one bit (Memory or Accumulator) </summary>
         private int ROL() {
 
-            var carry = M.HasBit(7);
+            var carry = M[7];
 
             M = (byte)((M << 1) | r.PS.C);
 
@@ -306,7 +306,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Rotate Right one bit (Memory or Accumulator) </summary>
         private int ROR() {
 
-            var carry = M.HasBit(0);
+            var carry = M[0];
 
             M = (byte)((M >> 1) | (r.PS.C << 7));
 
@@ -320,7 +320,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Test bits in Memory with Accumulator </summary>
         private int BIT() {
 
-            r.PS.V.Set(r.A.HasBit(6));
+            r.PS.V.Set(r.A[6]);
             r.PS.UpdateSigned(M);
             r.PS.UpdateZero(r.A & M);
 
@@ -642,8 +642,8 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         }
 
         /// <summary> Isn't instruction </summary>
-        private void Push16(ushort value) {
-            Push(value.HOctet()); Push(value.LOctet());
+        private void Push16(Hextet value) {
+            Push(value.H); Push(value.L);
         }
 
         /// <summary> Isn't instruction </summary>
@@ -652,13 +652,13 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         }
 
         /// <summary> Isn't instruction </summary>
-        private void Push(byte value) {
+        private void Push(Octet value) {
             bus.Write((ushort)(0x100 + r.SP), value);
             r.SP -= 1;
         }
 
         /// <summary> Isn't instruction </summary>
-        private byte Pull() {
+        private Octet Pull() {
             r.SP += 1;
             return bus.Read((ushort)(0x100 + r.SP));
         }

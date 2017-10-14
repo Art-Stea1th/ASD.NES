@@ -16,7 +16,6 @@ namespace ASD.NES.Core {
 
         private IController controller;
 
-        private long cpuCycle;
         private Timer process;
 
         public event Action<uint[]> NextFrameReady;
@@ -25,7 +24,7 @@ namespace ASD.NES.Core {
 
         public Console(IController controller) {
             process = new Timer(
-                TimeSpan.FromMilliseconds(1000.0 / 159.610272),
+                TimeSpan.FromMilliseconds(1000.0 / 128.863632),
                 () => NextFrameReady?.Invoke(Update()));
             State = State.Off;
             OldMemoryBus.Instance.Console = this;
@@ -113,12 +112,10 @@ namespace ASD.NES.Core {
         }
 
         private void ColdBoot() {
-            cpuCycle = 0;
             Cpu.ColdBoot();
             Ppu.ColdBoot();
         }
         private void WarmBoot() {
-            cpuCycle = 0;
             Cpu.WarmBoot();
             Ppu.WarmBoot();
         }

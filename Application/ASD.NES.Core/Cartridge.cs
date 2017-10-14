@@ -6,6 +6,7 @@ using OldCode;
 namespace ASD.NES.Core {
 
     using Helpers;
+    using Shared;
 
     public sealed class Cartridge {
 
@@ -18,14 +19,14 @@ namespace ASD.NES.Core {
 
         private Cartridge(byte[] data) {
 
-            byte[] header = data.Take(16).ToArray();
+            Octet[] header = data.Take(16).Select(b => (Octet)b).ToArray();
 
-            var fileSignature = BitConverter.ToUInt32(header, 0);
+            var fileSignature = BitConverter.ToUInt32(header.Select(o => (byte)o).ToArray(), 0);
             if (fileSignature != iNES_FILE_SIGNATURE) {
                 throw new InvalidDataException();
             }
 
-            var mapperNumder = BitOperations.MakeInt8(header[7].HNybble(), header[6].HNybble());
+            var mapperNumder = Octet.Make(header[7].H, header[6].H);
             if (mapperNumder != 0) {
                 throw new Information($"Mapper {mapperNumder} - Unsupported Mapper. Only Mapper 0 is supported.");
             }
@@ -34,7 +35,7 @@ namespace ASD.NES.Core {
             CHRROM = header[5];
 
             OldMemoryBus.Instance.NametableMirroring
-                = header[6].HasBit(1)
+                = header[6][1]
                 ? NametableMirroringMode.Vertical
                 : NametableMirroringMode.Horizontal;
 

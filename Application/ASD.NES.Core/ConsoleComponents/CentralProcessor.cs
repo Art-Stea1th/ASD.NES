@@ -9,11 +9,11 @@ namespace ASD.NES.Core.ConsoleComponents {
 
         private static readonly OldMemoryBus bus = OldMemoryBus.Instance;
 
-        private RInt8[] zeroPage, stack, wram;
-        private RInt8 res, nmi, irq, brk;
+        private RefOctet[] zeroPage, stack, wram;
+        private RefOctet res, nmi, irq, brk;
 
         private Core core;
-        private Registers registers;
+        private RegistersCPU registers;
 
         public CentralProcessor() {
             Initialize();
@@ -29,7 +29,7 @@ namespace ASD.NES.Core.ConsoleComponents {
             nmi = bus.GetReference(0xFFFA);
             irq = brk = bus.GetReference(0xFFFE);
 
-            registers = new Registers();
+            registers = new RegistersCPU();
 
             core = new Core(registers);
         }
@@ -82,14 +82,14 @@ namespace ASD.NES.Core.ConsoleComponents {
         }
 
         #region Helpers
-        public ushort ReadX2(ushort address) {
+        public ushort ReadX2(Hextet address) {
             return (ushort)((bus.Read((ushort)(address + 1)) << 8) | bus.Read(address));
         }
-        private void PushStack(byte val) {
+        private void PushStack(Octet val) {
             stack[registers.SP].Value = val;
             registers.SP -= 1;
         }
-        private void PushStack16(ushort val) {
+        private void PushStack16(Hextet val) {
             stack[registers.SP].Value = (byte)(val >> 8);
             registers.SP -= 1;
             stack[registers.SP].Value = (byte)val;
