@@ -461,7 +461,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             Push16(r.PC); // r.PS.B.Set(true); // ?
             Push(r.PS);   // r.PS.I.Set(true); // ?
 
-            r.PC = BitOperations.MakeInt16(bus.Read(0xFFFF), bus.Read(0xFFFE));
+            r.PC = Hextet.Make(bus.Read(0xFFFF), bus.Read(0xFFFE));
             return 0;
         }
 

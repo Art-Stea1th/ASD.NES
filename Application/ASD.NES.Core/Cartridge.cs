@@ -36,8 +36,8 @@ namespace ASD.NES.Core {
 
             OldMemoryBus.Instance.NametableMirroring
                 = header[6][1]
-                ? NametableMirroringMode.Vertical
-                : NametableMirroringMode.Horizontal;
+                ? NametableMirroring.Vertical
+                : NametableMirroring.Horizontal;
 
             var prgStart = 16;
             var prgBytes = 0x4000 * PRGROM;

@@ -5,7 +5,7 @@
 
     /// <summary> "Indirect Y" (Post-Indexed Indirect) addressing mode </summary>
     internal sealed class IDY : AddressingMode {
-        public override Hextet Address => (ushort)(BitOperations.MakeInt16(bus.Read((ushort)(ArgOne + 1)), bus.Read(ArgOne)) + r.Y);
+        public override Hextet Address => (ushort)(Hextet.Make(bus.Read((ushort)(ArgOne + 1)), bus.Read(ArgOne)) + r.Y);
         public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
         public override bool PageCrossed => !SamePage(Address, (ushort)(Address - r.Y));
         public IDY(RegistersCPU registers) : base(registers) { }
@@ -13,14 +13,14 @@
 
     /// <summary> "Indirect X" (Pre-Indexed Indirect) addressing mode </summary>
     internal sealed class IDX : AddressingMode {
-        public override Hextet Address => BitOperations.MakeInt16(bus.Read((ushort)(ArgOne + 1 + r.X)), bus.Read((ushort)(ArgOne + r.X)));
+        public override Hextet Address => Hextet.Make(bus.Read((ushort)(ArgOne + 1 + r.X)), bus.Read((ushort)(ArgOne + r.X)));
         public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
         public IDX(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Indirect" addressing mode </summary>
     internal sealed class IND : AddressingMode {
-        public override Hextet Address => BitOperations.MakeInt16(bus.Read((ushort)(ArgOne + 1)), bus.Read(ArgOne));
+        public override Hextet Address => Hextet.Make(bus.Read((ushort)(ArgOne + 1)), bus.Read(ArgOne));
         public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
         public IND(RegistersCPU registers) : base(registers) { }
     }
@@ -41,7 +41,7 @@
 
     /// <summary> "Absolute" addressing mode </summary>
     internal class ABS : AddressingMode {
-        public override Hextet Address => BitOperations.MakeInt16(ArgTwo, ArgOne);
+        public override Hextet Address => Hextet.Make(ArgTwo, ArgOne);
         public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
         public ABS(RegistersCPU registers) : base(registers) { }
     }
