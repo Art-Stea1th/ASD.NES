@@ -6,35 +6,31 @@ namespace ASD.NES.Core {
     using ConsoleComponents;
     using Shared;
 
-    public enum State { Off = 0x00, On = 0x01, Paused = 0x10, Busy = 0x11 }
+    public sealed partial class Console {
 
-    public sealed class Console {
+        private Timer clock;
+
+        private readonly Octet[] cpuRAM = new Octet[2048];
+        private readonly Octet[] ppuRAM = new Octet[2048];
 
         internal CentralProcessor Cpu { get; private set; }
-        internal PixelProcessor Ppu { get; private set; }
-        internal OldIO Io { get; private set; }
-
-        private IController controller;
-
-        private Timer process;
+        internal PictureProcessor Ppu { get; private set; }
+        internal InputHandler Input { get; private set; }
 
         public event Action<uint[]> NextFrameReady;
 
-        public State State { get; private set; }        
+        public IGamepad PlayerOneController { set => Input.ConnectController(value, PlayerNumber.One); }
+        public IGamepad PlayerTwoController { set => Input.ConnectController(value, PlayerNumber.Two); }
 
-        public Console(IController controller) {
-            process = new Timer(
-                TimeSpan.FromMilliseconds(1000.0 / 128.863632),
+        public Console() {
+            clock = new Timer(
+                TimeSpan.FromMilliseconds(1000.0 / 21.477272 / 6),
                 () => NextFrameReady?.Invoke(Update()));
             State = State.Off;
             OldMemoryBus.Instance.Console = this;
-            this.controller = controller;
-            Initialize();
+            InitializeHardware();
+            Input = new InputHandler();
             ColdBoot();
-        }
-
-        private void SendEmptyFrame() {
-            NextFrameReady?.Invoke(new uint[256 * 240]);
         }
 
         public void InsertCartridge(Cartridge cartridge) { }
@@ -53,62 +49,9 @@ namespace ASD.NES.Core {
             return Ppu.ImageData;
         }
 
-        public void PowerOn() {
-            if (State == State.Off) {
-                process.Start();
-                State = State.On;
-            }
-        }
-
-        public void PowerOff() {
-            if (State > 0) {
-                process.Stop();
-                State = State.Off;
-            }
-        }
-
-        public void Pause() {
-            if (State == State.On) {
-                process.Stop();
-                State = State.Paused;
-            }
-        }
-
-        public void Resume() {
-            if (State == State.Paused) {
-                process.Start();
-                State = State.On;
-            }
-        }
-
-        public void Reset() {
-
-            if (State == State.On) {
-                WarmBoot();
-            }
-
-            if (State == State.Off) {
-                PowerOn();
-                Initialize();
-                ColdBoot();
-            }
-            else if (State == State.Paused) {
-                try {
-                    Resume();
-                    WarmBoot();
-                }
-                catch {
-                    PowerOn();
-                    Initialize();
-                    ColdBoot();
-                }
-            }
-        }
-
-        private void Initialize() {
+        private void InitializeHardware() {
             Cpu = new CentralProcessor();
-            Ppu = new PixelProcessor();
-            Io = new OldIO(controller);            
+            Ppu = new PictureProcessor();
         }
 
         private void ColdBoot() {

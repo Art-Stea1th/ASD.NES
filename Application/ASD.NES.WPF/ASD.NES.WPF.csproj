@@ -56,7 +56,7 @@
   <ItemGroup>
     <Compile Include="Helpers\Observable.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
-    <Compile Include="Controllers\InputService.cs" />
+    <Compile Include="Controllers\KeyboardController.cs" />
     <Compile Include="Services\OpenFileService.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.SimpleFSM.cs" />

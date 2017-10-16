@@ -6,10 +6,10 @@ using System.Windows.Threading;
 
 namespace ASD.NES.WPF.ViewModels {
 
+    using Controllers;
     using Core;
     using Helpers;
     using Services;
-    using Controllers;
 
     internal sealed partial class ShellViewModel : Observable {
 
@@ -29,9 +29,22 @@ namespace ASD.NES.WPF.ViewModels {
         public ShellViewModel() {
             dispatcher = Dispatcher.CurrentDispatcher;
             screen = new WriteableBitmap(256, 240, 96, 96, PixelFormats.Bgr32, null);
-            console = new Console(new KeyboardController(dispatcher));
+            console = new Console();
+            ConfigureControllers();
             console.NextFrameReady += UpdateScreen;
             InitializeControlCommands();
+        }
+
+        private void ConfigureControllers() { // TODO: move to settings ViewModel
+
+            console.PlayerOneController = new KeyboardController(dispatcher) {
+                Left = Key.A, Up = Key.W, Right = Key.D, Down = Key.S,
+                Select = Key.RightShift, Start = Key.Enter, B = Key.K, A = Key.L
+            };
+            console.PlayerTwoController = new KeyboardController(dispatcher) {
+                Left = Key.Left, Up = Key.Up, Right = Key.Right, Down = Key.Down,
+                Select = Key.RightShift, Start = Key.Enter, B = Key.Insert, A = Key.Delete
+            };
         }
 
         private void OpenFileCommandExecute() {

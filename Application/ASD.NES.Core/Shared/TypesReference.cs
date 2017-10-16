@@ -1,5 +1,6 @@
 ﻿namespace ASD.NES.Core.Shared {
 
+    /// <summary> Represents reference to 16-bit unsigned integer </summary>
     internal sealed class RefQuadlet : Reference<Quadlet> {
         public bool this[int bit] {
             get => Value[bit];
@@ -21,6 +22,7 @@
         public static implicit operator Hextet(RefHextet reference) => reference.Value;
     }
 
+    /// <summary> Represents reference to 8-bit unsigned integer </summary>
     internal sealed class RefOctet : Reference<Octet> {
         public bool this[int bit] {
             get => Value[bit];

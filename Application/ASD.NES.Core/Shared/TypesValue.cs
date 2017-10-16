@@ -1,9 +1,11 @@
 ﻿using System.Runtime.InteropServices;
 
+// Yes, I know about extension methods, but in this case I preferred this way :)
+
 namespace ASD.NES.Core.Shared {
 
     /// <summary> Represents a 32-bit unsigned integer </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 32)]
+    [StructLayout(LayoutKind.Explicit)]
     internal struct Quadlet {
 
         [FieldOffset(0)] private uint quadlet;
@@ -11,10 +13,10 @@ namespace ASD.NES.Core.Shared {
         [FieldOffset(0)] private ushort hextetL;
         [FieldOffset(2)] private ushort hextetH;
 
-        /// <summary> Get or set High-Hextet </summary>
+        /// <summary> Get or set High-Hextet (16 bits) </summary>
         public Hextet H { get => hextetH; set => hextetH = value; }
 
-        /// <summary> Get or set Low-Hextet </summary>
+        /// <summary> Get or set Low-Hextet (16 bits) </summary>
         public Hextet L { get => hextetL; set => hextetL = value; }
 
         /// <summary> Get or set specified bit </summary>
@@ -36,7 +38,7 @@ namespace ASD.NES.Core.Shared {
     }
 
     /// <summary> Represents a 16-bit unsigned integer </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 16)]
+    [StructLayout(LayoutKind.Explicit)]
     internal struct Hextet {
 
         [FieldOffset(0)] private ushort hextet;
@@ -44,10 +46,10 @@ namespace ASD.NES.Core.Shared {
         [FieldOffset(0)] private byte octetL;
         [FieldOffset(1)] private byte octetH;
 
-        /// <summary> Get or set High-Octet </summary>
+        /// <summary> Get or set High-Octet (8 bits) </summary>
         public Octet H { get => octetH; set => octetH = value; }
 
-        /// <summary> Get or set Low-Octet </summary>
+        /// <summary> Get or set Low-Octet (8 bits) </summary>
         public Octet L { get => octetL; set => octetL = value; }
 
         /// <summary> Get or set specified bit </summary>
@@ -67,7 +69,7 @@ namespace ASD.NES.Core.Shared {
     }
 
     /// <summary> Represents an 8-bit unsigned integer </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    [StructLayout(LayoutKind.Explicit)]
     internal struct Octet {
 
         [FieldOffset(0)] private byte octet;

@@ -33,24 +33,36 @@
 
 
 
-        /// <summary> PPU scrolling position register </summary>
-        public RefOctet PpuScrl;
+        /// <summary> PPU scrolling position register <para/>
+        /// 0x2005 - (Common name: PPUSCROLL)</summary>
+        public readonly RefOctet PpuScrl;
 
 
 
-        /// <summary> PPU address register </summary>
-        public RefOctet PpuAddr;
+        /// <summary> PPU address register <para/>
+        /// 0x2006 - (Common name: PPUADDR) </summary>
+        public readonly RefOctet PpuAddr;
 
-        /// <summary> PPU data register </summary>
-        public RefOctet PpuData;
+        /// <summary> PPU data register <para/>
+        /// 0x2007 - (Common name: PPUDATA) </summary>
+        public readonly RefOctet PpuData;
 
 
 
-        /// <summary> OAM DMA register (high octet) </summary>
+        /// <summary> OAM DMA register (high octet) <para/>
+        /// 0x4014 - (Common name: OAMDMA) </summary>
         public RefOctet OamDmaR;
 
         public RegistersPPU() {
-
+            PpuCtrl = new ControlRegister(OldCode.OldMemoryBus.Instance.GetReference(0x2000));
+            PpuMask = new MaskRegister(OldCode.OldMemoryBus.Instance.GetReference(0x2001));
+            PpuStat = new StatusRegister(OldCode.OldMemoryBus.Instance.GetReference(0x2002));
+            OamAddr = OldCode.OldMemoryBus.Instance.GetReference(0x2003);
+            OamData = OldCode.OldMemoryBus.Instance.GetReference(0x2004);
+            PpuScrl = OldCode.OldMemoryBus.Instance.GetReference(0x2005);
+            PpuAddr = OldCode.OldMemoryBus.Instance.GetReference(0x2006);
+            PpuData = OldCode.OldMemoryBus.Instance.GetReference(0x2007);
+            OamDmaR = OldCode.OldMemoryBus.Instance.GetReference(0x4014);
         }
     }
 }

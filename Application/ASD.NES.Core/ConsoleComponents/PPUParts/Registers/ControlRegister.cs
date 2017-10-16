@@ -8,6 +8,7 @@
     internal sealed class ControlRegister {
 
         private readonly RefOctet r;
+        public ControlRegister(RefOctet register) => r = register;
 
         /// <summary> Add 256 to the X scroll position </summary>
         public bool Add256ToX { get => r[0]; set => r[0] = value; }
@@ -33,6 +34,15 @@
         /// <summary> Generate an NMI at the start of the vertical blanking interval (True: on; False: off) </summary>
         public bool NMIAtVBI { get => r[7]; set => r[7] = value; }
 
-        public ControlRegister(RefOctet register) => r = register;
+        // -----
+
+        public int OffsetX => (r.Value & 0b01) << 8;
+        public int OffsetY => ((r.Value & 0b10) << 6) | ((r.Value & 0b10) << 5) | ((r.Value & 0b10) << 4) | ((r.Value & 0b10) << 3);
+
+        public int NametableAddress => 0x2000 | ((r.Value & 0b11) << 10);
+        public int SpritePatternTableAddress => (r.Value & 0b0_1000) << 9;
+        public int BackgroundPatternTableAddress => (r.Value & 0b1_0000) << 8;
+
+        public void Clear() => r.Value = 0;
     }
 }

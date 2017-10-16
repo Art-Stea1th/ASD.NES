@@ -3,15 +3,24 @@ using OldCode;
 
 namespace ASD.NES.Core.ConsoleComponents {
 
-    internal sealed class PixelProcessor {
+    using PPUParts;
+
+    internal sealed class PictureProcessor {
 
         // -------------
-        private OldPPU oldPpu = new OldPPU();
+        private OldPPU oldPpu;
+        // -------------
+
+        private RegistersPPU r;
 
         public long FrameCount => oldPpu.FrameCount;
         public uint[] ImageData => oldPpu.ImageData;
 
-        // -------------
+
+        public PictureProcessor() {
+            r = new RegistersPPU();
+            oldPpu = new OldPPU(r);
+        }
 
         public void Write(int addr, byte val) {
             oldPpu.Write(addr, val);
