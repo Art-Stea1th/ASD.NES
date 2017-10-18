@@ -25,8 +25,8 @@ namespace ASD.NES.Core.Shared {
             set => quadlet = (uint)(value ? (int)quadlet | (1 << bit) : quadlet & ~(1 << bit));
         }
 
-        public static implicit operator uint(Quadlet value) => value.quadlet;
         public static implicit operator Quadlet(uint value) => new Quadlet(value);
+        public static implicit operator uint(Quadlet value) => value.quadlet;
 
         public static Quadlet Make(ushort highHextet, ushort lowHextet)
             => new Quadlet(highHextet, lowHextet);
@@ -58,8 +58,8 @@ namespace ASD.NES.Core.Shared {
             set => hextet = (ushort)(value ? hextet | (1 << bit) : hextet & ~(1 << bit));
         }
 
-        public static implicit operator ushort(Hextet value) => value.hextet;
         public static implicit operator Hextet(ushort value) => new Hextet(value);
+        public static implicit operator ushort(Hextet value) => value.hextet;
 
         public static Hextet Make(byte highOctet, byte lowOctet) => new Hextet(highOctet, lowOctet);
         private Hextet(ushort value) : this() => this.hextet = value;
@@ -92,8 +92,8 @@ namespace ASD.NES.Core.Shared {
             set => octet = (byte)(value ? octet | (1 << bit) : octet & ~(1 << bit));
         }
 
-        public static implicit operator byte(Octet value) => value.octet;
         public static implicit operator Octet(byte value) => new Octet(value);
+        public static implicit operator byte(Octet value) => value.octet;
 
         public static Octet Make(byte highNybble, byte lowNybble) => new Octet(highNybble, lowNybble);
         private Octet(byte value) : this() => octet = value;

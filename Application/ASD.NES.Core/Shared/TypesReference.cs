@@ -8,7 +8,9 @@
         }
         public static RefQuadlet Wrap(Quadlet value) => new RefQuadlet(value);
         private RefQuadlet(Quadlet value) : base(value) { }
+
         public static implicit operator Quadlet(RefQuadlet reference) => reference.Value;
+        public static implicit operator uint(RefQuadlet reference) => reference.Value;
     }
 
     internal sealed class RefHextet : Reference<Hextet> {
@@ -20,6 +22,7 @@
         private RefHextet(Hextet value) : base(value) { }
 
         public static implicit operator Hextet(RefHextet reference) => reference.Value;
+        public static implicit operator ushort(RefHextet reference) => reference.Value;
     }
 
     /// <summary> Represents reference to 8-bit unsigned integer </summary>
@@ -32,6 +35,7 @@
         private RefOctet(Octet value) : base(value) { }
 
         public static implicit operator Octet(RefOctet reference) => reference.Value;
+        public static implicit operator byte(RefOctet reference) => reference.Value;
     }
 
     internal abstract class Reference<TValue> where TValue : struct {

@@ -18,8 +18,7 @@ namespace ASD.NES.Core.ConsoleComponents {
 
 
         public PictureProcessor() {
-            r = new RegistersPPU();
-            oldPpu = new OldPPU(r);
+            oldPpu = new OldPPU();
         }
 
         public void Write(int addr, byte val) {

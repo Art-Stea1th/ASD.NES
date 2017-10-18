@@ -1,9 +1,14 @@
-﻿namespace ASD.NES.Core.ConsoleComponents.PPUParts {
+﻿using System;
 
+namespace ASD.NES.Core.ConsoleComponents.PPUParts {
+
+    using BasicComponents;
     using Registers;
     using Shared;
 
-    internal sealed class RegistersPPU {
+    internal sealed class RegistersPPU : IMemory<Octet> {
+
+        private PPUAddressSpace ppuMemory = PPUAddressSpace.Instance;
 
         /// <summary> PPU control register,
         /// Various flags controlling PPU operation <para/>
@@ -35,13 +40,13 @@
 
         /// <summary> PPU scrolling position register <para/>
         /// 0x2005 - (Common name: PPUSCROLL)</summary>
-        public readonly RefOctet PpuScrl;
+        public readonly RefHextet PpuScrl;
 
 
 
         /// <summary> PPU address register <para/>
         /// 0x2006 - (Common name: PPUADDR) </summary>
-        public readonly RefOctet PpuAddr;
+        public readonly RefHextet PpuAddr;
 
         /// <summary> PPU data register <para/>
         /// 0x2007 - (Common name: PPUDATA) </summary>
@@ -53,16 +58,102 @@
         /// 0x4014 - (Common name: OAMDMA) </summary>
         public RefOctet OamDmaR;
 
+        public event Action<Octet> OAMDMAWritten;
+
         public RegistersPPU() {
-            PpuCtrl = new ControlRegister(OldCode.OldMemoryBus.Instance.GetReference(0x2000));
-            PpuMask = new MaskRegister(OldCode.OldMemoryBus.Instance.GetReference(0x2001));
-            PpuStat = new StatusRegister(OldCode.OldMemoryBus.Instance.GetReference(0x2002));
-            OamAddr = OldCode.OldMemoryBus.Instance.GetReference(0x2003);
-            OamData = OldCode.OldMemoryBus.Instance.GetReference(0x2004);
-            PpuScrl = OldCode.OldMemoryBus.Instance.GetReference(0x2005);
-            PpuAddr = OldCode.OldMemoryBus.Instance.GetReference(0x2006);
-            PpuData = OldCode.OldMemoryBus.Instance.GetReference(0x2007);
-            OamDmaR = OldCode.OldMemoryBus.Instance.GetReference(0x4014);
+
+            PpuCtrl = new ControlRegister(RefOctet.Wrap(0));
+            PpuMask = new MaskRegister(RefOctet.Wrap(0));
+            PpuStat = new StatusRegister(RefOctet.Wrap(0));
+            OamAddr = RefOctet.Wrap(0);
+            OamData = RefOctet.Wrap(0);
+            PpuScrl = RefHextet.Wrap(0);
+            PpuAddr = RefHextet.Wrap(0);
+            PpuData = RefOctet.Wrap(0);
+            OamDmaR = RefOctet.Wrap(0);
+        }
+
+        public Octet this[int address] {
+            get => Read(address);
+            set => Write(address, value);
+        }
+
+        public int Cells => 9;
+
+        public Octet Read(int address) {
+
+            address &= 0x0007;
+
+            if (address == 1) {
+                return PpuMask;
+            }
+            else if (address == 2) {
+
+                var prevStatusWithData = (byte)(PpuStat.StatusOnly | (PpuData & 0b0001_1111));
+                PpuStat.VBlank = false;
+
+                return prevStatusWithData;
+            }
+            else if (address == 7) {
+
+                var readAddress = (ushort)(PpuAddr & ppuMemory.LastAddress);
+
+                byte returnValue;
+
+                if (readAddress < 0x3F00) {
+                    returnValue = PpuData;
+                    PpuData.Value = ppuMemory[readAddress];
+                }
+                else {
+                    returnValue = ppuMemory[readAddress];
+                }
+
+                PpuAddr.Value = (ushort)(PpuAddr + PpuCtrl.IncrementPerCPURW);
+
+                return returnValue;
+            }
+
+            throw new ArgumentOutOfRangeException($"Unimplemented read to PPU @ {(0x2000 + address):X}");
+        }
+
+        public void Write(int address, Octet value) {
+
+            if (address == 0x4014) {
+                OAMDMAWritten(value);
+            }
+            else {
+
+                address &= 0x0007;
+
+                if (address == 0) {
+                    PpuCtrl.Value = value;
+                }
+                else if (address == 1) {
+                    PpuMask.Value = value;
+                }
+                if (address == 3) {
+                    OamAddr.Value = value;
+                }
+                if (address == 5) {
+                    PpuScrl.Value.H = PpuScrl.Value.L;
+                    PpuScrl.Value.L = value;
+                }
+                else if (address == 6) {
+                    PpuAddr.Value.H = PpuAddr.Value.L;
+                    PpuAddr.Value.L = value;
+                }
+                else if (address == 7) {
+
+                    PpuData.Value = value;
+
+                    ppuMemory[PpuAddr.Value & ppuMemory.LastAddress] = PpuData.Value;
+
+                    PpuAddr.Value = (ushort)(PpuAddr.Value + PpuCtrl.IncrementPerCPURW);
+                }
+                else {
+                    System.Console.Error.WriteLine($"Unimplemented write {value:X2} to PPU @ {address:X4}");
+                }
+            }
         }
     }
 }

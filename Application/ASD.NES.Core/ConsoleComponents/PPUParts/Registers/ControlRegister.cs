@@ -38,11 +38,18 @@
 
         public int OffsetX => (r.Value & 0b01) << 8;
         public int OffsetY => ((r.Value & 0b10) << 6) | ((r.Value & 0b10) << 5) | ((r.Value & 0b10) << 4) | ((r.Value & 0b10) << 3);
-
         public int NametableAddress => 0x2000 | ((r.Value & 0b11) << 10);
+
+        public int IncrementPerCPURW => r[2] ? 32 : 1;
+
         public int SpritePatternTableAddress => (r.Value & 0b0_1000) << 9;
         public int BackgroundPatternTableAddress => (r.Value & 0b1_0000) << 8;
 
+        public Octet Value { get => r.Value; set => r.Value = value; }
+
         public void Clear() => r.Value = 0;
+
+        public static implicit operator Octet(ControlRegister register) => register.r.Value;
+        public static implicit operator byte(ControlRegister register) => register.r.Value;
     }
 }

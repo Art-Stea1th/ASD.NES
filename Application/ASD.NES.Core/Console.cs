@@ -10,9 +10,6 @@ namespace ASD.NES.Core {
 
         private Timer clock;
 
-        private readonly Octet[] cpuRAM = new Octet[2048];
-        private readonly Octet[] ppuRAM = new Octet[2048];
-
         internal CentralProcessor Cpu { get; private set; }
         internal PictureProcessor Ppu { get; private set; }
         internal InputHandler Input { get; private set; }
@@ -30,10 +27,11 @@ namespace ASD.NES.Core {
             OldMemoryBus.Instance.Console = this;
             InitializeHardware();
             Input = new InputHandler();
-            ColdBoot();
         }
 
-        public void InsertCartridge(Cartridge cartridge) { }
+        public void InsertCartridge(Cartridge cartridge) {
+            ColdBoot();
+        }
 
         public uint[] Update() {
 

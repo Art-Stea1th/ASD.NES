@@ -21,8 +21,12 @@
         /// Set at dot 1 of line 241 (the line *after* the post-render line); cleared after reading $2002 and at dot 1 of the pre-render line </summary>
         public bool VBlank { get => r[7]; set => r[7] = value; }
 
+        public byte StatusOnly => (byte)(r & 0b1110_0000);
+
         public void Clear() => r.Value = 0;
+        public Octet Value { get => r.Value; set => r.Value = value; }
 
         public static implicit operator Octet(StatusRegister register) => register.r.Value;
+        public static implicit operator byte(StatusRegister register) => register.r.Value;
     }
 }
