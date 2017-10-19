@@ -1,33 +1,22 @@
-﻿using OldCode;
-
-namespace ASD.NES.Core.ConsoleComponents {
+﻿namespace ASD.NES.Core.ConsoleComponents {
 
     using CPUParts;
     using Shared;
 
     internal sealed class CentralProcessor {
 
-        private static readonly OldMemoryBus bus = OldMemoryBus.Instance;
-
-        private RefOctet[] zeroPage, stack, wram;
-        private RefOctet res, nmi, irq, brk;
+        private static readonly CPUAddressSpace memory = CPUAddressSpace.Instance;
 
         private Core core;
         private RegistersCPU registers;
+
+        public CPUAddressSpace AddressSpace => memory;
 
         public CentralProcessor() {
             Initialize();
         }
 
         private void Initialize() {
-
-            zeroPage = bus.GetReferenceRange(0, 0x100);
-            stack = bus.GetReferenceRange(0x100, 0x100);
-            wram = bus.GetReferenceRange(0x200, 0x600);
-
-            res = bus.GetReference(0xFFFC);
-            nmi = bus.GetReference(0xFFFA);
-            irq = brk = bus.GetReference(0xFFFE);
 
             registers = new RegistersCPU();
 
@@ -36,13 +25,13 @@ namespace ASD.NES.Core.ConsoleComponents {
 
         public int Step() {
 
-            if (nmi[0]) {
-                nmi[0] = false;
+            if (memory.Nmi) {
+                memory.Nmi = false;
                 JumpToNMIVector();
                 return 1;
             }
 
-            var opcode = bus.Read(registers.PC);
+            var opcode = memory[registers.PC];
             return core.Execute(opcode);
         }
 
@@ -56,8 +45,8 @@ namespace ASD.NES.Core.ConsoleComponents {
 
             JumpToResetVector();
 
-            bus.Write(0x4017, 0x00);
-            bus.Write(0x4015, 0x00);
+            memory[0x4017] = 0x00;
+            memory[0x4015] = 0x00;
         }
 
         public void WarmBoot() {
@@ -66,7 +55,7 @@ namespace ASD.NES.Core.ConsoleComponents {
 
             registers.SP -= 3;
             registers.PS.I.Set(true);
-            bus.Write(0x4015, 0x00);
+            memory[0x4015] = 0x00;
         }
 
         private void JumpToResetVector() {
@@ -83,17 +72,15 @@ namespace ASD.NES.Core.ConsoleComponents {
 
         #region Helpers
         public ushort ReadX2(Hextet address) {
-            return (ushort)((bus.Read((ushort)(address + 1)) << 8) | bus.Read(address));
+            return Hextet.Make(memory[address + 1], memory[address]);
         }
         private void PushStack(Octet val) {
-            stack[registers.SP].Value = val;
+            memory[0x100 + registers.SP] = val;
             registers.SP -= 1;
         }
         private void PushStack16(Hextet val) {
-            stack[registers.SP].Value = (byte)(val >> 8);
-            registers.SP -= 1;
-            stack[registers.SP].Value = (byte)val;
-            registers.SP -= 1;
+            PushStack(val.H);
+            PushStack(val.L);
         }
         #endregion
     }

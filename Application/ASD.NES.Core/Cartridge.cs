@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using OldCode;
 
 namespace ASD.NES.Core {
 
-    using ConsoleComponents.CPUParts;
     using CartridgeComponents.Boards;
     using CartridgeComponents.Mappers;
+    using ConsoleComponents.CPUParts;
     using ConsoleComponents.PPUParts;
     using Helpers;
     using Shared;
@@ -35,7 +34,7 @@ namespace ASD.NES.Core {
 
             var mapperNumder = Octet.Make(header[7].H, header[6].H);
             if (mapperNumder != 0) {
-                throw new Information($"Mapper {mapperNumder} - Unsupported Mapper. Only Mapper 0 is supported.");
+                throw new Information($"Mapper {(byte)mapperNumder} - Unsupported Mapper. Only Mapper 0 is supported.");
             }
 
             PRGCount = header[4];
@@ -67,10 +66,7 @@ namespace ASD.NES.Core {
             board = new Mapper000();
             board.SetCHR(chrList);
             board.SetPRG(prgList);
-
-            OldMemoryBus.Instance.SetExternalMemory(board);
-
-            //CPUAddressSpace.Instance.SetExternalMemory(board);
+            CPUAddressSpace.Instance.SetExternalMemory(board);
         }
     }
 }

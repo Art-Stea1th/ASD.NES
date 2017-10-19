@@ -15,7 +15,8 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
 
         public override int Cells => 1024 * 64;
 
-        public override Octet Read(int address) {
+        protected override Octet Read(int address) {
+
             if (address < 0x6000) {
                 throw new IndexOutOfRangeException();
             }
@@ -31,8 +32,14 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
             throw new IndexOutOfRangeException();
         }
 
-        public override void Write(int address, Octet value) {
-            throw new InvalidOperationException();
+        protected override void Write(int address, Octet value) {
+
+            if (address == 0xFFFA) {
+                prgROM0[address - 0xC000].Value = value;
+            }
+            else {
+                throw new InvalidOperationException();
+            }
         }
 
         public override void SetCHR(IReadOnlyList<Octet[]> chr) {
@@ -48,7 +55,7 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
             if (prg == null) { throw new ArgumentException(); }
             if (prg.Count < 1) { throw new ArgumentOutOfRangeException(); }
 
-            prgROM0 = prg[0].Wrap();
+            prgROM1 = prgROM0 = prg[0].Wrap();
 
             if (prg.Count > 1) {
                 prgROM1 = prg[1].Wrap();

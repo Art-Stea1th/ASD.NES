@@ -1,33 +1,21 @@
-﻿using System.Collections.Generic;
-using OldCode;
+﻿using OldCode;
 
 namespace ASD.NES.Core.ConsoleComponents {
 
+    using CPUParts;
     using PPUParts;
 
     internal sealed class PictureProcessor {
 
-        // -------------
-        private OldPPU oldPpu;
-        // -------------
+        #region ------------- Old Code -------------
+        private OldPPU oldPpu = new OldPPU();
+        public long OldFrameCount => oldPpu.FrameCount;
+        public uint[] OldImageData => oldPpu.ImageData;
+        #endregion ---------- Old Code -------------
 
+        private CPUAddressSpace cpuMemory = CPUAddressSpace.Instance;
+        private PPUAddressSpace ppuMemory = PPUAddressSpace.Instance;
         private RegistersPPU r;
-
-        public long FrameCount => oldPpu.FrameCount;
-        public uint[] ImageData => oldPpu.ImageData;
-
-
-        public PictureProcessor() {
-            oldPpu = new OldPPU();
-        }
-
-        public void Write(int addr, byte val) {
-            oldPpu.Write(addr, val);
-        }
-
-        public byte Read(ushort addr) {
-            return oldPpu.Read(addr);
-        }
 
         public void Step() {
             oldPpu.Step();

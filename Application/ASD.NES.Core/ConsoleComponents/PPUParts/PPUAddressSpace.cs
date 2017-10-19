@@ -18,8 +18,8 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         private PPUAddressSpace() { }
         #endregion
 
-        private static readonly Octet[] tileSet0; // $0000 - $0FFF: CHR-ROM Tite-set 0 - 4 kb
-        private static readonly Octet[] tileSet1; // $1000 - $1FFF: CHR-ROM Tite-set 1 - 4 kb
+        private static readonly Octet[] tileSet0;     // $0000 - $0FFF: CHR-ROM Tite-set 0 - 4 kb
+        private static readonly Octet[] tileSet1;     // $1000 - $1FFF: CHR-ROM Tite-set 1 - 4 kb
 
         public static readonly Nametables Nametables; // $2000 - $2FFF: Nametables - 4 kb + $3000 - 3EFF: mirror
         private static readonly RefOctet[] palettes;  // $3F00 - $3FFF: Palettes (BG - 16 b \ Sprite - 16 b) - Mirror x 8 (256 b)
@@ -43,7 +43,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             palettes = new Octet[32].Wrap().Repeat(8).ToArray();
         }
 
-        public Octet Read(int address) {
+        private Octet Read(int address) {
 
             if (address < 0x1000) {
                 return tileSet0[address & 0xFFF];
@@ -57,7 +57,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             return palettes[address & 0xFF];
         }
 
-        public void Write(int address, Octet value) {
+        private void Write(int address, Octet value) {
 
             if (address < 0x1000) {
                 tileSet0[address & 0xFFF] = value;

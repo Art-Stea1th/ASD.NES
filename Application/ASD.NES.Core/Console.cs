@@ -1,5 +1,4 @@
 ﻿using System;
-using OldCode;
 
 namespace ASD.NES.Core {
 
@@ -12,21 +11,18 @@ namespace ASD.NES.Core {
 
         internal CentralProcessor Cpu { get; private set; }
         internal PictureProcessor Ppu { get; private set; }
-        internal InputHandler Input { get; private set; }
 
         public event Action<uint[]> NextFrameReady;
 
-        public IGamepad PlayerOneController { set => Input.ConnectController(value, PlayerNumber.One); }
-        public IGamepad PlayerTwoController { set => Input.ConnectController(value, PlayerNumber.Two); }
+        public IGamepad PlayerOneController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.One); }
+        public IGamepad PlayerTwoController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.Two); }
 
         public Console() {
             clock = new Timer(
                 TimeSpan.FromMilliseconds(1000.0 / 21.477272 / 6),
                 () => NextFrameReady?.Invoke(Update()));
             State = State.Off;
-            OldMemoryBus.Instance.Console = this;
             InitializeHardware();
-            Input = new InputHandler();
         }
 
         public void InsertCartridge(Cartridge cartridge) {
@@ -35,16 +31,16 @@ namespace ASD.NES.Core {
 
         public uint[] Update() {
 
-            var startingFrame = Ppu.FrameCount;
+            var startingFrame = Ppu.OldFrameCount;
 
-            while (startingFrame == Ppu.FrameCount) {
+            while (startingFrame == Ppu.OldFrameCount) {
 
                 var cycles = Cpu.Step();
                 for (var i = 0; i < cycles * 3; ++i) {
                     Ppu.Step();
                 }
             }
-            return Ppu.ImageData;
+            return Ppu.OldImageData;
         }
 
         private void InitializeHardware() {

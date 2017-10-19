@@ -1,12 +1,20 @@
 ﻿namespace ASD.NES.Core.ConsoleComponents {
 
+    using BasicComponents;
     using Shared;
 
     internal enum PlayerNumber { One, Two }
 
-    internal sealed class InputHandler {
+    internal sealed class InputPort : IMemory<Octet> {
 
         private Octet shiftRegister;
+
+        public Octet this[int address] {
+            get => Read(address);
+            set => Write(address, value);
+        }
+        public int Cells => 2;
+
         private InputState controllerOneInputState;
         private InputState controllerTwoInputState;
 
@@ -15,6 +23,14 @@
                 case PlayerNumber.One: controllerOneInputState = new InputState(controller); break;
                 case PlayerNumber.Two: controllerTwoInputState = new InputState(controller); break;
             }            
+        }
+
+        public byte Read(int address) {
+            switch (address) {
+                case 0x4016: return controllerOneInputState != null ? controllerOneInputState.Next() : (byte)0;
+                case 0x4017: return controllerTwoInputState != null ? controllerTwoInputState.Next() : (byte)0;
+                default: return 0;
+            }
         }
 
         public void Write(int address, Octet value) {
@@ -26,14 +42,6 @@
                     controllerOneInputState?.Reload();
                     controllerTwoInputState?.Reload();
                 }
-            }
-        }
-
-        public byte Read(int address) {
-            switch (address) {
-                case 0x4016: return controllerOneInputState != null ? controllerOneInputState.Next() : (byte)0;
-                case 0x4017: return controllerTwoInputState != null ? controllerTwoInputState.Next() : (byte)0;
-                default: return 0;
             }
         }
 

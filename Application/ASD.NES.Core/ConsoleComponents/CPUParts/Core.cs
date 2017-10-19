@@ -1,16 +1,15 @@
 ﻿using System;
-using OldCode;
 
 namespace ASD.NES.Core.ConsoleComponents.CPUParts {
-    using ASD.NES.Core.Shared;
-    using Helpers;
+
+    using Shared;
 
     /// <summary> Emulation NMOS 6502 component of the CPU RP2A03 (Ricoh Processor 2A03) </summary>
     internal sealed class Core { // all core instructions must be rewritten into classes
 
         private const int _ = 0;
 
-        private readonly OldMemoryBus bus = OldMemoryBus.Instance;
+        private readonly CPUAddressSpace memory = CPUAddressSpace.Instance;
         private readonly RegistersCPU r;
 
         private readonly Func<int>[] instruction;
@@ -398,7 +397,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
             if (condition) {
 
-                var addressNew = (ushort)(Address + 2 + (sbyte)bus.Read((ushort)(Address + 1)));
+                var addressNew = (ushort)(Address + 2 + (sbyte)((byte)memory[Address + 1]));
                 var cycles = mode.SamePage(Address, addressNew) ? 1 : 2;
 
                 Address = addressNew;
@@ -461,7 +460,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             Push16(r.PC); // r.PS.B.Set(true); // ?
             Push(r.PS);   // r.PS.I.Set(true); // ?
 
-            r.PC = Hextet.Make(bus.Read(0xFFFF), bus.Read(0xFFFE));
+            r.PC = Hextet.Make(memory[0xFFFF], memory[0xFFFE]);
             return 0;
         }
 
@@ -653,14 +652,14 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
         /// <summary> Isn't instruction </summary>
         private void Push(Octet value) {
-            bus.Write((ushort)(0x100 + r.SP), value);
+            memory[0x100 + r.SP] = value;
             r.SP -= 1;
         }
 
         /// <summary> Isn't instruction </summary>
         private Octet Pull() {
             r.SP += 1;
-            return bus.Read((ushort)(0x100 + r.SP));
+            return memory[0x100 + r.SP];
         }
         #endregion
         #endregion

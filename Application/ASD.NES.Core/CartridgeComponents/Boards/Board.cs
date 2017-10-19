@@ -13,8 +13,8 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         }
         public abstract int Cells { get; }
 
-        public abstract Octet Read(int address);
-        public abstract void Write(int address, Octet value);
+        protected abstract Octet Read(int address);
+        protected abstract void Write(int address, Octet value);
 
         public abstract void SetCHR(IReadOnlyList<Octet[]> chr);
         public abstract void SetPRG(IReadOnlyList<Octet[]> prg);

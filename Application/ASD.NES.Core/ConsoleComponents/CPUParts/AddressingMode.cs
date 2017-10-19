@@ -1,27 +1,26 @@
 ﻿namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
-    using Helpers;
     using Shared;
 
     /// <summary> "Indirect Y" (Post-Indexed Indirect) addressing mode </summary>
     internal sealed class IDY : AddressingMode {
-        public override Hextet Address => (ushort)(Hextet.Make(bus.Read((ushort)(ArgOne + 1)), bus.Read(ArgOne)) + r.Y);
-        public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
+        public override Hextet Address => (ushort)(Hextet.Make(memory[ArgOne + 1], memory[ArgOne]) + r.Y);
+        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
         public override bool PageCrossed => !SamePage(Address, (ushort)(Address - r.Y));
         public IDY(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Indirect X" (Pre-Indexed Indirect) addressing mode </summary>
     internal sealed class IDX : AddressingMode {
-        public override Hextet Address => Hextet.Make(bus.Read((ushort)(ArgOne + 1 + r.X)), bus.Read((ushort)(ArgOne + r.X)));
-        public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
+        public override Hextet Address => Hextet.Make(memory[ArgOne + 1 + r.X], memory[ArgOne + r.X]);
+        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
         public IDX(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Indirect" addressing mode </summary>
     internal sealed class IND : AddressingMode {
-        public override Hextet Address => Hextet.Make(bus.Read((ushort)(ArgOne + 1)), bus.Read(ArgOne));
-        public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
+        public override Hextet Address => Hextet.Make(memory[ArgOne + 1], memory[ArgOne]);
+        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
         public IND(RegistersCPU registers) : base(registers) { }
     }
 
@@ -42,7 +41,7 @@
     /// <summary> "Absolute" addressing mode </summary>
     internal class ABS : AddressingMode {
         public override Hextet Address => Hextet.Make(ArgTwo, ArgOne);
-        public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
+        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
         public ABS(RegistersCPU registers) : base(registers) { }
     }
 
@@ -61,7 +60,7 @@
     /// <summary> "Zero page" addressing mode </summary>
     internal class ZPG : AddressingMode {
         public override Hextet Address => ArgOne;
-        public override Octet M { get => bus.Read(Address); set => bus.Write(Address, value); }
+        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
         public ZPG(RegistersCPU registers) : base(registers) { }
     }
 
@@ -91,11 +90,11 @@
     /// <summary> Addressing mode </summary>
     internal abstract class AddressingMode {
 
-        protected readonly OldCode.OldMemoryBus bus = OldCode.OldMemoryBus.Instance;
+        protected readonly CPUAddressSpace memory = CPUAddressSpace.Instance;
         protected readonly RegistersCPU r;
 
-        protected virtual byte ArgOne => bus.Read((ushort)(r.PC + 1));
-        protected virtual byte ArgTwo => bus.Read((ushort)(r.PC + 2));
+        protected virtual byte ArgOne => memory[r.PC + 1];
+        protected virtual byte ArgTwo => memory[r.PC + 2];
 
         public virtual Hextet Address { get; set; }
         public virtual bool PageCrossed => false;
