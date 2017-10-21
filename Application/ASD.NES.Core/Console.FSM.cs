@@ -1,10 +1,13 @@
-﻿namespace ASD.NES.Core {
+﻿using System;
+
+namespace ASD.NES.Core {
 
     public enum State { Off = 0x00, On = 0x01, Paused = 0x10, Busy = 0x11 }
 
-    public sealed partial class Console { // simple FSM
+    public sealed partial class Console : IDisposable { // simple FSM
 
         public State State { get; private set; }
+        public void Dispose() => clock?.Dispose();
 
         public void PowerOn() {
             if (State == State.Off) {

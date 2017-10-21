@@ -58,5 +58,7 @@ namespace ASD.NES.WPF.ViewModels {
         private void UpdateScreen(uint[] data)
             => dispatcher.Invoke(()
                 => screen.WritePixels(new Int32Rect(0, 0, 256, 240), data, 256 * sizeof(uint), 0));
+
+        protected override void OnDispose() => console?.Dispose();
     }
 }

@@ -19,7 +19,7 @@ namespace ASD.NES.Core {
 
         public Console() {
             clock = new Timer(
-                TimeSpan.FromMilliseconds(1000.0 / 21.477272 / 6),
+                TimeSpan.FromMilliseconds(1000.0 / 60.0988) /*TimeSpan.FromTicks(1)*/,
                 () => NextFrameReady?.Invoke(Update()));
             State = State.Off;
             InitializeHardware();

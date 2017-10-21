@@ -66,7 +66,9 @@ namespace ASD.NES.Core {
             board = new Mapper000();
             board.SetCHR(chrList);
             board.SetPRG(prgList);
+
             CPUAddressSpace.Instance.SetExternalMemory(board);
+            PPUAddressSpace.Instance.SetExternalMemory(board);
         }
     }
 }

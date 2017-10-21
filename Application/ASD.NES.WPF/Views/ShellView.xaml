@@ -11,13 +11,10 @@
         mc:Ignorable="d"
         
         Title="{Binding Title}"
-        Width="708" Height="718"
+        Width="784" Height="789"
         WindowStartupLocation="CenterScreen"
         Background="#0F0F0F">
-
-    <Window.DataContext>
-        <vm:ShellViewModel/>
-    </Window.DataContext>
+    
     <Window.InputBindings>
         <KeyBinding
             Key="Esc"
@@ -72,5 +69,6 @@
             DockPanel.Dock="Bottom"
             Source="{Binding Screen}"
             RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+        
     </DockPanel>
 </Window>

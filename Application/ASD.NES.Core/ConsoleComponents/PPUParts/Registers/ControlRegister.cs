@@ -36,13 +36,22 @@
 
         // -----
 
-        public int OffsetX => (r.Value & 0b01) << 8;
-        public int OffsetY => ((r.Value & 0b10) << 6) | ((r.Value & 0b10) << 5) | ((r.Value & 0b10) << 4) | ((r.Value & 0b10) << 3);
+        /// <summary> X scroll start position (0 or 256) </summary>
+        public int StartX => (r.Value & 0b01) << 8;
+
+        /// <summary> Y scroll start position (0 or 240) </summary>
+        public int StartY => ((r.Value & 0b10) << 6) | ((r.Value & 0b10) << 5) | ((r.Value & 0b10) << 4) | ((r.Value & 0b10) << 3);
+
+        /// <summary> Base nametable address (0x2000; 0x2400; 0x2800; 0x2C00) </summary>
         public int NametableAddress => 0x2000 | ((r.Value & 0b11) << 10);
+
 
         public int IncrementPerCPURW => r[2] ? 32 : 1;
 
+        /// <summary> Sprite pattern table address for 8x8 sprites (0x0000 or 0x1000), ignored in 8x16 mode </summary>
         public int SpritePatternTableAddress => (r.Value & 0b0_1000) << 9;
+
+        /// <summary> Background pattern table address (0x0000 or 0x1000) </summary>
         public int BackgroundPatternTableAddress => (r.Value & 0b1_0000) << 8;
 
         public Octet Value { get => r.Value; set => r.Value = value; }

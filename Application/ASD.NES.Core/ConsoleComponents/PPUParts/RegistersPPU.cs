@@ -113,7 +113,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 return returnValue;
             }
 
-            throw new ArgumentOutOfRangeException($"Unimplemented read to PPU @ {(0x2000 + address):X}");
+            throw new ArgumentOutOfRangeException($"Unimplemented read to RegisteraPPU @ {(0x2000 + address):X}");
         }
 
         public void Write(int address, Octet value) {
@@ -150,9 +150,9 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
                     PpuAddr.Value = (ushort)(PpuAddr.Value + PpuCtrl.IncrementPerCPURW);
                 }
-                else {
-                    System.Console.Error.WriteLine($"Unimplemented write {value:X2} to PPU @ {address:X4}");
-                }
+                //else {
+                //    throw new ArgumentOutOfRangeException($"Unimplemented write {(byte)value:X2} to RegistersPPU @ {(0x2000 + address):X4}");
+                //}
             }
         }
     }

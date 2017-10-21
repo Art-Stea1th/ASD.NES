@@ -19,6 +19,8 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
         public int Cells => nametable.Sum(n => n.Cells);
 
+        private int GetBankIndex(int fixedAddress) => fixedAddress >> 10; // n / 1024
+
         private int FixAddress(int address) {
 
             address &= 0xFFF;
@@ -34,9 +36,6 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             }
             return address;
         }
-
-        private int GetBankIndex(int fixedAddress) => fixedAddress / 1024;
-
 
 
         private sealed class Nametable : IMemory<Octet> {
