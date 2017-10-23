@@ -1,2 +1,2 @@
-# NESCore
+# ASD.NES
 NES Emulator
