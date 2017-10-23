@@ -10,7 +10,7 @@ namespace ASD.NES.WPF {
 
         internal IDisposable DisposableViewModel { get; private set; }
 
-        public App() {            
+        public App() {
 
             Startup += (sender, e) => {
                 DisposableViewModel = new ShellViewModel();

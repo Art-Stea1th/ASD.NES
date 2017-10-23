@@ -38,9 +38,9 @@ namespace ASD.NES.Core.Shared {
                 Tick?.Invoke();
                 prevStep = now;
             }
-            //else {
-            //    Task.Delay(TimeSpan.FromTicks(1)).Wait(); // 10 000 = 1ms // 10 = 0.0001 ms
-            //}
+            else {
+                Task.Delay(TimeSpan.FromTicks(1)).Wait(); // 10 000 = 1ms // 10 = 0.0001 ms
+            }
         }
     }
 }
