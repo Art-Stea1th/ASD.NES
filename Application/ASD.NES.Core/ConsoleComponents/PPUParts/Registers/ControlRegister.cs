@@ -2,7 +2,7 @@
 
     using Shared;
 
-    /// <summary> PPU control register,
+    /// <summary> 0x2000 - PPU control register,
     /// Various flags controlling PPU operation
     /// (Common name: PPUCTRL) </summary>
     internal sealed class ControlRegister {
@@ -53,6 +53,12 @@
 
         /// <summary> Background pattern table address (0x0000 or 0x1000) </summary>
         public int BackgroundPatternTableAddress => (r.Value & 0b1_0000) << 8;
+
+        /// <summary> Sprite width: always 8 px </summary>
+        public byte SpriteSizeX => 8;
+
+        /// <summary> Sprite height: 8 or 16 px </summary>
+        public byte SpriteSizeY => (byte)(8 << ((r.Value & 0b10_0000) >> 5));
 
         public Octet Value { get => r.Value; set => r.Value = value; }
 

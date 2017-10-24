@@ -22,7 +22,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         private static readonly RegistersAPU registersAPU; // 0x4000 - 0x4013: apuReg - 20 b + 1 b (0x4015)
         private static readonly InputPort registersInput;  // 0x4016 - 0x4017: Input - 2 b
                                                            // 0x4018 - 0x4019: ??
-        private static Board externalMemory;               // 0x4020 - 0xFFF9: cartrg - 49120 b
+        private static Board externalMemory;               // 0x4020 - 0xFFFF: cartrg - 49120 b
 
         public Octet this[int address] {
             get => Read(address);

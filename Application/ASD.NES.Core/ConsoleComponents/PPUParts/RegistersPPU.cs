@@ -40,7 +40,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
         /// <summary> PPU scrolling position register <para/>
         /// 0x2005 - (Common name: PPUSCROLL)</summary>
-        public readonly RefHextet PpuScrl;
+        public readonly ScrollRegister PpuScrl;
 
 
 
@@ -67,7 +67,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             PpuStat = new StatusRegister(RefOctet.Wrap(0));
             OamAddr = RefOctet.Wrap(0);
             OamData = RefOctet.Wrap(0);
-            PpuScrl = RefHextet.Wrap(0);
+            PpuScrl = new ScrollRegister(RefHextet.Wrap(0));
             PpuAddr = RefHextet.Wrap(0);
             PpuData = RefOctet.Wrap(0);
             OamDmaR = RefOctet.Wrap(0);
@@ -135,8 +135,8 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                     OamAddr.Value = value;
                 }
                 if (address == 5) {
-                    PpuScrl.Value.H = PpuScrl.Value.L;
-                    PpuScrl.Value.L = value;
+                    PpuScrl.X = PpuScrl.Y;
+                    PpuScrl.Y = value;
                 }
                 else if (address == 6) {
                     PpuAddr.Value.H = PpuAddr.Value.L;

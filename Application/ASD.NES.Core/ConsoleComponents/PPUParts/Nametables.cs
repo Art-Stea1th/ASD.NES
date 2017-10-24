@@ -40,21 +40,21 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
         private sealed class Nametable : IMemory<Octet> {
 
-            private readonly RefOctet[] symbols = new Octet[960].Wrap();
-            private readonly RefOctet[] attributes = new Octet[64].Wrap();
+            private readonly RefOctet[] patterns = new Octet[960].Wrap();  // shape
+            private readonly RefOctet[] attributes = new Octet[64].Wrap(); // color
 
             public Octet this[int address] {
                 get => Read(address);
                 set => Write(address, value);
             }
-            public int Cells => symbols.Length + attributes.Length;
+            public int Cells => patterns.Length + attributes.Length;
 
             public Octet Read(int address) {
 
                 address &= 0x3FF;
 
                 if (address < 0x3C0) {
-                    return symbols[address];
+                    return patterns[address];
                 }
 
                 address &= 0x3F;
@@ -66,7 +66,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 address &= 0x3FF;
 
                 if (address < 0x3C0) {
-                    symbols[address].Value = value;
+                    patterns[address].Value = value;
                 }
                 else {
                     address &= 0x3F;

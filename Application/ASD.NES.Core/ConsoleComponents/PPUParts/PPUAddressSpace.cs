@@ -19,7 +19,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         private PPUAddressSpace() { }
         #endregion
 
-        private static Board externalMemory;          // $0000 - $1FFF: CHR-ROM Tite-set 0, 1 - 8 kb (2x4 kb)
+        private static Board externalMemory;          // $0000 - $1FFF: CHR-ROM Tite-set 0 and 1 - 8 kb (2x4 kb)
 
         public static readonly Nametables Nametables; // $2000 - $2FFF: Nametables - 4 kb + $3000 - 3EFF: mirror
         private static readonly RefOctet[] palettes;  // $3F00 - $3FFF: Palettes (BG - 16 b \ Sprite - 16 b) - Mirror x 8 (256 b)
