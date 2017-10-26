@@ -7,7 +7,7 @@
 
         private static readonly CPUAddressSpace memory = CPUAddressSpace.Instance;
 
-        private Core core;
+        private CPUCore core;
         private RegistersCPU registers;
 
         public CPUAddressSpace AddressSpace => memory;
@@ -20,7 +20,7 @@
 
             registers = new RegistersCPU();
 
-            core = new Core(registers);
+            core = new CPUCore(registers);
         }
 
         public int Step() {

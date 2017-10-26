@@ -5,7 +5,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
     using Shared;
 
     /// <summary> Emulation NMOS 6502 component of the CPU RP2A03 (Ricoh Processor 2A03) </summary>
-    internal sealed class Core { // all core instructions must be rewritten into classes
+    internal sealed class CPUCore { // all core instructions must be rewritten into classes
 
         private const int _ = 0;
 
@@ -23,7 +23,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         private Octet M { get => mode.M; set => mode.M = value; }
         private bool PageCrossed => mode.PageCrossed;
 
-        public Core(RegistersCPU registers) {
+        public CPUCore(RegistersCPU registers) {
 
             r = registers;
 

@@ -6,9 +6,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
     using BasicComponents;
     using CartridgeComponents.Boards;
     using Helpers;
-    using Shared;
-
-    public enum NametableMirroring { FourScreen, SingleScreen, Vertical, Horizontal }
+    using Shared;    
 
     internal sealed class PPUAddressSpace : IMemory<Octet> {
 
@@ -19,14 +17,16 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         private PPUAddressSpace() { }
         #endregion
 
-        private static Board externalMemory;          // $0000 - $1FFF: CHR-ROM Tite-set 0 and 1 - 8 kb (2x4 kb)
+        private static Board externalMemory;           // $0000 - $1FFF: CHR-ROM Tite-set 0 and 1 - 8 kb (2x4 kb)
 
-        public static readonly Nametables Nametables; // $2000 - $2FFF: Nametables - 4 kb + $3000 - 3EFF: mirror
-        private static readonly RefOctet[] palettes;  // $3F00 - $3FFF: Palettes (BG - 16 b \ Sprite - 16 b) - Mirror x 8 (256 b)
+        private static readonly Nametables nametables; // $2000 - $2FFF: Nametables - 4 kb + $3000 - 3EFF: mirror
+        private static readonly RefOctet[] palettes;   // $3F00 - $3FFF: Palettes (BG - 16 b \ Sprite - 16 b) - Mirror x 8 (256 b)
 
-        public NametableMirroring NametableMirroring {
-            get => Nametables.Mirroring;
-            set => Nametables.Mirroring = value;
+        public Nametables.Nametable GetNametable(int index) => nametables.GetNametable(index);
+
+        public Mirroring NametableMirroring {
+            get => nametables.Mirroring;
+            set => nametables.Mirroring = value;
         }
 
         public Octet this[int address] {
@@ -37,7 +37,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         public int LastAddress => Cells - 1;
 
         static PPUAddressSpace() {
-            Nametables = new Nametables();
+            nametables = new Nametables();
             palettes = new Octet[32].Wrap().Repeat(8).ToArray();
         }
 
@@ -51,7 +51,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 return externalMemory[address | 0x6000];
             }
             if (address < 0x3EFF) {
-                return Nametables[address];
+                return nametables[address];
             }
             return palettes[address & 0xFF];
         }
@@ -62,7 +62,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 externalMemory[address | 0x6000] = value;
             }
             else if (address < 0x3EFF) {
-                Nametables[address] = value;
+                nametables[address] = value;
             }
             else {
                 palettes[address & 0xFF].Value = value;

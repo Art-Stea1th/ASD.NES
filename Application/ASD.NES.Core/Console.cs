@@ -7,7 +7,7 @@ namespace ASD.NES.Core {
 
     public sealed partial class Console {
 
-        private Timer clock;
+        private Clock clock;
 
         internal CentralProcessor Cpu { get; private set; }
         internal PictureProcessor Ppu { get; private set; }
@@ -18,8 +18,8 @@ namespace ASD.NES.Core {
         public IGamepad PlayerTwoController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.Two); }
 
         public Console() {
-            clock = new Timer(
-                TimeSpan.FromMilliseconds(1000.0 / 60.0988) /*TimeSpan.FromTicks(1)*/,
+            clock = new Clock(
+                TimeSpan.FromMilliseconds(1000.0 / 60.0988) /*TimeSpan.FromTicks(4)*/,
                 () => NextFrameReady?.Invoke(Update()));
             State = State.Off;
             InitializeHardware();
@@ -31,16 +31,16 @@ namespace ASD.NES.Core {
 
         public uint[] Update() {
 
-            var startingFrame = Ppu.OldFrameCount;
+            var startingFrame = Ppu.TotalFrames;
 
-            while (startingFrame == Ppu.OldFrameCount) {
+            while (startingFrame == Ppu.TotalFrames) {
 
                 var cycles = Cpu.Step();
                 for (var i = 0; i < cycles * 3; ++i) {
                     Ppu.Step();
                 }
             }
-            return Ppu.OldImageData;
+            return Ppu.ActualFrame;
         }
 
         private void InitializeHardware() {

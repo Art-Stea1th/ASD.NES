@@ -12,7 +12,7 @@ namespace ASD.NES.Core {
     using Helpers;
     using Shared;
 
-    public sealed class Cartridge {
+    public sealed class Cartridge { // hardcode read
 
         private int PRGCount { get; set; }
         private int CHRCount { get; set; }
@@ -42,8 +42,8 @@ namespace ASD.NES.Core {
 
             PPUAddressSpace.Instance.NametableMirroring
                 = header[6][1]
-                ? NametableMirroring.Vertical
-                : NametableMirroring.Horizontal;
+                ? Mirroring.Vertical
+                : Mirroring.Horizontal;
 
             var prgStart = 16;
             var prgBytes = 0x4000 * PRGCount;

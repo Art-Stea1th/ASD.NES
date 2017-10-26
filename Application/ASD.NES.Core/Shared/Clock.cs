@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace ASD.NES.Core.Shared {
 
-    internal sealed class Timer : IDisposable {
+    internal sealed class Clock : IDisposable {
 
         private CancellationTokenSource cancellation;
         private DateTime prevStep = DateTime.Now;
@@ -14,7 +14,7 @@ namespace ASD.NES.Core.Shared {
 
         public void Dispose() => Stop();
 
-        public Timer(TimeSpan interval = default(TimeSpan), Action tick = default(Action)) {
+        public Clock(TimeSpan interval = default(TimeSpan), Action tick = default(Action)) {
             Interval = interval; Tick += tick;
         }
 
