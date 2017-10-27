@@ -1,4 +1,6 @@
-﻿namespace ASD.NES.Core.ConsoleComponents.PPUParts {
+﻿using System.Threading.Tasks;
+
+namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
     using CPUParts;
     using Shared;
@@ -18,8 +20,8 @@
         private RegistersPPU r;
         private int spriteCount;
 
-        private byte[] oam = new byte[256];
-        private byte[] oamIndexes = new byte[8]; // tmp
+        private ObjectAttributeMemory oam = new ObjectAttributeMemory();
+        private byte[] oamIndexes = new byte[1024]; // set 1k :) original NES spr.limit = 8; // TODO: add this as option
         private uint[] frame = new uint[256 * 240];
 
         public uint[] Frame => frame;
@@ -29,10 +31,9 @@
             r.OAMDMAWritten += FillOAM;
         }
 
-        // BAD SMELLING BIG HARDCODE METHOD
         internal void RenderStep(int scanpoint, int scanline) {
 
-            var backgroundCHR = default(byte);
+            var backgroundColorIndex = default(byte);
 
             if (r.PpuMask.RenderBackground) {
 
@@ -55,104 +56,87 @@
                     var backgroundTileNumber = nametable.GetSymbol(symbolX, symbolY);
 
                     var backgroundColorBitsL = GetTileBits(backgroundTileNumber, mapY & 7, mapX & 7, r.PpuCtrl.BackgroundPatternTableAddress);
+                    var backgroundColorBitsH = 0;
 
-                    var attribute = nametable.GetAttribute(mapX >> 5, mapY >> 5);
+                    if (backgroundColorBitsL > 0) {
 
-                    var quadrantOffset = ((symbolY & 0b10) << 1 | (symbolX & 0b10)); // 0, 2, 4, 6
-                    var backgroundColorBitsH = (byte)((attribute >> quadrantOffset) & 0b11);
+                        var attribute = nametable.GetAttribute(mapX >> 5, mapY >> 5);
+                        var quadrantOffset = ((symbolY & 0b10) << 1 | (symbolX & 0b10)); // 0, 2, 4, 6
 
-                    // ---- oooo ----
-
-                    if (backgroundColorBitsL == 0) { backgroundColorBitsH = 0; }
-
-                    var backgroundPaletteBaseAddress = 0x3F00;
-                    var backgroundColorIndex = (backgroundColorBitsH << 2) | backgroundColorBitsL;
-                    var paletteColorIndex = ppuMemory[backgroundPaletteBaseAddress + backgroundColorIndex]; // 0 - 63
-
-                    var pixelColorRGB = palette[paletteColorIndex];
-
-                    frame[Linearize(scanpoint, scanline, 256)] = pixelColorRGB; // write pixel
-
-                    backgroundCHR = backgroundColorBitsL;    // tmp save
-                }                
+                        backgroundColorBitsH = (byte)((attribute >> quadrantOffset) & 0b11);
+                    }
+                    backgroundColorIndex = (byte)(backgroundColorBitsH << 2 | backgroundColorBitsL);
+                }
             }
+
+            var spriteColorIndex = default(byte);
+            var spriteInFront = default(bool);
 
             if (r.PpuMask.RenderSprites) {
 
                 if (scanpoint >= 8 || r.PpuMask.RenderLeftmostSpr) {
-
-                    var linearIndex = Linearize(scanpoint, scanline, 256);
 
                     for (var spriteIndex = 0; spriteIndex < spriteCount; spriteIndex++) { // Check each sprite (spriteCount 0-8);
 
                         if (scanpoint < 8 && !r.PpuMask.RenderAll) { continue; }
 
                         int oamIndex = oamIndexes[spriteIndex];
+                        var sprite = oam[oamIndex]; // oamEntry
 
-                        var spriteY = (byte)(oam[oamIndex * 4 + 0] + 1);
-                        var spriteTileNumber = oam[oamIndex * 4 + 1];
-                        var attributes = (byte)(oam[oamIndex * 4 + 2] & 0xE3); // & 0xE3 - Uniplemented bits (by spec.)
-                        var spriteX = oam[oamIndex * 4 + 3];
+                        if (sprite.Y == 0 || sprite.Y >= 240) { continue; } // sprites never drawn if y-coord is 0
+                        if (scanpoint < sprite.X || scanpoint - sprite.X >= 8) { continue; } // check range X
 
-                        if (spriteY == 0 || spriteY >= 240) { continue; } // sprites never drawn if y-coord is 0
-                        if (scanpoint < spriteX || scanpoint - spriteX >= 8) { continue; } // check range X
+                        var spriteTileNumber = sprite.TileNumber;
+                        var spriteTileByte = GetTileCoordinate(scanline, sprite.Y, sprite.FlipV);
+                        var spriteTileBit = GetTileCoordinate(scanpoint, sprite.X, sprite.FlipH);
+                        var spriteTilesBase = r.PpuCtrl.SpritePatternTableAddress;
 
-                        var spriteColorBitsH = (byte)(attributes & 0b11);
-                        var inFrontOfBG = (attributes & 0x20) == 0;
-                        var flipHorizontal = (attributes & 0x40) != 0;
-                        var flipVertical = (attributes & 0x80) != 0;
-
-                        var spriteColorBitsL = default(byte);
-
-                        if (r.PpuCtrl.SpriteSizeY < 16) {
-
-                            var titeX = scanpoint - spriteX;
-                            var tileY = scanline - spriteY;
-
-                            var spriteTileByte = flipVertical ? tileY ^ 7 : tileY;
-                            var spriteTileBit = flipHorizontal ? titeX ^ 7 : titeX;
-
-                            spriteColorBitsL = GetTileBits(spriteTileNumber, spriteTileByte, spriteTileBit, r.PpuCtrl.SpritePatternTableAddress);
-                        }
-                        else {
+                        if (r.PpuCtrl.SpriteSize16) {
 
                             var whichTile = 0;
-                            if (scanline - spriteY >= 8) { whichTile = 1; }
-                            if (flipVertical) { whichTile ^= 1; }
+                            if (scanline - sprite.Y >= 8) { whichTile = 1; }
+                            if (sprite.FlipV) { whichTile ^= 1; }
 
-                            var titeX = scanpoint - spriteX;
-                            var tileY = (scanline - spriteY) & 7; // tile mirroring (ex. F to 7)
-
-                            var spriteTileByte = flipVertical ? tileY ^ 7 : tileY;
-                            var spriteTileBit = flipHorizontal ? titeX ^ 7 : titeX;
-
-                            var spriteTilesBase = (spriteTileNumber & 1) << 12;
-                            spriteTileNumber = (byte)((spriteTileNumber & 0xFE) + whichTile);
-
-                            spriteColorBitsL = GetTileBits(spriteTileNumber, spriteTileByte, spriteTileBit, spriteTilesBase);
+                            spriteTilesBase = (sprite.TileNumber & 1) << 12;
+                            spriteTileNumber = (byte)((sprite.TileNumber & 0xFE) + whichTile);
                         }
+
+                        var spriteColorBitsL = GetTileBits(spriteTileNumber, spriteTileByte, spriteTileBit, spriteTilesBase);
 
                         if (spriteColorBitsL > 0) {
 
-                            if (inFrontOfBG || backgroundCHR == 0) {
+                            spriteInFront = sprite.InFront;
+                            if (spriteInFront || backgroundColorIndex == 0) {
 
-                                var spriteZeroHit = oamIndex == 0 && backgroundCHR != 0;
-                                if (r.PpuMask.RenderBackground && spriteZeroHit) {
+                                if (oamIndex == 0 && r.PpuMask.RenderBackground/* && backgroundColorIndex != 0*/) {
                                     r.PpuStat.SpriteZeroHit = true;
                                 }
-
-                                var spritePaletteBase = 0x3F10;
-                                var spriteColorIndex = spriteColorBitsH << 2 | spriteColorBitsL;
-                                var spritePaletteColorIndex = ppuMemory[spritePaletteBase + spriteColorIndex];
-
-                                var pixelColorRGB = palette[spritePaletteColorIndex];
-
-                                frame[linearIndex] = pixelColorRGB;
+                                spriteColorIndex = (byte)(sprite.ColorBitsH << 2 | spriteColorBitsL);
                             }
                         }
                     }
-                }                
+                }
             }
+            frame[Linearize(scanpoint, scanline, 256)] = palette[GetPaletteIndex(backgroundColorIndex, spriteColorIndex, spriteInFront)];
+        }
+
+        private Octet GetPaletteIndex(Octet bckgColorBit, Octet sprtColorBit, bool sprInFront) { // Multiplexer
+
+            var paletteAddress = 0x3F00; // 0x3F00 - background, 0x3F10 - sprite
+            var colorIndex = bckgColorBit;
+
+            if ((sprtColorBit & 0b0011) > 0) {
+                if (sprInFront || bckgColorBit == 0) {
+                    paletteAddress |= 0x10;
+                    colorIndex = sprtColorBit;
+                }
+            }
+            return ppuMemory[paletteAddress + colorIndex]; // palette index
+        }
+
+        private int GetTileCoordinate(int scanCoordinate, int spriteCoordinate, bool flip) {
+            var coord = (scanCoordinate - spriteCoordinate) & 7; // 'AND 7' - tile mirroring, important for Y in 8x16 mode
+            return flip ? coord ^ 7 : coord;
         }
 
         private byte GetTileBits(int tileNumber, int tileByte, int tileBit, int tilesBase) {
@@ -165,26 +149,20 @@
             var tileBitL = (byte)((tileByteBitsL >> (tileBit ^ 7)) & 1);
             var tileBitH = (byte)((tileByteBitsH >> (tileBit ^ 7)) & 1);
 
-            return (byte)((tileBitH << 1) | tileBitL);
+            return (byte)((tileBitH << 1) | tileBitL); // 2bit result
         }
 
-        /// <summary> return y * width + x (convert to single dimension index) </summary>
         private int Linearize(int x, int y, int width) => y * width + x;
 
-        /// <summary> Cycles 257-320: Sprite fetches(8 sprites total, 8 cycles per sprite) <para/>
-        /// 1-4: Read the Y-coordinate, tile number, attributes, and X-coordinate of the selected sprite from secondary OAM <para/>
-        /// 5-8: Read the X-coordinate of the selected sprite from secondary OAM 4 times(while the PPU fetches the sprite tile data) <para/>
-        /// For the first empty sprite slot, this will consist of sprite #63's Y-coordinate followed by 3 $FF bytes; for subsequent empty sprite slots, this will be four $FF bytes <para/>
-        /// </summary>
         internal void ComputeSpriteForScanline(int scanpoint, int scanline) {
 
             if (scanpoint == 0) { spriteCount = 0; }
 
             var oamIndex = (byte)scanpoint;
 
-            if (spriteCount < 8) {
+            if (spriteCount < oamIndexes.Length) {
 
-                var spriteYStart = (byte)(oam[oamIndex * 4] + 1);
+                var spriteYStart = oam[oamIndex].Y;
                 var spriteYEnd = spriteYStart + r.PpuCtrl.SpriteSizeY;
 
                 if (scanline >= spriteYStart && (scanline < spriteYEnd)) {
@@ -195,10 +173,18 @@
         }
 
         private void FillOAM(Octet oamDmaAddress) {
-            for (var offset = 0; offset < 0x100; ++offset) {
-                var readAddress = (oamDmaAddress << 8) + ((offset + r.OamAddr.Value) & 0xFF);
-                oam[offset] = cpuMemory[readAddress];
-            }
+
+            int GetCPUMemoryAddress(int offset) => (oamDmaAddress << 8) + ((r.OamAddr.Value + offset));
+
+            Parallel.For(0, oam.Cells, (i) => {
+                oam[i] = Quadlet.Make(
+                    Hextet.Make(
+                        cpuMemory[GetCPUMemoryAddress(i << 2 | 0b11)],
+                        cpuMemory[GetCPUMemoryAddress(i << 2 | 0b10)]),
+                    Hextet.Make(
+                        cpuMemory[GetCPUMemoryAddress(i << 2 | 0b01)],
+                        cpuMemory[GetCPUMemoryAddress(i << 2 | 0b00)]));
+            });
         }
     }
 }
