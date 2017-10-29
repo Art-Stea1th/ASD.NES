@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 
 namespace ASD.NES.Core.ConsoleComponents.PPUParts {
-
+    using System.Linq;
     using CPUParts;
     using Shared;
 
@@ -21,7 +21,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         private int spriteCount;
 
         private ObjectAttributeMemory oam = new ObjectAttributeMemory();
-        private byte[] oamIndexes = new byte[1024]; // set 1k :) original NES spr.limit = 8; // TODO: add this as option
+        private byte[] oamIndexes = new byte[64]; // set 64 :) original NES spr.limit = 8; // TODO: add this as option
         private uint[] frame = new uint[256 * 240];
 
         public uint[] Frame => frame;
@@ -76,32 +76,33 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
                 if (scanpoint >= 8 || r.PpuMask.RenderLeftmostSpr) {
 
-                    for (var spriteIndex = 0; spriteIndex < spriteCount; spriteIndex++) { // Check each sprite (spriteCount 0-8);
+                    for (var spriteIndex = 0; spriteIndex < spriteCount; spriteIndex++) { // Check each sprite (spriteCount 0-8-64);
 
                         if (scanpoint < 8 && !r.PpuMask.RenderAll) { continue; }
 
                         int oamIndex = oamIndexes[spriteIndex];
                         var sprite = oam[oamIndex]; // oamEntry
 
-                        if (sprite.Y == 0 || sprite.Y >= 240) { continue; } // sprites never drawn if y-coord is 0
-                        if (scanpoint < sprite.X || scanpoint - sprite.X >= 8) { continue; } // check range X
+                        if (scanline < sprite.Y || scanline - sprite.Y >= r.PpuCtrl.SpriteSizeY) { continue; }
+                        if (scanpoint < sprite.X || scanpoint - sprite.X >= r.PpuCtrl.SpriteSizeX) { continue; }
+
 
                         var spriteTileNumber = sprite.TileNumber;
-                        var spriteTileByte = GetTileCoordinate(scanline, sprite.Y, sprite.FlipV);
-                        var spriteTileBit = GetTileCoordinate(scanpoint, sprite.X, sprite.FlipH);
+                        var spriteTileByte = GetInTileCoordinate(scanline, sprite.Y, sprite.FlipV);
+                        var spriteTileBit = GetInTileCoordinate(scanpoint, sprite.X, sprite.FlipH);
                         var spriteTilesBase = r.PpuCtrl.SpritePatternTableAddress;
 
                         if (r.PpuCtrl.SpriteSize16) {
 
                             var whichTile = 0;
-                            if (scanline - sprite.Y >= 8) { whichTile = 1; }
+                            if (scanline - sprite.Y >= 8) { whichTile ^= 1; }
                             if (sprite.FlipV) { whichTile ^= 1; }
 
                             spriteTilesBase = (sprite.TileNumber & 1) << 12;
                             spriteTileNumber = (byte)((sprite.TileNumber & 0xFE) + whichTile);
                         }
 
-                        var spriteColorBitsL = GetTileBits(spriteTileNumber, spriteTileByte, spriteTileBit, spriteTilesBase);
+                        var spriteColorBitsL = GetTileBits(spriteTileNumber, spriteTileByte, spriteTileBit, spriteTilesBase);                        
 
                         if (spriteColorBitsL > 0) {
 
@@ -134,7 +135,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             return ppuMemory[paletteAddress + colorIndex]; // palette index
         }
 
-        private int GetTileCoordinate(int scanCoordinate, int spriteCoordinate, bool flip) {
+        private int GetInTileCoordinate(int scanCoordinate, int spriteCoordinate, bool flip) {
             var coord = (scanCoordinate - spriteCoordinate) & 7; // 'AND 7' - tile mirroring, important for Y in 8x16 mode
             return flip ? coord ^ 7 : coord;
         }
@@ -176,7 +177,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
             int GetCPUMemoryAddress(int offset) => (oamDmaAddress << 8) + ((r.OamAddr.Value + offset));
 
-            Parallel.For(0, oam.Cells, (i) => {
+            for (var i = 0; i < oam.Cells; i++) {
                 oam[i] = Quadlet.Make(
                     Hextet.Make(
                         cpuMemory[GetCPUMemoryAddress(i << 2 | 0b11)],
@@ -184,7 +185,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                     Hextet.Make(
                         cpuMemory[GetCPUMemoryAddress(i << 2 | 0b01)],
                         cpuMemory[GetCPUMemoryAddress(i << 2 | 0b00)]));
-            });
+            }
         }
     }
 }

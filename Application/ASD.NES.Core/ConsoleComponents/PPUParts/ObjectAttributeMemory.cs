@@ -18,7 +18,7 @@
 
             private Quadlet record;
 
-            public Octet Y => (Octet)(record.L.L + 1);
+            public Octet Y => record.L.L;
             public Octet TileNumber => record.L.H;
 
             public Octet ColorBitsH => (Octet)(record.H.L & 0b11);
@@ -28,7 +28,7 @@
 
             public Octet X => record.H.H;
 
-            public static implicit operator OAMRecord(Quadlet record) => new OAMRecord(record);
+            public static implicit operator OAMRecord(Quadlet record) => new OAMRecord(record + 1); // record.Y + 1
             public OAMRecord(Quadlet record) => this.record = record;
         }
     }
