@@ -7,32 +7,32 @@ namespace ASD.NES.Core {
     public sealed partial class Console : IDisposable { // simple FSM
 
         public State State { get; private set; }
-        public void Dispose() => clock?.Dispose();
+        public void Dispose() => Clk?.Dispose();
 
         public void PowerOn() {
             if (State == State.Off) {
-                clock.Start();
+                Clk.Start();
                 State = State.On;
             }
         }
 
         public void PowerOff() {
             if (State > 0) {
-                clock.Stop();
+                Clk.Stop();
                 State = State.Off;
             }
         }
 
         public void Pause() {
             if (State == State.On) {
-                clock.Stop();
+                Clk.Stop();
                 State = State.Paused;
             }
         }
 
         public void Resume() {
             if (State == State.Paused) {
-                clock.Start();
+                Clk.Start();
                 State = State.On;
             }
         }

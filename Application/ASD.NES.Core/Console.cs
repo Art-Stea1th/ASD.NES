@@ -7,10 +7,9 @@ namespace ASD.NES.Core {
 
     public sealed partial class Console {
 
-        private Clock clock;
-
-        internal CentralProcessor Cpu { get; private set; }
-        internal PictureProcessor Ppu { get; private set; }
+        private Clock Clk { get; set; }
+        private CentralProcessor Cpu { get; set; }
+        private PictureProcessor Ppu { get; set; }
 
         public event Action<uint[]> NextFrameReady;
 
@@ -18,15 +17,28 @@ namespace ASD.NES.Core {
         public IGamepad PlayerTwoController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.Two); }
 
         public Console() {
-            clock = new Clock(
-                TimeSpan.FromMilliseconds(1000.0 / 60.0988) /*TimeSpan.FromTicks(4)*/,
-                () => NextFrameReady?.Invoke(Update()));
             State = State.Off;
             InitializeHardware();
         }
 
         public void InsertCartridge(Cartridge cartridge) {
             ColdBoot();
+        }
+
+        private void InitializeHardware() {
+
+            Clk = new Clock(TimeSpan.FromMilliseconds(1000.0 / 60.0988) /*TimeSpan.FromTicks(4)*/);
+            Clk.Tick += () => NextFrameReady?.Invoke(Update());
+
+            Cpu = new CentralProcessor();
+            Ppu = new PictureProcessor();
+
+            // 3 PPU steps on CPU tick
+            Cpu.Clock += () => {
+                Ppu.Step();
+                Ppu.Step();
+                Ppu.Step();
+            };
         }
 
         public uint[] Update() {
@@ -41,17 +53,13 @@ namespace ASD.NES.Core {
                 }
             }
             return Ppu.ActualFrame;
-        }
-
-        private void InitializeHardware() {
-            Cpu = new CentralProcessor();
-            Ppu = new PictureProcessor();
-        }
+        }        
 
         private void ColdBoot() {
             Cpu.ColdBoot();
             Ppu.ColdBoot();
         }
+
         private void WarmBoot() {
             Cpu.WarmBoot();
             Ppu.WarmBoot();

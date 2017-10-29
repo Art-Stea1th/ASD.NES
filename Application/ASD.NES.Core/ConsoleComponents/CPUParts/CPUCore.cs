@@ -17,7 +17,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         private readonly ushort[] bytes;
         private readonly int[] cycles;
 
-        private AddressingMode mode, ACC, IMM, ZPG, ZPX, ZPY, ABS, ABX, ABY, IND, IDX, IDY, REL, IMP, ___ = null;
+        private AddressingMode mode, ACC_, IMM_, ZPG_, ZPX_, ZPY_, ABS_, ABX_, ABY_, IND_, IDX_, IDY_, REL_, IMP_, ____ = null;
 
         private Hextet Address { get => mode.Address; set => mode.Address = value; }
         private Octet M { get => mode.M; set => mode.M = value; }
@@ -27,30 +27,30 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
             r = registers;
 
-            IMP = new IMP(r); IMM = new IMM(r);
-            ZPG = new ZPG(r); ZPX = new ZPX(r); ZPY = new ZPY(r);
-            ABS = new ABS(r); ABX = new ABX(r); ABY = new ABY(r);
-            IND = new IND(r); IDX = new IDX(r); IDY = new IDY(r);
-            REL = new REL(r); ACC = new ACC(r);
+            IMP_ = new IMP(r); IMM_ = new IMM(r);
+            ZPG_ = new ZPG(r); ZPX_ = new ZPX(r); ZPY_ = new ZPY(r);
+            ABS_ = new ABS(r); ABX_ = new ABX(r); ABY_ = new ABY(r);
+            IND_ = new IND(r); IDX_ = new IDX(r); IDY_ = new IDY(r);
+            REL_ = new REL(r); ACC_ = new ACC(r);
 
             /// must be serialized
             addressing = new AddressingMode[] {
-                IMP, IDX, ___, ___, ___, ZPG, ZPG, ___, IMP, IMM, ACC, ___, ___, ABS, ABS, ___,
-                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
-                ABS, IDX, ___, ___, ZPG, ZPG, ZPG, ___, IMP, IMM, ACC, ___, ABS, ABS, ABS, ___,
-                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
-                IMP, IDX, ___, ___, ___, ZPG, ZPG, ___, IMP, IMM, ACC, ___, ABS, ABS, ABS, ___,
-                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
-                IMP, IDX, ___, ___, ___, ZPG, ZPG, ___, IMP, IMM, ACC, ___, IND, ABS, ABS, ___,
-                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
-                ___, IDX, ___, ___, ZPG, ZPG, ZPG, ___, IMP, ___, IMP, ___, ABS, ABS, ABS, ___,
-                REL, IDY, ___, ___, ZPX, ZPX, ZPY, ___, IMP, ABY, IMP, ___, ___, ABX, ___, ___,
-                IMM, IDX, IMM, ___, ZPG, ZPG, ZPG, ___, IMP, IMM, IMP, ___, ABS, ABS, ABS, ___,
-                REL, IDY, ___, ___, ZPX, ZPX, ZPY, ___, IMP, ABY, IMP, ___, ABX, ABX, ABY, ___,
-                IMM, IDX, ___, ___, ZPG, ZPG, ZPG, ___, IMP, IMM, IMP, ___, ABS, ABS, ABS, ___,
-                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
-                IMM, IDX, ___, ___, ZPG, ZPG, ZPG, ___, IMP, IMM, IMP, ___, ABS, ABS, ABS, ___,
-                REL, IDY, ___, ___, ___, ZPX, ZPX, ___, IMP, ABY, ___, ___, ___, ABX, ABX, ___,
+                IMP_, IDX_, ____, ____, ____, ZPG_, ZPG_, ____, IMP_, IMM_, ACC_, ____, ____, ABS_, ABS_, ____,
+                REL_, IDY_, ____, ____, ____, ZPX_, ZPX_, ____, IMP_, ABY_, ____, ____, ____, ABX_, ABX_, ____,
+                ABS_, IDX_, ____, ____, ZPG_, ZPG_, ZPG_, ____, IMP_, IMM_, ACC_, ____, ABS_, ABS_, ABS_, ____,
+                REL_, IDY_, ____, ____, ____, ZPX_, ZPX_, ____, IMP_, ABY_, ____, ____, ____, ABX_, ABX_, ____,
+                IMP_, IDX_, ____, ____, ____, ZPG_, ZPG_, ____, IMP_, IMM_, ACC_, ____, ABS_, ABS_, ABS_, ____,
+                REL_, IDY_, ____, ____, ____, ZPX_, ZPX_, ____, IMP_, ABY_, ____, ____, ____, ABX_, ABX_, ____,
+                IMP_, IDX_, ____, ____, ____, ZPG_, ZPG_, ____, IMP_, IMM_, ACC_, ____, IND_, ABS_, ABS_, ____,
+                REL_, IDY_, ____, ____, ____, ZPX_, ZPX_, ____, IMP_, ABY_, ____, ____, ____, ABX_, ABX_, ____,
+                ____, IDX_, ____, ____, ZPG_, ZPG_, ZPG_, ____, IMP_, ____, IMP_, ____, ABS_, ABS_, ABS_, ____,
+                REL_, IDY_, ____, ____, ZPX_, ZPX_, ZPY_, ____, IMP_, ABY_, IMP_, ____, ____, ABX_, ____, ____,
+                IMM_, IDX_, IMM_, ____, ZPG_, ZPG_, ZPG_, ____, IMP_, IMM_, IMP_, ____, ABS_, ABS_, ABS_, ____,
+                REL_, IDY_, ____, ____, ZPX_, ZPX_, ZPY_, ____, IMP_, ABY_, IMP_, ____, ABX_, ABX_, ABY_, ____,
+                IMM_, IDX_, ____, ____, ZPG_, ZPG_, ZPG_, ____, IMP_, IMM_, IMP_, ____, ABS_, ABS_, ABS_, ____,
+                REL_, IDY_, ____, ____, ____, ZPX_, ZPX_, ____, IMP_, ABY_, ____, ____, ____, ABX_, ABX_, ____,
+                IMM_, IDX_, ____, ____, ZPG_, ZPG_, ZPG_, ____, IMP_, IMM_, IMP_, ____, ABS_, ABS_, ABS_, ____,
+                REL_, IDY_, ____, ____, ____, ZPX_, ZPX_, ____, IMP_, ABY_, ____, ____, ____, ABX_, ABX_, ____,
             };
 
             /// must be serialized
@@ -112,9 +112,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
                 2, 6, _, _, 3, 3, 5, _, 2, 2, 2, _, 4, 4, 6, _,
                 2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
             };
-        }
-
-        public bool HaveInstruction(byte opcode) => instruction[opcode] != null;
+        }        
 
         public int Execute(byte opcode) {
             mode = addressing[opcode];
