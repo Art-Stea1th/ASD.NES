@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ASD.NES.Core.ConsoleComponents.CPUParts {
-
-    using Shared;
 
     /// <summary> Emulation NMOS 6502 component of the CPU RP2A03 (Ricoh Processor 2A03) </summary>
     internal sealed class CPUCoreNew {
@@ -32,7 +28,9 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             r = registers;
 
             IMM_ = new IMM_(r, this);
-            ZPG_ = new ZPG_(r, this); ZPX_ = new ZPX_(r, this);
+            ZPG_ = new ZPG_(r, this); ZPX_ = new ZPX_(r, this); ZPY_ = new ZPY_(r, this);
+            ABS_ = new ABS_(r, this); ABX_ = new ABX_(r, this); ABY_ = new ABY_(r, this);
+            IND_ = new IND_(r, this); IDX_ = new IDX_(r, this); IDY_ = new IDY_(r, this);
 
             addressing = new AddressingModeNew[] {
                 IMP_, IDX_, ____, ____, ____, ZPG_, ZPG_, ____, IMP_, IMM_, ACC_, ____, ____, ABS_, ABS_, ____,
@@ -54,21 +52,21 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             };
 
             instruction = new Action[] {
+                null, null, null, null, null, null, null, null, null, ORA,  null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, AND,  null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, EOR,  null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, ADC,  null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                LDY,  null, LDX,  null, null, null, null, null, null, LDA,  null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                CPY,  null, null, null, null, null, null, null, null, CMP,  null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, ADC,  null, null, null, ADC,  null, null, null, null, null, null,
-                null, null, null, null, null, ADC,  null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                CPX,  null, null, null, null, null, null, null, null, SBC,  null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             };
 
@@ -85,25 +83,29 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         }
 
         private void ReadOpcode() {
-            opcode = memory[r.PC]; ClockTime();       // cycles++;
+            opcode = memory[r.PC]; ClockTime();
         }
 
-        private void SwitchMode() {            
+        private void SwitchMode() {
             mode = addressing[opcode];
         }
 
         private void ExecuteInstruction() {
             instruction[opcode]();
-            r.PC++;                                   // bytes++;
+            r.PC++;                                   // b++;
         }
 
-        internal void ClockTime() => Clock?.Invoke(); // cycles++;
+        internal void ClockTimeIf(bool condition) {
+            if (condition) { ClockTime(); }
+        }
+
+        internal void ClockTime() => Clock?.Invoke(); // c++;
 
         #region Instructions
         #region Arithmetic
 
         /// <summary> Add Memory to Accumulator with Carry </summary>
-        private void ADC() {
+        private void ADC() { // IMM
 
             var result = r.A + M + r.PS.C;
 
@@ -114,6 +116,110 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
             r.PS.UpdateSigned(r.A);
             r.PS.UpdateZero(r.A);
+        }
+
+        /// <summary> Subtract Memory from Accumulator with Carry </summary>
+        private void SBC() { // IMM
+
+            var result = r.A + (M ^ 0xFF) + r.PS.C;
+
+            r.PS.UpdateOverflow(result);
+            r.PS.UpdateCarry(result);
+
+            r.A = (byte)(result);
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+        }
+        #endregion
+        #region Arithmetic: Bit Operations
+
+        /// <summary> AND Memory with Accumulator </summary>
+        private void AND() { // IMM
+
+            r.A &= (byte)M;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+        }
+
+        /// <summary> OR Memory with Accumulator </summary>
+        private void ORA() { // IMM
+
+            r.A |= (byte)M;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+        }
+
+        /// <summary> XOR Memory with Accumulator </summary>
+        private void EOR() { // IMM
+
+            r.A ^= (byte)M;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+        }
+        #endregion
+        #region Arithmetic: Compare
+
+        /// <summary> Compare Memory and Accumulator </summary>
+        private void CMP() { // IMM
+
+            var result = r.A - M;
+
+            r.PS.C.Set(result >= 0);
+            r.PS.UpdateSigned(result);
+            r.PS.UpdateZero(result);
+        }
+
+        /// <summary> Compare Memory and Index Register X </summary>
+        private void CPX() { // IMM
+
+            var result = r.X - M;
+
+            r.PS.C.Set(result >= 0);
+            r.PS.UpdateSigned(result);
+            r.PS.UpdateZero(result);
+        }
+
+        /// <summary> Compare Memory and Index Register Y </summary>
+        private void CPY() { // IMM
+
+            var result = r.Y - M;
+
+            r.PS.C.Set(result >= 0);
+            r.PS.UpdateSigned(result);
+            r.PS.UpdateZero(result);
+        }
+        #endregion
+        #region Load / Store
+
+        /// <summary> Load Accumulator from Memory </summary>
+        private void LDA() { // IMM
+
+            r.A = (byte)M;
+
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
+        }
+
+        /// <summary> Load Index Register X from Memory </summary>
+        private void LDX() { // IMM
+
+            r.X = (byte)M;
+
+            r.PS.UpdateSigned(r.X);
+            r.PS.UpdateZero(r.X);
+        }
+
+        /// <summary> Load Index Register Y from Memory </summary>
+        private void LDY() { // IMM
+
+            r.Y = (byte)M;
+
+            r.PS.UpdateSigned(r.Y);
+            r.PS.UpdateZero(r.Y);
         }
         #endregion
         #endregion
