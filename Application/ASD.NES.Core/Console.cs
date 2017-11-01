@@ -27,7 +27,7 @@ namespace ASD.NES.Core {
 
         private void InitializeHardware() {
 
-            Clk = new Clock(TimeSpan.FromMilliseconds(1000.0 / 60.0988) /*TimeSpan.FromTicks(4)*/);
+            Clk = new Clock(/*TimeSpan.FromMilliseconds(1000.0 / 60.0988)*/ TimeSpan.FromTicks(4));
             Clk.Tick += () => NextFrameReady?.Invoke(Update());
 
             Cpu = new CentralProcessor();
