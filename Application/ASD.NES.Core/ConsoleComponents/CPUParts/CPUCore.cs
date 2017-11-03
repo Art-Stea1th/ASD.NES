@@ -5,35 +5,35 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
     using Shared;
 
     /// <summary> Emulation NMOS 6502 component of the CPU RP2A03 (Ricoh Processor 2A03) </summary>
-    internal sealed class CPUCore { // all core instructions must be rewritten into classes
-
-        private const int _ = 0;
+    internal sealed class CPUCore {
 
         private readonly CPUAddressSpace memory = CPUAddressSpace.Instance;
         private readonly RegistersCPU r;
 
-        private readonly Func<int>[] instruction;
         private readonly AddressingMode[] addressing;
-        private readonly ushort[] bytes;
-        private readonly int[] cycles;
+        private readonly Action[] instruction;
 
         private AddressingMode mode, ACC_, IMM_, ZPG_, ZPX_, ZPY_, ABS_, ABX_, ABY_, IND_, IDX_, IDY_, REL_, IMP_, ____ = null;
 
-        private Hextet Address { get => mode.Address; set => mode.Address = value; }
-        private Octet M { get => mode.M; set => mode.M = value; }
-        private bool PageCrossed => mode.PageCrossed;
+        internal event Action Clock;
+
+        private byte opcode;
+
+        ///// <summary>
+        ///// Memory operand. <para/>
+        ///// ATTENTION! Reading or Writing - increases the "<see cref="RegistersCPU.PC"/>" and Invoke the "<see cref="Clock"/>" several times.
+        ///// </summary>
+        //private int M { get => mode.M; set => mode.M = value; }
 
         public CPUCore(RegistersCPU registers) {
 
             r = registers;
 
-            IMP_ = new IMP(r); IMM_ = new IMM(r);
-            ZPG_ = new ZPG(r); ZPX_ = new ZPX(r); ZPY_ = new ZPY(r);
-            ABS_ = new ABS(r); ABX_ = new ABX(r); ABY_ = new ABY(r);
-            IND_ = new IND(r); IDX_ = new IDX(r); IDY_ = new IDY(r);
-            REL_ = new REL(r); ACC_ = new ACC(r);
+            IMM_ = new IMM_(r, this);
+            ZPG_ = new ZPG_(r, this); ZPX_ = new ZPX_(r, this); ZPY_ = new ZPY_(r, this);
+            ABS_ = new ABS_(r, this); // ABX_ = new ABX_(r, this); ABY_ = new ABY_(r, this);
+            // IND_ = new IND_(r, this); IDX_ = new IDX_(r, this); IDY_ = new IDY_(r, this);
 
-            /// must be serialized
             addressing = new AddressingMode[] {
                 IMP_, IDX_, ____, ____, ____, ZPG_, ZPG_, ____, IMP_, IMM_, ACC_, ____, ____, ABS_, ABS_, ____,
                 REL_, IDY_, ____, ____, ____, ZPX_, ZPX_, ____, IMP_, ABY_, ____, ____, ____, ABX_, ABX_, ____,
@@ -53,82 +53,61 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
                 REL_, IDY_, ____, ____, ____, ZPX_, ZPX_, ____, IMP_, ABY_, ____, ____, ____, ABX_, ABX_, ____,
             };
 
-            /// must be serialized
-            instruction = new Func<int>[] {
-                BRK,  ORA,  null, null, null, ORA,  ASL,  null, PHP,  ORA,  ASL,  null, null, ORA,  ASL,  null,
-                BPL,  ORA,  null, null, null, ORA,  ASL,  null, CLC,  ORA,  null, null, null, ORA,  ASL,  null,
-                JSR,  AND,  null, null, BIT,  AND,  ROL,  null, PLP,  AND,  ROL,  null, BIT,  AND,  ROL,  null,
-                BMI,  AND,  null, null, null, AND,  ROL,  null, SEC,  AND,  null, null, null, AND,  ROL,  null,
-                RTI,  EOR,  null, null, null, EOR,  LSR,  null, PHA,  EOR,  LSR,  null, JMP,  EOR,  LSR,  null,
-                BVC,  EOR,  null, null, null, EOR,  LSR,  null, CLI,  EOR,  null, null, null, EOR,  LSR,  null,
-                RTS,  ADC,  null, null, null, ADC,  ROR,  null, PLA,  ADC,  ROR,  null, JMP,  ADC,  ROR,  null,
-                BVS,  ADC,  null, null, null, ADC,  ROR,  null, SEI,  ADC,  null, null, null, ADC,  ROR,  null,
-                null, STA,  null, null, STY,  STA,  STX,  null, DEY,  null, TXA,  null, STY,  STA,  STX,  null,
-                BCC,  STA,  null, null, STY,  STA,  STX,  null, TYA,  STA,  TXS,  null, null, STA,  null, null,
-                LDY,  LDA,  LDX,  null, LDY,  LDA,  LDX,  null, TAY,  LDA,  TAX,  null, LDY,  LDA,  LDX,  null,
-                BCS,  LDA,  null, null, LDY,  LDA,  LDX,  null, CLV,  LDA,  TSX,  null, LDY,  LDA,  LDX,  null,
-                CPY,  CMP,  null, null, CPY,  CMP,  DEC,  null, INY,  CMP,  DEX,  null, CPY,  CMP,  DEC,  null,
-                BNE,  CMP,  null, null, null, CMP,  DEC,  null, CLD,  CMP,  null, null, null, CMP,  DEC,  null,
-                CPX,  SBC,  null, null, CPX,  SBC,  INC,  null, INX,  SBC,  NOP,  null, CPX,  SBC,  INC,  null,
-                BEQ,  SBC,  null, null, null, SBC,  INC,  null, SED,  SBC,  null, null, null, SBC,  INC,  null,
+            instruction = new Action[] {
+                null, null, null, null, null, ORA,  ASL,  null, null, ORA,  null, null, null, ORA,  ASL,  null,
+                null, null, null, null, null, ORA,  ASL,  null, null, null, null, null, null, null, null, null,
+                JSR,  null, null, null, BIT,  AND,  ROL,  null, null, AND,  null, null, BIT,  AND,  ROL,  null,
+                null, null, null, null, null, AND,  ROL,  null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, EOR,  LSR,  null, null, EOR,  null, null, JMP,  EOR,  LSR,  null,
+                null, null, null, null, null, EOR,  LSR,  null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, ADC,  ROR,  null, null, ADC,  null, null, null, ADC,  ROR,  null,
+                null, null, null, null, null, ADC,  ROR,  null, null, null, null, null, null, null, null, null,
+                null, null, null, null, STY,  STA,  STX,  null, null, null, null, null, STY,  STA,  STX,  null,
+                null, null, null, null, STY,  STA,  STX,  null, null, null, null, null, null, null, null, null,
+                LDY,  null, LDX,  null, LDY,  LDA,  LDX,  null, null, LDA,  null, null, LDY,  LDA,  LDX,  null,
+                null, null, null, null, LDY,  LDA,  LDX,  null, null, null, null, null, null, null, null, null,
+                CPY,  null, null, null, CPY,  CMP,  DEC,  null, null, CMP,  null, null, CPY,  CMP,  DEC,  null,
+                null, null, null, null, null, CMP,  DEC,  null, null, null, null, null, null, null, null, null,
+                CPX,  null, null, null, CPX,  SBC,  INC,  null, null, SBC,  null, null, CPX,  SBC,  INC,  null,
+                null, null, null, null, null, SBC,  INC,  null, null, null, null, null, null, null, null, null,
             };
 
-            /// must be auto-count
-            bytes = new ushort[] {
-                1, 2, _, _, _, 2, 2, _, 1, 2, 1, _, _, 3, 3, _,
-                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
-                0, 2, _, _, 2, 2, 2, _, 1, 2, 1, _, 3, 3, 3, _,
-                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
-                0, 2, _, _, _, 2, 2, _, 1, 2, 1, _, 0, 3, 3, _,
-                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
-                1, 2, _, _, _, 2, 2, _, 1, 2, 1, _, 0, 3, 3, _,
-                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
-                _, 2, _, _, 2, 2, 2, _, 1, _, 1, _, 3, 3, 3, _,
-                0, 2, _, _, 2, 2, 2, _, 1, 3, 1, _, _, 3, _, _,
-                2, 2, 2, _, 2, 2, 2, _, 1, 2, 1, _, 3, 3, 3, _,
-                0, 2, _, _, 2, 2, 2, _, 1, 3, 1, _, 3, 3, 3, _,
-                2, 2, _, _, 2, 2, 2, _, 1, 2, 1, _, 3, 3, 3, _,
-                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
-                2, 2, _, _, 2, 2, 2, _, 1, 2, 1, _, 3, 3, 3, _,
-                0, 2, _, _, _, 2, 2, _, 1, 3, _, _, _, 3, 3, _,
-            };
-
-            /// must be auto-count
-            cycles = new int[] {
-                7, 6, _, _, _, 3, 5, _, 3, 2, 2, _, _, 4, 6, _,
-                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
-                6, 6, _, _, 3, 3, 5, _, 4, 2, 2, _, 4, 4, 6, _,
-                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
-                6, 6, _, _, _, 3, 5, _, 3, 2, 2, _, 3, 4, 6, _,
-                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
-                6, 6, _, _, _, 3, 5, _, 4, 2, 2, _, 5, 4, 6, _,
-                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
-                _, 6, _, _, 3, 3, 3, _, 2, _, 2, _, 4, 4, 4, _,
-                2, 6, _, _, 4, 4, 4, _, 2, 5, 2, _, _, 5, _, _,
-                2, 6, 2, _, 3, 3, 3, _, 2, 2, 2, _, 4, 4, 4, _,
-                2, 5, _, _, 4, 4, 4, _, 2, 4, 2, _, 4, 4, 4, _,
-                2, 6, _, _, 3, 3, 5, _, 2, 2, 2, _, 4, 4, 6, _,
-                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
-                2, 6, _, _, 3, 3, 5, _, 2, 2, 2, _, 4, 4, 6, _,
-                2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
-            };
-        }        
-
-        public int Execute(byte opcode) {
-            mode = addressing[opcode];
-            var ticks = cycles[opcode];
-            ticks += instruction[opcode]();
-            r.PC += bytes[opcode];
-            return ticks;
+            // min PC inc = 1;
+            // min Cycles inc = 2;
         }
+
+        public bool HaveInstruction(byte opcode) => instruction[opcode] != null;
+
+        #region Step
+        public void Step() {
+            ReadOpcode();
+            SwitchMode();
+            ExecuteInstruction();
+        }
+        private void ReadOpcode() {
+            ClockTime(); opcode = memory[r.PC];
+        }
+        private void SwitchMode() {
+            mode = addressing[opcode];
+        }
+        private void ExecuteInstruction() {
+            instruction[opcode]();
+            r.PC++;                                   // b++;
+        }
+        internal void ClockTimeIf(bool condition) {
+            if (condition) { ClockTime(); }
+        }
+        internal void ClockTime() => Clock?.Invoke(); // c++;
+        #endregion
 
         #region Instructions
         #region Arithmetic
 
         /// <summary> Add Memory to Accumulator with Carry </summary>
-        private int ADC() {
+        private void ADC() { // IMM, ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            var result = r.A + M + r.PS.C;
+            var result = r.A + m + r.PS.C;
 
             r.PS.UpdateOverflow(result);
             r.PS.UpdateCarry(result);
@@ -137,14 +116,13 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
             r.PS.UpdateSigned(r.A);
             r.PS.UpdateZero(r.A);
-
-            return PageCrossed ? 1 : 0;
         }
 
         /// <summary> Subtract Memory from Accumulator with Carry </summary>
-        private int SBC() {
+        private void SBC() { // IMM, ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            var result = r.A + (M ^ 0xFF) + r.PS.C;
+            var result = r.A + (m ^ 0xFF) + r.PS.C;
 
             r.PS.UpdateOverflow(result);
             r.PS.UpdateCarry(result);
@@ -153,490 +131,232 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
             r.PS.UpdateSigned(r.A);
             r.PS.UpdateZero(r.A);
-
-            return PageCrossed ? 1 : 0;
         }
         #endregion
         #region Arithmetic: Increment / Decrement
 
         /// <summary> Increment Memory </summary>
-        private int INC() {
+        private void INC() { // ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            M++;
+            m++;
 
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
+            r.PS.UpdateSigned(m);
+            r.PS.UpdateZero(m);
 
-            return 0;
-        }
-
-        /// <summary> Increment Index Register X </summary>
-        private int INX() {
-
-            r.X++;
-
-            r.PS.UpdateSigned(r.X);
-            r.PS.UpdateZero(r.X);
-
-            return 0;
-        }
-
-        /// <summary> Increment Index Register Y </summary>
-        private int INY() {
-
-            r.Y++;
-
-            r.PS.UpdateSigned(r.Y);
-            r.PS.UpdateZero(r.Y);
-
-            return 0;
+            mode.Write(m);
         }
 
         /// <summary> Decrement Memory </summary>
-        private int DEC() {
+        private void DEC() { // ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            M--;
+            m--;
 
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
+            r.PS.UpdateSigned(m);
+            r.PS.UpdateZero(m);
 
-            return 0;
-        }
-
-        /// <summary> Decrement Index Register X </summary>
-        private int DEX() {
-
-            r.X--;
-
-            r.PS.UpdateSigned(r.X);
-            r.PS.UpdateZero(r.X);
-
-            return 0;
-        }
-
-        /// <summary> Decrement Index Register Y </summary>
-        private int DEY() {
-
-            r.Y--;
-
-            r.PS.UpdateSigned(r.Y);
-            r.PS.UpdateZero(r.Y);
-
-            return 0;
+            mode.Write(m);
         }
         #endregion
         #region Arithmetic: Bit Operations
 
         /// <summary> AND Memory with Accumulator </summary>
-        private int AND() {
+        private void AND() { // IMM, ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            r.A &= M;
+            r.A &= m;
 
             r.PS.UpdateSigned(r.A);
             r.PS.UpdateZero(r.A);
-
-            return PageCrossed ? 1 : 0;
         }
 
         /// <summary> OR Memory with Accumulator </summary>
-        private int ORA() {
+        private void ORA() { // IMM, ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            r.A |= M;
+            r.A |= m;
 
             r.PS.UpdateSigned(r.A);
             r.PS.UpdateZero(r.A);
-
-            return PageCrossed ? 1 : 0;
         }
 
         /// <summary> XOR Memory with Accumulator </summary>
-        private int EOR() {
+        private void EOR() { // IMM, ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            r.A ^= M;
+            r.A ^= m;
 
             r.PS.UpdateSigned(r.A);
             r.PS.UpdateZero(r.A);
-
-            return PageCrossed ? 1 : 0;
         }
 
         /// <summary> Arithmetic Shift Left one bit (Memory or Accumulator) </summary>
-        private int ASL() {
+        private void ASL() { // ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            r.PS.C.Set(M[7]);
+            r.PS.C.Set((m >> 7) & 1);
 
-            M <<= 1;
+            m <<= 1;
 
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
+            r.PS.UpdateSigned(m);
+            r.PS.UpdateZero(m);
 
-            return 0;
+            mode.Write(m);
         }
 
         /// <summary> Logical Shift Right one bit (Memory or Accumulator) </summary>
-        private int LSR() {
+        private void LSR() { // ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            r.PS.C.Set(M[0]);
+            r.PS.C.Set((m >> 0) & 1);
 
-            M >>= 1;
+            m >>= 1;
 
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
+            r.PS.UpdateSigned(m);
+            r.PS.UpdateZero(m);
 
-            return 0;
+            mode.Write(m);
         }
 
         /// <summary> Rotate Left one bit (Memory or Accumulator) </summary>
-        private int ROL() {
+        private void ROL() { // ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            var carry = M[7];
+            var carry = (m >> 7) & 1;
 
-            M = (byte)((M << 1) | r.PS.C);
+            m = (byte)((m << 1) | (r.PS.C >> 0));
 
             r.PS.C.Set(carry);
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
+            r.PS.UpdateSigned(m);
+            r.PS.UpdateZero(m);
 
-            return 0;
+            mode.Write(m);
         }
 
         /// <summary> Rotate Right one bit (Memory or Accumulator) </summary>
-        private int ROR() {
+        private void ROR() { // ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            var carry = M[0];
+            var carry = (m >> 0) & 1;
 
-            M = (byte)((M >> 1) | (r.PS.C << 7));
+            m = (byte)((m >> 1) | (r.PS.C << 7));
 
             r.PS.C.Set(carry);
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(M);
+            r.PS.UpdateSigned(m);
+            r.PS.UpdateZero(m);
 
-            return 0;
+            mode.Write(m);
         }
 
         /// <summary> Test bits in Memory with Accumulator </summary>
-        private int BIT() {
+        private void BIT() { // ZPG, ABS
+            var m = (byte)mode.Read();
 
             r.PS.V.Set(r.A[6]);
-            r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(r.A & M);
-
-            return 0;
+            r.PS.UpdateSigned(m);
+            r.PS.UpdateZero(r.A & m);
         }
         #endregion
         #region Arithmetic: Compare
 
         /// <summary> Compare Memory and Accumulator </summary>
-        private int CMP() {
+        private void CMP() { // IMM, ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            var result = r.A - M;
+            var result = r.A - m;
 
             r.PS.C.Set(result >= 0);
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
-
-            return PageCrossed ? 1 : 0;
         }
 
         /// <summary> Compare Memory and Index Register X </summary>
-        private int CPX() {
+        private void CPX() { // IMM, ZPG, ABS
+            var m = (byte)mode.Read();
 
-            var result = r.X - M;
+            var result = r.X - m;
 
             r.PS.C.Set(result >= 0);
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
-
-            return 0;
         }
 
         /// <summary> Compare Memory and Index Register Y </summary>
-        private int CPY() {
+        private void CPY() { // IMM, ZPG, ABS
+            var m = (byte)mode.Read();
 
-            var result = r.Y - M;
+            var result = r.Y - m;
 
             r.PS.C.Set(result >= 0);
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
-
-            return 0;
-        }
-        #endregion
-        #region Branch
-
-        /// <summary> Branch if Carry Clear </summary>
-        private int BCC() => BranchIf(r.PS.C == 0);
-
-        /// <summary> Branch if Zero Clear </summary>
-        private int BNE() => BranchIf(r.PS.Z == 0);
-
-        /// <summary> Branch if Plus (if Signed Clear) </summary>
-        private int BPL() => BranchIf(r.PS.S == 0);
-
-        /// <summary> Branch if Overflow Clear </summary>
-        private int BVC() => BranchIf(r.PS.V == 0);
-
-
-        /// <summary> Branch if Carry Set </summary>
-        private int BCS() => BranchIf(r.PS.C == 1);
-
-        /// <summary> Branch if Zero Set </summary>
-        private int BEQ() => BranchIf(r.PS.Z == 1);
-
-        /// <summary> Branch if Minus (if Signed Set) </summary>
-        private int BMI() => BranchIf(r.PS.S == 1);
-
-        /// <summary> Branch if Overflow Set </summary>
-        private int BVS() => BranchIf(r.PS.V == 1);
-
-
-        /// <summary> Isn't instruction </summary>
-        private int BranchIf(bool condition) {
-
-            if (condition) {
-
-                var addressNew = (ushort)(Address + 2 + (sbyte)((byte)memory[Address + 1]));
-                var cycles = mode.SamePage(Address, addressNew) ? 1 : 2;
-
-                Address = addressNew;
-                return cycles;
-            }
-            Address += 2;
-            return 0;
-        }
-        #endregion
-        #region Flag Manipulations
-
-        /// <summary> Clear Carry flag </summary>
-        private int CLC() {
-            r.PS.C.Set(false);
-            return 0;
-        }
-
-        /// <summary> Clear Decimal flag </summary>
-        private int CLD() {
-            r.PS.D.Set(false);
-            return 0;
-        }
-
-        /// <summary> Clear Interrupt Disable flag </summary>
-        private int CLI() {
-            r.PS.I.Set(false);
-            return 0;
-        }
-
-        /// <summary> Clear Overflow flag </summary>
-        private int CLV() {
-            r.PS.V.Set(false);
-            return 0;
-        }
-
-
-        /// <summary> Set Carry flag </summary>
-        private int SEC() {
-            r.PS.C.Set(true);
-            return 0;
-        }
-
-        /// <summary> Set Decimal flag </summary>
-        private int SED() {
-            r.PS.D.Set(true);
-            return 0;
-        }
-
-        /// <summary> Set Interrupt Disable flag </summary>
-        private int SEI() {
-            r.PS.I.Set(true);
-            return 0;
         }
         #endregion
         #region Jumps
 
-        /// <summary> Force Break </summary>
-        private int BRK() {
-
-            Push16(r.PC); // r.PS.B.Set(true); // ?
-            Push(r.PS);   // r.PS.I.Set(true); // ?
-
-            r.PC = Hextet.Make(memory[0xFFFF], memory[0xFFFE]);
-            return 0;
-        }
-
         /// <summary> Jump to new location </summary>
-        private int JMP() { // Not impl.: JMP.IND has a bug where the indirect address wraps the page boundary
-            r.PC = Address;
-            return 0;
+        private void JMP() { // ABS // Not impl.: JMP.IND has a bug where the indirect address wraps the page boundary
+            r.PC = mode.ReadAddress();
+            r.PC--;      // <--- !!!!!!!!!! // TODO: fix
         }
 
         /// <summary> Jump to Subroutine (and saving return address) </summary>
-        private int JSR() {
+        private void JSR() { // ABS
             Push16((ushort)(r.PC + 2));
-            r.PC = Address;
-            return 0;
-        }
-
-        /// <summary> Return from Interrupt </summary>
-        private int RTI() {
-            r.PS.SetNew(Pull());
-            r.PC = Pull16();
-            return 0;
-        }
-
-        /// <summary> Return from Subroutine </summary>
-        private int RTS() {
-            r.PC = Pull16();
-            return 0;
-        }
-
-        /// <summary> No Operation </summary>
-        private int NOP() {
-            return 0;
+            r.PC = mode.ReadAddress();
+            r.PC--;      // <--- !!!!!!!!!! // TODO: fix
+            ClockTime(); // <--- !!!!!!!!!! // TODO: fix
         }
         #endregion
         #region Load / Store
 
         /// <summary> Load Accumulator from Memory </summary>
-        private int LDA() {
+        private void LDA() { // IMM, ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            r.A = M;
+            r.A = m;
 
             r.PS.UpdateSigned(r.A);
             r.PS.UpdateZero(r.A);
-
-            return PageCrossed ? 1 : 0;
         }
 
         /// <summary> Load Index Register X from Memory </summary>
-        private int LDX() {
+        private void LDX() { // IMM, ZPG, ZPY, ABS
+            var m = (byte)mode.Read();
 
-            r.X = M;
+            r.X = m;
 
             r.PS.UpdateSigned(r.X);
             r.PS.UpdateZero(r.X);
-
-            return PageCrossed ? 1 : 0;
         }
 
         /// <summary> Load Index Register Y from Memory </summary>
-        private int LDY() {
+        private void LDY() { // IMM, ZPG, ZPX, ABS
+            var m = (byte)mode.Read();
 
-            r.Y = M;
+            r.Y = m;
 
             r.PS.UpdateSigned(r.Y);
             r.PS.UpdateZero(r.Y);
-
-            return PageCrossed ? 1 : 0;
         }
 
-
         /// <summary> Store Accumulator to Memory </summary>
-        private int STA() {
-            M = r.A;
-            return 0;
+        private void STA() { // ZPG, ZPX, ABS
+            mode.WriteOnly(r.A);
         }
 
         /// <summary> Store Index Register X to Memory </summary>
-        private int STX() {
-            M = r.X;
-            return 0;
+        private void STX() { // ZPG, ZPY, ABS
+            mode.WriteOnly(r.X);
         }
 
         /// <summary> Store Index Register Y to Memory </summary>
-        private int STY() {
-            M = r.Y;
-            return 0;
+        private void STY() { // ZPG, ZPX, ABS
+            mode.WriteOnly(r.Y);
         }
         #endregion
-        #region Transfer
-
-        /// <summary> Transfer Accumulator to Index Register X </summary>
-        private int TAX() {
-
-            r.X = r.A;
-
-            r.PS.UpdateSigned(r.X);
-            r.PS.UpdateZero(r.X);
-
-            return 0;
-        }
-
-        /// <summary> Transfer Accumulator to Index Register Y </summary>
-        private int TAY() {
-
-            r.Y = r.A;
-
-            r.PS.UpdateSigned(r.Y);
-            r.PS.UpdateZero(r.Y);
-
-            return 0;
-        }
-
-        /// <summary> Transfer Stack Pointer to Index Register X </summary>
-        private int TSX() {
-
-            r.X = r.SP;
-
-            r.PS.UpdateSigned(r.X);
-            r.PS.UpdateZero(r.X);
-
-            return 0;
-        }
-
-
-        /// <summary> Transfer Index Register X to Accumulator</summary>
-        private int TXA() {
-
-            r.A = r.X;
-
-            r.PS.UpdateSigned(r.A);
-            r.PS.UpdateZero(r.A);
-
-            return 0;
-        }
-
-        /// <summary> Transfer Index Register Y to Accumulator</summary>
-        private int TYA() {
-
-            r.A = r.Y;
-
-            r.PS.UpdateSigned(r.A);
-            r.PS.UpdateZero(r.A);
-
-            return 0;
-        }
-
-        /// <summary> Transfer Index Register X to Stack Pointer</summary>
-        private int TXS() {
-
-            r.SP = r.X;
-            return 0;
-        }
-        #endregion
-        #region Stack        
-
-        /// <summary> Push Accumulator on Stack </summary>
-        private int PHA() {
-            Push(r.A);
-            return 0;
-        }
-
-        /// <summary> Push Processor Status on Stack </summary>
-        private int PHP() {
-            Push(r.PS);
-            return 0;
-        }
-
-        /// <summary> Pull Accumulator on Stack </summary>
-        private int PLA() {
-            r.A = Pull(); // r.PS.UpdateSigned(r.A); r.PS.UpdateZero(r.A); // ???
-            return 0;
-        }
-
-        /// <summary> Pull Processor Status on Stack </summary>
-        private int PLP() {
-            r.PS.SetNew(Pull());
-            return 0;
-        }
+        #region Stack
 
         /// <summary> Isn't instruction </summary>
         private void Push16(Hextet value) {
@@ -650,12 +370,14 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
         /// <summary> Isn't instruction </summary>
         private void Push(Octet value) {
+            ClockTime();                  // <--- !!!!!!!!!! // TODO: move Clock's
             memory[0x100 + r.SP] = value;
             r.SP -= 1;
         }
 
         /// <summary> Isn't instruction </summary>
         private Octet Pull() {
+            ClockTime();                  // <--- !!!!!!!!!! // TODO: move Clock's
             r.SP += 1;
             return memory[0x100 + r.SP];
         }

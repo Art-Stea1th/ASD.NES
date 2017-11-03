@@ -9,8 +9,8 @@ namespace ASD.NES.Core.ConsoleComponents {
 
         private static readonly CPUAddressSpace memory = CPUAddressSpace.Instance;
 
-        private CPUCore core;
-        private CPUCoreNew coreNew;
+        private CPUCoreOld core;
+        private CPUCore coreNew;
         private RegistersCPU registers;
 
         public CPUAddressSpace AddressSpace => memory;
@@ -28,8 +28,8 @@ namespace ASD.NES.Core.ConsoleComponents {
 
             registers = new RegistersCPU();
 
-            core = new CPUCore(registers);
-            coreNew = new CPUCoreNew(registers);
+            core = new CPUCoreOld(registers);
+            coreNew = new CPUCore(registers);
         }
 
         public int Step() {
