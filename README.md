@@ -1,2 +1,1 @@
-# ASD.NES
 NES Emulator
