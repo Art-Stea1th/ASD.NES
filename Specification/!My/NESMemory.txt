@@ -1,0 +1,73 @@
+-------------------------------------------------------------------------------------------------------
+                Bytes: 65536    Size    Start   End    Mode    Description    
+"WRAM" ------------------------------------------------------------------------------------------------
+                256             0x0100  0x0000  0x00FF RW      Zero Page    
+                256             0x0100  0x0100  0x01FF RW      Stack    
+                1536            0x0600  0x0200  0x07FF RW      RAM
+"Mirror" ----------------------------------------------------------------------------------------------
+                6144            0x1800  0x0800  0x1FFF         x3 - WRAM
+"VRAM" ------------------------------------------------------------------------------------------------
+                1               0x0001  0x2000         W       Control Register 0    
+                1               0x0001  0x2001         W       Control Register 1    
+                1               0x0001  0x2002         R       Status Register    
+                1               0x0001  0x2003         W       Address Register / Sprite Index
+"SPR-RAM" ---------------------------------------------------------------------------------------------
+                1               0x0001  0x2004         W       I/O Register / Sprite Data     
+                1               0x0001  0x2005         W       Address Register 0 / Scrolling   
+"VRAM" ------------------------------------------------------------------------------------------------
+                1               0x0001  0x2006         W       Address Register 1 / Scrolling    
+                1               0x0001  0x2007         RW      I/O Register / Transfer    
+"Mirror" ----------------------------------------------------------------------------------------------
+                8184            0x1FF8  0x2008  0x3FFF         x1023 - VRAM (Include: SPR-RAM)
+"pAPU" ------------------------------------------------------------------------------------------------
+                1               0x0001  0x4000         W       Rectangle 0 / Control Register
+                1               0x0001  0x4001         W       Rectangle 0 / Ramp Control Register    
+                1               0x0001  0x4002         W       Rectangle 0 / Fine Tune (FT) Register   
+                1               0x0001  0x4003         W       Rectangle 0 / Coarse Tune (CT) Register 
+                1               0x0001  0x4004         W       Rectangle 1 / Control Register    
+                1               0x0001  0x4005         W       Rectangle 1 / Ramp Control Register    
+                1               0x0001  0x4006         W       Rectangle 1 / Fine Tune (FT) Register   
+                1               0x0001  0x4007         W       Rectangle 1 / Coarse Tune (CT) Register 
+                1               0x0001  0x4008         W       Triangle / Control Register 0    
+                1               0x0001  0x4009         ?       Triangle / Control Register 1    
+                1               0x0001  0x400A         W       Triangle / Frequency Register 0    
+                1               0x0001  0x400B         W       Triangle / Frequency Register 1    
+                1               0x0001  0x400C         W       Noise / Control Register    
+                1               0x0001  0x400D         ?       ?    
+                1               0x0001  0x400E         W       Noise / Frequency Register 0    
+                1               0x0001  0x400F         W       Noise / Frequency Register 1    
+                1               0x0001  0x4010         W       Delta Modulation / Control Register    
+                1               0x0001  0x4011         W       Delta Modulation / D/A Register    
+                1               0x0001  0x4012         W       Delta Modulation / Address Register    
+                1               0x0001  0x4013         W       Delta Modulation / Data Length Register
+"SPR-RAM" ---------------------------------------------------------------------------------------------
+                1               0x0001  0x4014         W       Sprite DMA Register
+"pAPU" ------------------------------------------------------------------------------------------------
+                1               0x0001  0x4015         RW      Vertical Clock Signal Register
+                1               0x0001  0x4016         RW      Joypad 1    Input
+                1               0x0001  0x4017         RW      Joypad 2 / SOFTCLK    
+                8               0x0008  0x4018  0x401F ?       ?    
+"IRQ" -------------------------------------------------------------------------------------------------
+                1               0x0001  0x4020         W       Lower Byte of IRQ Counter
+                1               0x0001  0x4021         W       Upper Byte of IRQ Counter    
+                1               0x0001  0x4022         W       Enable/Disable IRQs    
+                1               0x0001  0x4023         ?       ?    
+                1               0x0001  0x4024         W       Data Write Register    
+                1               0x0001  0x4025         W       Control Register    
+                1               0x0001  0x4026         W       ExPort Output ?    
+                9               0x0009  0x4027  0x402F ?       ?    
+                1               0x0001  0x4030         R       Disk Status Register 0    
+                1               0x0001  0x4031         R       Data Read Register    
+                1               0x0001  0x4032         R       Disk Status Register 1    
+                1               0x0001  0x4033         R       ExPort Input    
+                204             0x00CC  0x4034  0x40FF ?       ?    
+                3840            0x0F00  0x4100  0x4FFF ?       ?
+"MMC5" ------------------------------------------------------------------------------------------------
+                4096            0x1000  0x5000  0x5FFF R       Expansion ROM    
+"Save" ------------------------------------------------------------------------------------------------
+                8192            0x2000  0x6000  0x7FFF R       PRG-RAM / PRG-ROM    
+"PRG 1" -----------------------------------------------------------------------------------------------
+                16384           0x4000  0x8000  0xBFFF R       ROM / RAM
+"PRG 0" -----------------------------------------------------------------------------------------------
+                16384           0x4000  0xC000  0xFFFF R       ROM / RAM
+-------------------------------------------------------------------------------------------------------
