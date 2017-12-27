@@ -33,7 +33,7 @@ namespace ASD.NES.Core {
             Cpu = new CentralProcessor();
             Ppu = new PictureProcessor();
 
-            // 3 PPU steps on CPU tick
+            // 3 PPU steps on new CPU tick
             Cpu.Clock += () => {
                 Ppu.Step();
                 Ppu.Step();
@@ -41,7 +41,7 @@ namespace ASD.NES.Core {
             };
         }
 
-        public uint[] Update() {
+        public uint[] Update() { // x3 PPU steps on old CPU tick
 
             var startingFrame = Ppu.TotalFrames;
 

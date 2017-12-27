@@ -19,7 +19,7 @@ namespace ASD.NES.Core {
 
         private Board board;
 
-        static readonly uint iNES_FILE_SIGNATURE = 0x1A53454E;
+        private static readonly uint iNesFileSignature = 0x1A53454E;
 
         public static Cartridge Create(byte[] data) => new Cartridge(data);
 
@@ -28,7 +28,7 @@ namespace ASD.NES.Core {
             Octet[] header = data.Take(16).Select(b => (Octet)b).ToArray();
 
             var fileSignature = BitConverter.ToUInt32(header.Select(o => (byte)o).ToArray(), 0);
-            if (fileSignature != iNES_FILE_SIGNATURE) {
+            if (fileSignature != iNesFileSignature) {
                 throw new InvalidDataException();
             }
 
