@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ASD.NES.Core.ConsoleComponents {
+﻿namespace ASD.NES.Core.ConsoleComponents {
 
     using CPUParts;
     using Shared;
@@ -9,27 +7,18 @@ namespace ASD.NES.Core.ConsoleComponents {
 
         private static readonly CPUAddressSpace memory = CPUAddressSpace.Instance;
 
-        private CPUCoreOld core;
-        private CPUCore coreNew;
+        private CPUCore core;
         private RegistersCPU registers;
 
         public CPUAddressSpace AddressSpace => memory;
-
-        public event Action Clock {
-            add => coreNew.Clock += value;
-            remove => coreNew.Clock -= value;
-        }
 
         public CentralProcessor() {
             Initialize();
         }
 
         private void Initialize() {
-
             registers = new RegistersCPU();
-
-            core = new CPUCoreOld(registers);
-            coreNew = new CPUCore(registers);
+            core = new CPUCore(registers);
         }
 
         public int Step() {
@@ -37,16 +26,10 @@ namespace ASD.NES.Core.ConsoleComponents {
             if (memory.Nmi) {
                 memory.Nmi = false;
                 JumpToNMIVector();
-                coreNew.ClockTime();
-                return 0;
+                return 1;
             }
 
             var opcode = memory[registers.PC];
-
-            if (coreNew.HaveInstruction(opcode)) {
-                coreNew.Step();
-                return 0;
-            }
             return core.Execute(opcode);
         }
 
