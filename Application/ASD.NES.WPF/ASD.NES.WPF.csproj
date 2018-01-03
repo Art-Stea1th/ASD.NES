@@ -43,12 +43,6 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ASD.NES.Core\ASD.NES.Core.csproj">
-      <Project>{E3EEC926-1AE4-4F13-B7B7-3BE7C7BD609E}</Project>
-      <Name>ASD.NES.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -75,6 +69,12 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ASD.NES.Kernel\ASD.NES.Kernel.csproj">
+      <Project>{0538b45b-5541-4763-9008-d6cbd70ad9b5}</Project>
+      <Name>ASD.NES.Kernel</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

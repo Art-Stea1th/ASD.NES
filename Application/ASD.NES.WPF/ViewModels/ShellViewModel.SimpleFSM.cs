@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace ASD.NES.WPF.ViewModels {
 
-    using Core;
+    using Kernel;
     using Helpers;
 
     internal sealed partial class ShellViewModel {

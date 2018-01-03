@@ -3,7 +3,7 @@ using Microsoft.Win32;
 
 namespace ASD.NES.WPF.Services {
 
-    using Core;
+    using Kernel;
 
     internal static class OpenFileService {
 

@@ -3,7 +3,7 @@ using System.Windows.Threading;
 
 namespace ASD.NES.WPF.Controllers {
 
-    using Core;
+    using Kernel;
     using Helpers;
 
     internal sealed class KeyboardController : Observable, IGamepad {

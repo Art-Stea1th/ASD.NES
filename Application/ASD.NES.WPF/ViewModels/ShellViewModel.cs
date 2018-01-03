@@ -7,7 +7,7 @@ using System.Windows.Threading;
 namespace ASD.NES.WPF.ViewModels {
 
     using Controllers;
-    using Core;
+    using Kernel;
     using Helpers;
     using Services;
 
