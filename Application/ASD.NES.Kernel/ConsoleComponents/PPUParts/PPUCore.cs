@@ -1,7 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
-namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
-    using System.Linq;
     using CPUParts;
     using Shared;
 

@@ -36,6 +36,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         }
 
         public RegistersPPU RegistersPPU => registersPPU;
+        public RegistersAPU RegistersAPU => registersAPU;
         public InputPort InputPort => registersInput;
 
         static CPUAddressSpace() {
