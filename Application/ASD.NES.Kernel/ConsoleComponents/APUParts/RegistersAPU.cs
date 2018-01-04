@@ -4,12 +4,10 @@
     using Registers;
     using Shared;
 
-    internal enum FrameCounterMode { FourStep = 0, FiveStep = 1 }
-
     internal sealed class RegistersAPU : IMemory<Octet> {
 
-        public PulseChannelRegister PulseA { get; private set; }
-        public PulseChannelRegister PulseB { get; private set; }
+        public PulseChannel PulseA { get; private set; }
+        public PulseChannel PulseB { get; private set; }
 
         public Octet this[int address] { get => 0; set => Write(address, value); }
         public int Cells => 20;
@@ -20,12 +18,9 @@
             0x0C, 0x10, 0x18, 0x12, 0x30, 0x14, 0x60, 0x16, 0xC0, 0x18, 0x48, 0x1A, 0x10, 0x1C, 0x20, 0x1E
         };
 
-        private FrameCounterMode frameCounterMode;
-        private bool irqInhibit;
-
         public RegistersAPU() {
-            PulseA = new PulseChannelRegister();
-            PulseB = new PulseChannelRegister();
+            PulseA = new PulseChannel();
+            PulseB = new PulseChannel();
         }
 
         private void Write(int address, Octet value) {
@@ -33,6 +28,23 @@
             if (address >= 0x4000 && address <= 0x4007) {
                 var pulse = address < 0x4004 ? PulseA : PulseB;
                 pulse[address] = value;
+
+                switch (address & 3) {
+                    case 0:
+                        pulse.EnvelopeVolume = 15;
+                        pulse.EnvelopeCounter = pulse.EnvelopeDividerPeriodOrVolume;
+                        break;
+                    case 1:
+                        pulse.SweepPeriodCounter = pulse.SweepPeriod;
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        pulse.CurrentLengthCounter = lengthCounterLookupTable[pulse.LengthCounterLoad];
+                        break;
+                    default:
+                        break;
+                }
             }
             else if (address == 0x4015) {
                 return;

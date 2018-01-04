@@ -10,9 +10,15 @@ namespace ASD.NES.Kernel {
         private Clock Clk { get; set; }
         private CentralProcessor Cpu { get; set; }
         private PictureProcessor Ppu { get; set; }
+        private AudioProcessor Apu { get; set; }
 
         public event Action<uint[]> NextFrameReady;
+        public event Action PlayAudio {
+            add => Apu.PlayAudio += value;
+            remove => Apu.PlayAudio -= value;
+        }
 
+        public IAudioBuffer AudioBuffer => Apu.Buffer;
         public IGamepad PlayerOneController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.One); }
         public IGamepad PlayerTwoController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.Two); }
 
@@ -27,11 +33,16 @@ namespace ASD.NES.Kernel {
 
         private void InitializeHardware() {
 
-            Clk = new Clock(/*TimeSpan.FromMilliseconds(1000.0 / 60.0988)*/ TimeSpan.FromTicks(4));
+            Clk = new Clock(TimeSpan.FromMilliseconds(1000.0 / 60.0988) /*TimeSpan.FromTicks(4)*/);
             Clk.Tick += () => NextFrameReady?.Invoke(Update());
 
             Cpu = new CentralProcessor();
             Ppu = new PictureProcessor();
+
+            if (Apu == null) {
+                Apu = new AudioProcessor();
+            }
+
         }
 
         public uint[] Update() {
@@ -41,12 +52,26 @@ namespace ASD.NES.Kernel {
             while (startingFrame == Ppu.TotalFrames) {
 
                 var cycles = Cpu.Step();
-                for (var i = 0; i < cycles * 3; ++i) {
-                    Ppu.Step();
-                }
+                PpuStep(cycles);
+                ApuStep(cycles);
             }
             return Ppu.ActualFrame;
-        }        
+        }
+
+        public void PpuStep(int cpuCycles) {
+            for (var i = 0; i < cpuCycles * 3; ++i) {
+                Ppu.Step();
+            }
+        }
+
+        int extraCpuCycle = 0;
+        public void ApuStep(int cpuCycles) {
+            cpuCycles += extraCpuCycle;
+            for (var i = 0; i < cpuCycles / 2; i++) {
+                Apu.Step();
+            }
+            extraCpuCycle = cpuCycles & 0x1;
+        }
 
         private void ColdBoot() {
             Cpu.ColdBoot();

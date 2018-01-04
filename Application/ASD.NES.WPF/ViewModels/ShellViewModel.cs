@@ -4,11 +4,14 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
+using NAudio.Wave;
+
 namespace ASD.NES.WPF.ViewModels {
 
     using Controllers;
-    using Kernel;
+    using DataProviders;
     using Helpers;
+    using Kernel;
     using Services;
 
     internal sealed partial class ShellViewModel : Observable {
@@ -19,6 +22,8 @@ namespace ASD.NES.WPF.ViewModels {
         private Cartridge cartridge;
 
         private WriteableBitmap screen;
+        private WaveOut audioDevice;
+
         public ImageSource Screen => screen;
 
         public ICommand OpenFile => new RelayCommand(OpenFileCommandExecute);
@@ -30,9 +35,17 @@ namespace ASD.NES.WPF.ViewModels {
             dispatcher = Dispatcher.CurrentDispatcher;
             screen = new WriteableBitmap(256, 240, 96, 96, PixelFormats.Bgr32, null);
             console = new Console();
+            ConfigureAudioDevice();
             ConfigureControllers();
             console.NextFrameReady += UpdateScreen;
+            console.PlayAudio += audioDevice.Play;
             InitializeControlCommands();
+        }
+
+        private void ConfigureAudioDevice() {
+            var waveProvider = new WaveProvider(console.AudioBuffer);
+            audioDevice = new WaveOut();
+            audioDevice.Init(waveProvider);
         }
 
         private void ConfigureControllers() { // TODO: move to settings ViewModel
