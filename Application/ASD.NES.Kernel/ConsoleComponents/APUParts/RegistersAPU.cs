@@ -46,9 +46,6 @@
                         break;
                 }
             }
-            else if (address == 0x4015) {
-                return;
-            }
             else {
                 return;
             }

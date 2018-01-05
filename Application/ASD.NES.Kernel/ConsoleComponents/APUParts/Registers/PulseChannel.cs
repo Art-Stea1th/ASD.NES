@@ -1,4 +1,5 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
+    using System;
 
     // TODO: Separate channel & registers
 
@@ -79,9 +80,9 @@
                         newPeriod = Timer - periodAdjustment;
                     }
                     else {
-                        newPeriod = (Timer + periodAdjustment);
+                        newPeriod = Timer + periodAdjustment;
                     }
-                    if (0 < newPeriod && newPeriod < 0x7FF && SweepShift != 0) {
+                    if (newPeriod > 0 && newPeriod < 0x7FF && SweepShift != 0) {
                         Timer = (ushort)newPeriod;
                     }
                 }
@@ -118,11 +119,13 @@
                 return 0.0f;
             }
 
-            var frequency = 102400.0 / Timer;
-            var normalizedSampleTime = timeInSamples * frequency / sampleRate;
+            // http://wiki.nesdev.com/w/index.php/APU_Pulse
+            // f = CPU / (16 * (t + 1)) | t = (CPU / (16 * f)) - 1 | 111860 ~ 1.789773 MHz / 16 / timer
+            var frequency = 111860.0 / Timer;
+            var normalizedSampleTime = timeInSamples * frequency / sampleRate; // https://en.wikipedia.org/wiki/Normalized_frequency_(unit)
 
-            var fractionalNormalizedSampleTime = normalizedSampleTime - (int)normalizedSampleTime;
-            float dutyPulse = fractionalNormalizedSampleTime < DutyMap[Duty] ? 1 : -1;
+            var fractionalNormalizedSampleTime = normalizedSampleTime - Math.Floor(normalizedSampleTime); // 0 ... 0.999
+            float dutyPulse = fractionalNormalizedSampleTime < DutyMap[Duty] ? -1 : 1;
 
             var volume = EnvelopeDividerPeriodOrVolume;
             if (!ConstantVolume) {
