@@ -49,12 +49,14 @@ namespace ASD.NES.Kernel.ConsoleComponents {
             if (tickLengthCounterAndSweep) {
                 r.PulseA.TickLengthCounter();
                 r.PulseB.TickLengthCounter();
+                r.Triangle.TickLengthCounter();
                 r.PulseA.TickSweep();
                 r.PulseB.TickSweep();
             }
 
             r.PulseA.TickEnvelopeCounter();
             r.PulseB.TickEnvelopeCounter();
+            r.Triangle.TickLinearCounter();
 
             WriteFrameCounterAudio();
             tickLengthCounterAndSweep = !tickLengthCounterAndSweep;
@@ -72,16 +74,25 @@ namespace ASD.NES.Kernel.ConsoleComponents {
                 PlayAudio.Invoke();
             }
 
+            float pulseA = 0f, pulseB = 0f, triangle = 0f;
+
             for (var i = 0; i < samplesPerAPUFrameTick; i++) {
-                var pulseA = r.PulseA.GetPulseAudio(timeInSamples, sampleRate);
-                var pulseB = r.PulseB.GetPulseAudio(timeInSamples, sampleRate);
+
+                if (r.Status.PulseAEnabled || r.PulseA.CurrentLengthCounter != 0) {
+                    pulseA = r.PulseA.GetPulseAudio(timeInSamples, sampleRate);
+                }
+                if (r.Status.PulseBEnabled || r.PulseB.CurrentLengthCounter != 0) {
+                    pulseB = r.PulseB.GetPulseAudio(timeInSamples, sampleRate);
+                }
+                if (r.Status.TriangleEnabled && r.Triangle.CurrentLinearCounter != 0 && r.Triangle.CurrentLengthCounter != 0) {
+                    triangle = r.Triangle.GetTriangleAudio(timeInSamples, sampleRate);
+                }                
 
                 // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer
-                (Buffer as AudioBuffer).Write(pulseA + pulseB);
+                (Buffer as AudioBuffer).Write(pulseA + pulseB + triangle);
                 timeInSamples++;
             }
-
-            if (timeInSamples > sampleRate) { // !!!
+            if (timeInSamples > ushort.MaxValue) { // !!!
                 timeInSamples = 0;
             }
         }

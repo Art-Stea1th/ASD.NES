@@ -1,5 +1,6 @@
-﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
-    using System;
+﻿using System;
+
+namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
 
     // TODO: Separate channel & registers
 
@@ -45,7 +46,6 @@
 
         // ------- Additional -------
 
-        public bool Enabled { get; set; } = true;
         public bool EnvelopeLoop => LengthCounterHalt;
 
         // flag is shared with LengthCounterHalt
@@ -115,17 +115,13 @@
 
         public float GetPulseAudio(int timeInSamples, int sampleRate) {
 
-            if (!Enabled || CurrentLengthCounter == 0) {
-                return 0.0f;
-            }
-
             // http://wiki.nesdev.com/w/index.php/APU_Pulse
             // f = CPU / (16 * (t + 1)) | t = (CPU / (16 * f)) - 1 | 111860 ~ 1.789773 MHz / 16 / timer
             var frequency = 111860.0 / Timer;
-            var normalizedSampleTime = timeInSamples * frequency / sampleRate; // https://en.wikipedia.org/wiki/Normalized_frequency_(unit)
+            var normalizedSampleTime = timeInSamples * frequency / sampleRate;
 
             var fractionalNormalizedSampleTime = normalizedSampleTime - Math.Floor(normalizedSampleTime); // 0 ... 0.999
-            float dutyPulse = fractionalNormalizedSampleTime < DutyMap[Duty] ? -1 : 1;
+            float dutyPulse = fractionalNormalizedSampleTime < DutyMap[Duty] ? 1 : -1;
 
             var volume = EnvelopeDividerPeriodOrVolume;
             if (!ConstantVolume) {

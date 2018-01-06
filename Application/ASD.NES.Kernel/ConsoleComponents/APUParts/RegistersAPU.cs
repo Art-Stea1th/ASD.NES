@@ -6,8 +6,11 @@
 
     internal sealed class RegistersAPU : IMemory<Octet> {
 
-        public PulseChannel PulseA { get; private set; }
-        public PulseChannel PulseB { get; private set; }
+        public PulseChannel PulseA { get; }
+        public PulseChannel PulseB { get; }
+        public TriangleChannel Triangle { get; }
+
+        public StatusRegister Status { get; }
 
         public Octet this[int address] { get => 0; set => Write(address, value); }
         public int Cells => 20;
@@ -21,6 +24,9 @@
         public RegistersAPU() {
             PulseA = new PulseChannel();
             PulseB = new PulseChannel();
+            Triangle = new TriangleChannel();
+
+            Status = new StatusRegister();
         }
 
         private void Write(int address, Octet value) {
@@ -37,14 +43,29 @@
                     case 1:
                         pulse.SweepPeriodCounter = pulse.SweepPeriod;
                         break;
-                    case 2:
-                        break;
                     case 3:
                         pulse.CurrentLengthCounter = lengthCounterLookupTable[pulse.LengthCounterLoad];
                         break;
                     default:
                         break;
                 }
+            }
+            else if (address >= 0x4008 && address <= 0x400B) {
+                Triangle[address] = value;
+                switch (address & 3) {
+                    case 0:
+                        Triangle.CurrentLinearCounter = Triangle.LinearCounterLoad;
+                        break;
+                    case 3:
+                        Triangle.CurrentLengthCounter = lengthCounterLookupTable[Triangle.LengthCounterLoad];
+                        Triangle.CurrentLinearCounter = Triangle.LinearCounterLoad;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (address == 0x4015) {
+                Status.Value = value;
             }
             else {
                 return;
