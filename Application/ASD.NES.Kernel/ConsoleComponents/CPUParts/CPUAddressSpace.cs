@@ -5,10 +5,10 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
     using APUParts;
     using BasicComponents;
     using CartridgeComponents.Boards;
+    using Helpers;
     using PPUParts;
-    using Shared;
 
-    internal sealed class CPUAddressSpace : IMemory<Octet> {
+    internal sealed class CPUAddressSpace : IMemory<byte> {
 
         #region Singleton
         public static CPUAddressSpace Instance => instance.Value;
@@ -17,22 +17,22 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         private CPUAddressSpace() { }
         #endregion
 
-        private static readonly Octet[] internalMemory;    // 0x0000 - 0x1FFF: cpuRam - 8 kb (2 kb mirror x4) - [ZeroPage, Stack, WRAM]
+        private static readonly byte[] internalMemory;     // 0x0000 - 0x1FFF: cpuRam - 8 kb (2 kb mirror x4) - [ZeroPage, Stack, WRAM]
         private static readonly RegistersPPU registersPPU; // 0x2000 - 0x3FFF: ppuReg - 8 kb (8 b mirror x1024) + 1b (0x4014)
         private static readonly RegistersAPU registersAPU; // 0x4000 - 0x4013: apuReg - 20 b + 1 b (0x4015)
         private static readonly InputPort registersInput;  // 0x4016 - 0x4017: Input - 2 b
                                                            // 0x4018 - 0x4019: ??
         private static Board externalMemory;               // 0x4020 - 0xFFFF: cartrg - 49120 b
 
-        public Octet this[int address] {
+        public byte this[int address] {
             get => Read(address);
             set => Write(address, value);
         }
         public int Cells => 1024 * 64;
 
         public bool Nmi {
-            get => this[0xFFFA][0];
-            set => this[0xFFFA] = (Octet)(value ? this[0xFFFA] | 1 : this[0xFFFA] & ~1);
+            get => Read(0xFFFA).HasBit(0);
+            set { var nmi = Read(0xFFFA); Write(0xFFFA, nmi.WithChangedBit(0, value)); }
         }
 
         public RegistersPPU RegistersPPU => registersPPU;
@@ -40,7 +40,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         public InputPort InputPort => registersInput;
 
         static CPUAddressSpace() {
-            internalMemory = new Octet[2048];
+            internalMemory = new byte[2048];
             registersPPU = new RegistersPPU();
             registersAPU = new RegistersAPU();
             registersInput = new InputPort();
@@ -50,7 +50,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
             externalMemory = boardMemory;
         }
 
-        private Octet Read(int address) {
+        private byte Read(int address) {
             if (address < 0x2000) {
                 return internalMemory[address & 0x7FF];
             }
@@ -66,7 +66,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
             return externalMemory[address];
         }
 
-        private void Write(int address, Octet value) {
+        private void Write(int address, byte value) {
             if (address < 0x2000) {
                 internalMemory[address & 0x7FF] = value;
             }

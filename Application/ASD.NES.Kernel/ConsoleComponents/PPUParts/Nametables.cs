@@ -8,7 +8,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
     public enum Mirroring { FourScreen, SingleScreen, Vertical, Horizontal }
 
-    internal sealed class Nametables : IMemory<Octet> {
+    internal sealed class Nametables : IMemory<byte> {
 
         private readonly Nametable[] nametable = new Nametable[4].Initialize<Nametable>();
 
@@ -16,7 +16,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
         public Mirroring Mirroring { get; set; }
 
-        public Octet this[int address] {
+        public byte this[int address] {
             get => nametable[GetBankIndex(FixAddress(address))][address & 0x3FF];
             set => nametable[GetBankIndex(FixAddress(address))][address & 0x3FF] = value;
         }
@@ -43,18 +43,18 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
         }
 
 
-        internal sealed class Nametable : IMemory<Octet> {
+        internal sealed class Nametable : IMemory<byte> {
 
-            private readonly RefOctet[] symbols = new Octet[960].Wrap();   // 32x30
-            private readonly RefOctet[] attributes = new Octet[64].Wrap(); //  8x8
+            private readonly RefInt8[] symbols = new byte[960].Wrap();   // 32x30
+            private readonly RefInt8[] attributes = new byte[64].Wrap(); //  8x8
 
-            public Octet this[int address] {
+            public byte this[int address] {
                 get => Read(address);
                 set => Write(address, value);
             }
             public int Cells => symbols.Length + attributes.Length;
 
-            public Octet Read(int address) {
+            public byte Read(int address) {
 
                 address &= 0x3FF;
 
@@ -66,7 +66,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
                 return attributes[address];
             }
 
-            public void Write(int address, Octet value) {
+            public void Write(int address, byte value) {
 
                 address &= 0x3FF;
 
@@ -79,8 +79,8 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
                 }
             }
 
-            public Octet GetSymbol(int x, int y) => symbols[y << 5 | x];       // y * 32 + x
-            public Octet GetAttribute(int x, int y) => attributes[y << 3 | x]; // y *  8 + x
+            public byte GetSymbol(int x, int y) => symbols[y << 5 | x];       // y * 32 + x
+            public byte GetAttribute(int x, int y) => attributes[y << 3 | x]; // y *  8 + x
         }
     }
 }

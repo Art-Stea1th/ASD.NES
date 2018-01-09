@@ -1,15 +1,15 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents {
 
     using BasicComponents;
-    using Shared;
+    using Helpers;
 
     internal enum PlayerNumber { One, Two }
 
-    internal sealed class InputPort : IMemory<Octet> {
+    internal sealed class InputPort : IMemory<byte> {
 
-        private Octet shiftRegister;
+        private byte shiftRegister;
 
-        public Octet this[int address] {
+        public byte this[int address] {
             get => Read(address);
             set => Write(address, value);
         }
@@ -33,12 +33,12 @@
             }
         }
 
-        public void Write(int address, Octet value) {
+        public void Write(int address, byte value) {
             if (address == 0x4016) {
                 var prev = shiftRegister;
                 shiftRegister = value;
 
-                if (prev[0] && !shiftRegister[0]) {
+                if (prev.HasBit(0) && !shiftRegister.HasBit(0)) {
                     controllerOneInputState?.Reload();
                     controllerTwoInputState?.Reload();
                 }
@@ -48,7 +48,7 @@
         private class InputState {
 
             private IGamepad controller;
-            private Octet states;
+            private byte states;
             private byte keyBit;
 
             public InputState(IGamepad controller)
@@ -56,22 +56,24 @@
 
             public byte Next()
                 => keyBit < 8
-                ? (byte)(states[keyBit++] ? 1 : 0)
+                ? (byte)(states.HasBit(keyBit++) ? 1 : 0)
                 : (byte)0;
 
             public void Reload() {
 
                 keyBit = states = 0;
 
-                states[0] = controller.IsKeyDown(GamepadKey.A);
-                states[1] = controller.IsKeyDown(GamepadKey.B);
-                states[2] = controller.IsKeyDown(GamepadKey.Select);
-                states[3] = controller.IsKeyDown(GamepadKey.Start);
+                states = BitOperations.MakeInt8(
+                    controller.IsKeyDown(GamepadKey.Right),
+                    controller.IsKeyDown(GamepadKey.Left),
+                    controller.IsKeyDown(GamepadKey.Down),
+                    controller.IsKeyDown(GamepadKey.Up),
 
-                states[4] = controller.IsKeyDown(GamepadKey.Up);
-                states[5] = controller.IsKeyDown(GamepadKey.Down);
-                states[6] = controller.IsKeyDown(GamepadKey.Left);
-                states[7] = controller.IsKeyDown(GamepadKey.Right);
+                    controller.IsKeyDown(GamepadKey.Start),
+                    controller.IsKeyDown(GamepadKey.Select),
+                    controller.IsKeyDown(GamepadKey.B),
+                    controller.IsKeyDown(GamepadKey.A)
+                    );
             }
         }
     }

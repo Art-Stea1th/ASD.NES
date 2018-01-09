@@ -7,8 +7,8 @@
     /// (Common name: PPUCTRL) </summary>
     internal sealed class ControlRegister {
 
-        private readonly RefOctet r;
-        public ControlRegister(RefOctet register) => r = register;
+        private readonly RefInt8 r;
+        public ControlRegister(RefInt8 register) => r = register;
 
         /// <summary> Add 256 to the X scroll position </summary>
         public bool Add256ToX { get => r[0]; set => r[0] = value; }
@@ -60,11 +60,10 @@
         /// <summary> Sprite height: 8 or 16 px </summary>
         public byte SpriteSizeY => (byte)(8 << ((r.Value & 0b10_0000) >> 5));
 
-        public Octet Value { get => r.Value; set => r.Value = value; }
+        public byte Value { get => r.Value; set => r.Value = value; }
 
         public void Clear() => r.Value = 0;
 
-        public static implicit operator Octet(ControlRegister register) => register.r.Value;
         public static implicit operator byte(ControlRegister register) => register.r.Value;
     }
 }

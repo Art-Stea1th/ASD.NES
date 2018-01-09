@@ -2,7 +2,7 @@
 
 namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
-    using Shared;
+    using Helpers;
 
     /// <summary> Emulation NMOS 6502 component of the CPU RP2A03 (Ricoh Processor 2A03) </summary>
     internal sealed class CPUCore { // all core instructions must be rewritten into a classes
@@ -19,8 +19,8 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
         private AddressingMode mode, acc_, imm_, zpg_, zpx_, zpy_, abs_, abx_, aby_, ind_, idx_, idy_, rel_, imp_, ____ = null;
 
-        private Hextet Address { get => mode.Address; set => mode.Address = value; }
-        private Octet M { get => mode.M; set => mode.M = value; }
+        private ushort Address { get => mode.Address; set => mode.Address = value; }
+        private byte M { get => mode.M; set => mode.M = value; }
         private bool PageCrossed => mode.PageCrossed;
 
         public CPUCore(RegistersCPU registers) {
@@ -259,7 +259,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Arithmetic Shift Left one bit (Memory or Accumulator) </summary>
         private int ASL() {
 
-            r.PS.C.Set(M[7]);
+            r.PS.C.Set(M.HasBit(7));
 
             M <<= 1;
 
@@ -272,7 +272,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Logical Shift Right one bit (Memory or Accumulator) </summary>
         private int LSR() {
 
-            r.PS.C.Set(M[0]);
+            r.PS.C.Set(M.HasBit(0));
 
             M >>= 1;
 
@@ -285,7 +285,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Rotate Left one bit (Memory or Accumulator) </summary>
         private int ROL() {
 
-            var carry = M[7];
+            var carry = M.HasBit(7);
 
             M = (byte)((M << 1) | r.PS.C);
 
@@ -299,7 +299,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Rotate Right one bit (Memory or Accumulator) </summary>
         private int ROR() {
 
-            var carry = M[0];
+            var carry = M.HasBit(0);
 
             M = (byte)((M >> 1) | (r.PS.C << 7));
 
@@ -313,7 +313,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Test bits in Memory with Accumulator </summary>
         private int BIT() {
 
-            r.PS.V.Set(r.A[6]);
+            r.PS.V.Set(r.A.HasBit(6));
             r.PS.UpdateSigned(M);
             r.PS.UpdateZero(r.A & M);
 
@@ -454,7 +454,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
             Push16(r.PC); // r.PS.B.Set(true); // ?
             Push(r.PS);   // r.PS.I.Set(true); // ?
 
-            r.PC = Hextet.Make(memory[0xFFFF], memory[0xFFFE]);
+            r.PC = BitOperations.MakeInt16(memory[0xFFFF], memory[0xFFFE]);
             return 0;
         }
 
@@ -635,8 +635,8 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         }
 
         /// <summary> Isn't instruction </summary>
-        private void Push16(Hextet value) {
-            Push(value.H); Push(value.L);
+        private void Push16(ushort value) {
+            Push(value.H()); Push(value.L());
         }
 
         /// <summary> Isn't instruction </summary>
@@ -645,13 +645,13 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         }
 
         /// <summary> Isn't instruction </summary>
-        private void Push(Octet value) {
+        private void Push(byte value) {
             memory[0x100 + r.SP] = value;
             r.SP -= 1;
         }
 
         /// <summary> Isn't instruction </summary>
-        private Octet Pull() {
+        private byte Pull() {
             r.SP += 1;
             return memory[0x100 + r.SP];
         }

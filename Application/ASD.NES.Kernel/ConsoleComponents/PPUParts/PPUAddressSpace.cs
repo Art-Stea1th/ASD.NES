@@ -6,9 +6,9 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
     using BasicComponents;
     using CartridgeComponents.Boards;
     using Helpers;
-    using Shared;    
+    using Shared;
 
-    internal sealed class PPUAddressSpace : IMemory<Octet> {
+    internal sealed class PPUAddressSpace : IMemory<byte> {
 
         #region Singleton
         public static PPUAddressSpace Instance => instance.Value;
@@ -20,7 +20,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
         private static Board externalMemory;           // $0000 - $1FFF: CHR-ROM Tite-set 0 and 1 - 8 kb (2x4 kb)
 
         private static readonly Nametables nametables; // $2000 - $2FFF: Nametables - 4 kb + $3000 - 3EFF: mirror
-        private static readonly RefOctet[] palettes;   // $3F00 - $3FFF: Palettes (BG - 16 b \ Sprite - 16 b) - Mirror x 8 (256 b)
+        private static readonly RefInt8[] palettes;    // $3F00 - $3FFF: Palettes (BG - 16 b \ Sprite - 16 b) - Mirror x 8 (256 b)
 
         public Nametables.Nametable GetNametable(int index) => nametables.GetNametable(index);
 
@@ -29,7 +29,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
             set => nametables.Mirroring = value;
         }
 
-        public Octet this[int address] {
+        public byte this[int address] {
             get => Read(address);
             set => Write(address, value);
         }
@@ -38,14 +38,14 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
         static PPUAddressSpace() {
             nametables = new Nametables();
-            palettes = new Octet[32].Wrap().Repeat(8).ToArray();
+            palettes = new byte[32].Wrap().Repeat(8).ToArray();
         }
 
         public void SetExternalMemory(Board boardMemory) {
             externalMemory = boardMemory;
         }
 
-        private Octet Read(int address) {
+        private byte Read(int address) {
 
             if (address < 0x2000) {
                 return externalMemory[address | 0x6000];
@@ -56,7 +56,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
             return palettes[address & 0xFF];
         }
 
-        private void Write(int address, Octet value) {
+        private void Write(int address, byte value) {
 
             if (address < 0x2000) {
                 externalMemory[address | 0x6000] = value;

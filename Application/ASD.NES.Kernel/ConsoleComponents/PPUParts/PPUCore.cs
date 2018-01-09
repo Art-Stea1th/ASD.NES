@@ -1,7 +1,7 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
     using CPUParts;
-    using Shared;
+    using Helpers;
 
     internal sealed class PPUCore {
 
@@ -119,7 +119,7 @@
             frame[Linearize(scanpoint, scanline, 256)] = palette[GetPaletteIndex(backgroundColorIndex, spriteColorIndex, spriteInFront)];
         }
 
-        private Octet GetPaletteIndex(Octet bckgColorBit, Octet sprtColorBit, bool sprInFront) { // Multiplexer
+        private byte GetPaletteIndex(byte bckgColorBit, byte sprtColorBit, bool sprInFront) { // Multiplexer
 
             var paletteAddress = 0x3F00; // 0x3F00 - background, 0x3F10 - sprite
             var colorIndex = bckgColorBit;
@@ -171,16 +171,16 @@
             }
         }
 
-        private void FillOAM(Octet oamDmaAddress) {
+        private void FillOAM(byte oamDmaAddress) {
 
             int GetCPUMemoryAddress(int offset) => (oamDmaAddress << 8) + ((r.OamAddr.Value + offset));
 
             for (var i = 0; i < oam.Cells; i++) {
-                oam[i] = Quadlet.Make(
-                    Hextet.Make(
+                oam[i] = BitOperations.MakeInt32(
+                    BitOperations.MakeInt16(
                         cpuMemory[GetCPUMemoryAddress(i << 2 | 0b11)],
                         cpuMemory[GetCPUMemoryAddress(i << 2 | 0b10)]),
-                    Hextet.Make(
+                    BitOperations.MakeInt16(
                         cpuMemory[GetCPUMemoryAddress(i << 2 | 0b01)],
                         cpuMemory[GetCPUMemoryAddress(i << 2 | 0b00)]));
             }

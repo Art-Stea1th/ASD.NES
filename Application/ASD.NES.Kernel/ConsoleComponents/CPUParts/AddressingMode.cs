@@ -1,84 +1,84 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
-    using Shared;
+    using Helpers;
 
     /// <summary> "Indirect Y" (Post-Indexed Indirect) addressing mode </summary>
     internal sealed class IDY : AddressingMode {
-        public override Hextet Address => (ushort)(Hextet.Make(memory[ArgOne + 1], memory[ArgOne]) + r.Y);
-        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
+        public override ushort Address => (ushort)(BitOperations.MakeInt16(memory[ArgOne + 1], memory[ArgOne]) + r.Y);
+        public override byte M { get => memory[Address]; set => memory[Address] = value; }
         public override bool PageCrossed => !SamePage(Address, (ushort)(Address - r.Y));
         public IDY(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Indirect X" (Pre-Indexed Indirect) addressing mode </summary>
     internal sealed class IDX : AddressingMode {
-        public override Hextet Address => Hextet.Make(memory[ArgOne + 1 + r.X], memory[ArgOne + r.X]);
-        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
+        public override ushort Address => BitOperations.MakeInt16(memory[ArgOne + 1 + r.X], memory[ArgOne + r.X]);
+        public override byte M { get => memory[Address]; set => memory[Address] = value; }
         public IDX(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Indirect" addressing mode </summary>
     internal sealed class IND : AddressingMode {
-        public override Hextet Address => Hextet.Make(memory[ArgOne + 1], memory[ArgOne]);
-        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
+        public override ushort Address => BitOperations.MakeInt16(memory[ArgOne + 1], memory[ArgOne]);
+        public override byte M { get => memory[Address]; set => memory[Address] = value; }
         public IND(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Absolute Y" addressing mode </summary>
     internal sealed class ABY : ABS {
-        public override Hextet Address => (ushort)(base.Address + r.Y);
+        public override ushort Address => (ushort)(base.Address + r.Y);
         public override bool PageCrossed => !SamePage(Address, base.Address);
         public ABY(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Absolute X" addressing mode </summary>
     internal sealed class ABX : ABS {
-        public override Hextet Address => (ushort)(base.Address + r.X);
+        public override ushort Address => (ushort)(base.Address + r.X);
         public override bool PageCrossed => !SamePage(Address, base.Address);
         public ABX(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Absolute" addressing mode </summary>
     internal class ABS : AddressingMode {
-        public override Hextet Address => Hextet.Make(ArgTwo, ArgOne);
-        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
+        public override ushort Address => BitOperations.MakeInt16(ArgTwo, ArgOne);
+        public override byte M { get => memory[Address]; set => memory[Address] = value; }
         public ABS(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Zero page (Post-Indexed) Y" addressing mode </summary>
     internal sealed class ZPY : ZPG {
-        public override Hextet Address => (ushort)(base.Address + r.Y);
+        public override ushort Address => (ushort)(base.Address + r.Y);
         public ZPY(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Zero page (Post-Indexed) X" addressing mode </summary>
     internal sealed class ZPX : ZPG {
-        public override Hextet Address => (ushort)(base.Address + r.X);
+        public override ushort Address => (ushort)(base.Address + r.X);
         public ZPX(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Zero page" addressing mode </summary>
     internal class ZPG : AddressingMode {
-        public override Hextet Address => ArgOne;
-        public override Octet M { get => memory[Address]; set => memory[Address] = value; }
+        public override ushort Address => ArgOne;
+        public override byte M { get => memory[Address]; set => memory[Address] = value; }
         public ZPG(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Relative" addressing mode </summary>
     internal sealed class REL : AddressingMode {
-        public override Hextet Address { get => r.PC; set => r.PC = value; }
+        public override ushort Address { get => r.PC; set => r.PC = value; }
         public REL(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Immediate" addressing mode </summary>
     internal sealed class IMM : AddressingMode {
-        public override Octet M => ArgOne;
+        public override byte M => ArgOne;
         public IMM(RegistersCPU registers) : base(registers) { }
     }
 
     /// <summary> "Accumulator" addressing mode </summary>
     internal sealed class ACC : AddressingMode {
-        public override Octet M { get => r.A; set => r.A = value; }
+        public override byte M { get => r.A; set => r.A = value; }
         public ACC(RegistersCPU registers) : base(registers) { }
     }
 
@@ -96,9 +96,9 @@
         protected virtual byte ArgOne => memory[r.PC + 1];
         protected virtual byte ArgTwo => memory[r.PC + 2];
 
-        public virtual Hextet Address { get; set; }
+        public virtual ushort Address { get; set; }
         public virtual bool PageCrossed => false;
-        public virtual Octet M { get; set; }
+        public virtual byte M { get; set; }
 
         public AddressingMode(RegistersCPU registers)
             => r = registers;

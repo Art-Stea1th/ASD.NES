@@ -7,8 +7,8 @@
     /// (Common name: PPUMASK) </summary>
     internal sealed class MaskRegister {
 
-        private readonly RefOctet r;
-        public MaskRegister(RefOctet register) => r = register;
+        private readonly RefInt8 r;
+        public MaskRegister(RefInt8 register) => r = register;
 
         /// <summary> True: produce a greyscale display, False: normal color </summary>
         public bool Greyscale { get => r[0]; set => r[0] = value; }
@@ -38,10 +38,9 @@
 
         public bool RenderAll => (r.Value & 0b0001_1110) == 0b0001_1110;
 
-        public Octet Value { get => r.Value; set => r.Value = value; }
+        public byte Value { get => r.Value; set => r.Value = value; }
         public void Clear() => r.Value = 0;
 
-        public static implicit operator Octet(MaskRegister register) => register.r.Value;
         public static implicit operator byte(MaskRegister register) => register.r.Value;
     }
 }

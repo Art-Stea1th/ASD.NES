@@ -3,20 +3,19 @@
 namespace ASD.NES.Kernel.CartridgeComponents.Boards {
 
     using BasicComponents;
-    using Shared;
 
-    internal abstract class Board : IMemory<Octet> {
+    internal abstract class Board : IMemory<byte> {
 
-        public Octet this[int address] {
+        public byte this[int address] {
             get => Read(address);
             set => Write(address, value);
         }
         public abstract int Cells { get; }
 
-        protected abstract Octet Read(int address);
-        protected abstract void Write(int address, Octet value);
+        protected abstract byte Read(int address);
+        protected abstract void Write(int address, byte value);
 
-        public abstract void SetCHR(IReadOnlyList<Octet[]> chr);
-        public abstract void SetPRG(IReadOnlyList<Octet[]> prg);
+        public abstract void SetCHR(IReadOnlyList<byte[]> chr);
+        public abstract void SetPRG(IReadOnlyList<byte[]> prg);
     }
 }

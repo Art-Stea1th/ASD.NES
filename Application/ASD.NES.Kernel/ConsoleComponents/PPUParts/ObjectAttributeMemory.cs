@@ -1,7 +1,7 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
     using BasicComponents;
-    using Shared;
+    using Helpers;
     using static ObjectAttributeMemory;
 
     internal sealed class ObjectAttributeMemory : IMemory<OAMRecord> {
@@ -16,20 +16,20 @@
 
         internal struct OAMRecord {
 
-            private Quadlet record;
+            private uint record;
 
-            public Octet Y => record.L.L;
-            public Octet TileNumber => record.L.H;
+            public byte Y => record.LL();
+            public byte TileNumber => record.LH();
 
-            public Octet ColorBitsH => (Octet)(record.H.L & 0b11);
-            public bool InFront => !record.H.L[5];
-            public bool FlipH => record.H.L[6];
-            public bool FlipV => record.H.L[7];
+            public byte ColorBitsH => (byte)(record.HL() & 0b11);
+            public bool InFront => !record.HL().HasBit(5);
+            public bool FlipH => record.HL().HasBit(6);
+            public bool FlipV => record.HL().HasBit(7);
 
-            public Octet X => record.H.H;
+            public byte X => record.HH();
 
-            public static implicit operator OAMRecord(Quadlet record) => new OAMRecord(record + 1); // record.Y + 1
-            public OAMRecord(Quadlet record) => this.record = record;
+            public static implicit operator OAMRecord(uint record) => new OAMRecord(record + 1); // record.Y + 1
+            public OAMRecord(uint record) => this.record = record;
         }
     }
 }

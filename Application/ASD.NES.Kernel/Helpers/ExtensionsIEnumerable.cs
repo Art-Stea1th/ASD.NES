@@ -3,8 +3,6 @@ using System.Linq;
 
 namespace ASD.NES.Kernel.Helpers {
 
-    using Shared;
-
     internal static class ExtensionsIEnumerable {
 
         public static IEnumerable<T> Repeat<T>(this IEnumerable<T> sequence, int times)
@@ -16,8 +14,5 @@ namespace ASD.NES.Kernel.Helpers {
             }
             return array;
         }
-
-        public static RefOctet[] Wrap(this Octet[] array)
-            => array.Select(b => RefOctet.Wrap(b)).ToArray();
     }
 }

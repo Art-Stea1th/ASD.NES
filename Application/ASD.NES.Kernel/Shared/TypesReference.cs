@@ -1,48 +1,52 @@
 ﻿namespace ASD.NES.Kernel.Shared {
 
-    /// <summary> Represents reference to 16-bit unsigned integer </summary>
-    internal sealed class RefQuadlet : Reference<Quadlet> {
-        public bool this[int bit] {
-            get => Value[bit];
-            set => Value[bit] = value;
-        }
-        public static RefQuadlet Wrap(Quadlet value) => new RefQuadlet(value);
-        private RefQuadlet(Quadlet value) : base(value) { }
+    using Helpers;
 
-        public static implicit operator Quadlet(RefQuadlet reference) => reference.Value;
-        public static implicit operator uint(RefQuadlet reference) => reference.Value;
+    /// <summary> Represents reference to 32-bit unsigned integer </summary>
+    internal sealed class RefInt32 {
+
+        public uint Value { get; set; }
+
+        public bool this[int bit] {
+            get => Value.HasBit(bit);
+            set => Value = Value.WithChangedBit(bit, value);
+        }
+        public static RefInt32 Wrap(uint value) => new RefInt32(value);
+        private RefInt32(uint value)
+            => Value = value;
+
+        public static implicit operator uint(RefInt32 reference) => reference.Value;
     }
 
-    internal sealed class RefHextet : Reference<Hextet> {
-        public bool this[int bit] {
-            get => Value[bit];
-            set => Value[bit] = value;
-        }
-        public static RefHextet Wrap(Hextet value) => new RefHextet(value);
-        private RefHextet(Hextet value) : base(value) { }
+    /// <summary> Represents reference to 16-bit unsigned integer </summary>
+    internal sealed class RefInt16 {
 
-        public static implicit operator Hextet(RefHextet reference) => reference.Value;
-        public static implicit operator ushort(RefHextet reference) => reference.Value;
+        public ushort Value { get; set; }
+
+        public bool this[int bit] {
+            get => Value.HasBit(bit);
+            set => Value = Value.WithChangedBit(bit, value);
+        }
+        public static RefInt16 Wrap(ushort value) => new RefInt16(value);
+        private RefInt16(ushort value)
+            => Value = value;
+
+        public static implicit operator ushort(RefInt16 reference) => reference.Value;
     }
 
     /// <summary> Represents reference to 8-bit unsigned integer </summary>
-    internal sealed class RefOctet : Reference<Octet> {
+    internal sealed class RefInt8 {
+
+        public byte Value { get; set; }
+
         public bool this[int bit] {
-            get => Value[bit];
-            set => Value[bit] = value;
+            get => Value.HasBit(bit);
+            set => Value = Value.WithChangedBit(bit, value);
         }
-        public static RefOctet Wrap(Octet value) => new RefOctet(value);
-        private RefOctet(Octet value) : base(value) { }
-
-        public static implicit operator Octet(RefOctet reference) => reference.Value;
-        public static implicit operator byte(RefOctet reference) => reference.Value;
-    }
-
-    internal abstract class Reference<TValue> where TValue : struct {
-
-        public TValue Value;
-
-        protected Reference(TValue value = default(TValue))
+        public static RefInt8 Wrap(byte value) => new RefInt8(value);
+        private RefInt8(byte value)
             => Value = value;
+
+        public static implicit operator byte(RefInt8 reference) => reference.Value;
     }
 }

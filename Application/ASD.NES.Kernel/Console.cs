@@ -39,7 +39,7 @@ namespace ASD.NES.Kernel {
             Cpu = new CentralProcessor();
             Ppu = new PictureProcessor();
 
-            if (Apu == null) {
+            if (Apu == null) { // ? TODO: impl. reset for pAPU
                 Apu = new AudioProcessor();
             }
 

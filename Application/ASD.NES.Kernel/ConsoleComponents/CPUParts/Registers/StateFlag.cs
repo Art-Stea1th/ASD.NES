@@ -4,10 +4,10 @@
 
     internal struct StateFlag {
 
-        private readonly RefOctet register;
+        private readonly RefInt8 register;
         private readonly int registerBit;
 
-        public StateFlag(RefOctet register, int registerBit) {
+        public StateFlag(RefInt8 register, int registerBit) {
             this.register = register;
             this.registerBit = registerBit;
         }

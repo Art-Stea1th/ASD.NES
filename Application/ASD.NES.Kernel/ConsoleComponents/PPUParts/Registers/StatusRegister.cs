@@ -7,8 +7,8 @@
     /// Common name: PPUSTATUS </summary>
     internal sealed class StatusRegister {
 
-        private readonly RefOctet r;
-        public StatusRegister(RefOctet register) => r = register;
+        private readonly RefInt8 r;
+        public StatusRegister(RefInt8 register) => r = register;
 
         /// <summary> True: more than eight sprites appear on a scanline </summary>
         public bool SpriteOverflow { get => r[5]; set => r[5] = value; }
@@ -24,9 +24,9 @@
         public byte StatusOnly => (byte)(r & 0b1110_0000);
 
         public void Clear() => r.Value = 0;
-        public Octet Value { get => r.Value; set => r.Value = value; }
+        public byte Value { get => r.Value; set => r.Value = value; }
 
-        public static implicit operator Octet(StatusRegister register) => register.r.Value;
+
         public static implicit operator byte(StatusRegister register) => register.r.Value;
     }
 }

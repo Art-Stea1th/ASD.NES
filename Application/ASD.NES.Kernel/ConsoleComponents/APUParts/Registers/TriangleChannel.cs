@@ -3,39 +3,39 @@
     // TODO: Separate channel & registers
 
     using BasicComponents;
-    using Shared;
+    using Helpers;
 
-    internal sealed class TriangleChannel : IMemory<Octet> {
+    internal sealed class TriangleChannel : IMemory<byte> {
 
-        private Octet[] quadlet = new Octet[4];
-        public Octet this[int address] {
-            get => quadlet[address & 3];
-            set => quadlet[address & 3] = value;
+        private byte[] register = new byte[4];
+        public byte this[int address] {
+            get => register[address & 3];
+            set => register[address & 3] = value;
         }
-        public int Cells => quadlet.Length;
+        public int Cells => register.Length;
 
         // ------- Registers -------
 
-        // quadlet[0] - $4008 : CRRR RRRR : Length counter halt / linear counter control(C), linear counter load(R)
-        public bool LengthCounterHalt => quadlet[0][7];
+        // register[0] - $4008 : CRRR RRRR : Length counter halt / linear counter control(C), linear counter load(R)
+        public bool LengthCounterHalt => register[0].HasBit(7);
         public byte LinearCounterLoad {
-            get => (byte)(quadlet[0] & 0x7F);
-            set => quadlet[0] = (byte)((quadlet[0] & 0x80) | (value & 0x7F));
+            get => (byte)(register[0] & 0x7F);
+            set => register[0] = (byte)((register[0] & 0x80) | (value & 0x7F));
         }
 
-        // quadlet[1] - $4009 : ---- ---- : Unused
-        // quadlet[2] - $400A : TTTT TTTT : Timer low(T)
-        // quadlet[3] - $400B : LLLL LTTT : Length counter load(L), timer high(T)
+        // register[1] - $4009 : ---- ---- : Unused
+        // register[2] - $400A : TTTT TTTT : Timer low(T)
+        // register[3] - $400B : LLLL LTTT : Length counter load(L), timer high(T)
 
         public ushort Timer {
-            get => (ushort)(((quadlet[3] & 0b111) << 8) | quadlet[2]);
+            get => (ushort)(((register[3] & 0b111) << 8) | register[2]);
             set {
-                quadlet[2] = (byte)value;
-                quadlet[3] = (byte)((quadlet[3] | 0b1111_1000) | ((value >> 8) & 0b111));
+                register[2] = (byte)value;
+                register[3] = (byte)((register[3] | 0b1111_1000) | ((value >> 8) & 0b111));
             }
         }
 
-        public byte LengthCounterLoad => (byte)(quadlet[3] >> 3);
+        public byte LengthCounterLoad => (byte)(register[3] >> 3);
 
 
         // ------- Additional -------

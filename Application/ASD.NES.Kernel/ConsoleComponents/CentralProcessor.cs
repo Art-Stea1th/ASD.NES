@@ -1,7 +1,7 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents {
 
     using CPUParts;
-    using Shared;
+    using Helpers;
 
     internal sealed class CentralProcessor {
 
@@ -69,16 +69,16 @@
         }
 
         #region Helpers
-        public ushort ReadX2(Hextet address) {
-            return Hextet.Make(memory[address + 1], memory[address]);
+        public ushort ReadX2(ushort address) {
+            return BitOperations.MakeInt16(memory[address + 1], memory[address]);
         }
-        private void PushStack(Octet val) {
+        private void PushStack(byte val) {
             memory[0x100 + registers.SP] = val;
             registers.SP -= 1;
         }
-        private void PushStack16(Hextet val) {
-            PushStack(val.H);
-            PushStack(val.L);
+        private void PushStack16(ushort val) {
+            PushStack(val.H());
+            PushStack(val.L());
         }
         #endregion
     }

@@ -5,7 +5,7 @@
     /// <summary> Processor State flag </summary>
     internal sealed class StateRegister {
 
-        private readonly RefOctet register = RefOctet.Wrap(0x00);
+        private readonly RefInt8 register = RefInt8.Wrap(0x00);
         private readonly StateFlag s, v, u, b, d, i, z, c;
 
         /// <summary> "Signed" (bit 7) - set when the previous operation resulted in a negative value. </summary>
@@ -44,7 +44,7 @@
         public void UpdateZero(int value) => z.Set(value == 0);
         public void UpdateCarry(int value) => c.Set((value >> 8) != 0);
 
-        public void SetNew(Octet vatue) => this.register.Value = vatue;
-        public static implicit operator Octet(StateRegister state) => state.register;
+        public void SetNew(byte vatue) => this.register.Value = vatue;
+        public static implicit operator byte(StateRegister state) => state.register;
     }
 }

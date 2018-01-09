@@ -2,9 +2,8 @@
 
     using BasicComponents;
     using Registers;
-    using Shared;
 
-    internal sealed class RegistersAPU : IMemory<Octet> {
+    internal sealed class RegistersAPU : IMemory<byte> {
 
         public PulseChannel PulseA { get; }
         public PulseChannel PulseB { get; }
@@ -12,7 +11,7 @@
 
         public StatusRegister Status { get; }
 
-        public Octet this[int address] { get => 0; set => Write(address, value); }
+        public byte this[int address] { get => 0; set => Write(address, value); }
         public int Cells => 20;
 
         // https://wiki.nesdev.com/w/index.php/APU_Length_Counter
@@ -29,7 +28,7 @@
             Status = new StatusRegister();
         }
 
-        private void Write(int address, Octet value) {
+        private void Write(int address, byte value) {
 
             if (address >= 0x4000 && address <= 0x4007) {
                 var pulse = address < 0x4004 ? PulseA : PulseB;
