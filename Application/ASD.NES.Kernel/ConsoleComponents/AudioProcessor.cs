@@ -18,30 +18,32 @@ namespace ASD.NES.Kernel.ConsoleComponents {
             Buffer = new AudioBuffer();
         }
 
-        private int apuStepCounter;
-        private bool tickLengthCounterAndSweep;        
+        private int stepCounter;
+        private bool tickLengthCounterAndSweep;
 
         private const int sampleRate = 48000;                           // 48kHz
         private const int samplesPerFrame = sampleRate / 60;            // 800
         private const int samplesPerAPUFrameTick = samplesPerFrame / 4; // 200
 
-        // Mode 0: 4-Step Sequence
-        // http://wiki.nesdev.com/w/index.php/APU_Frame_Counter
-        public void Step() { // TODO: Important! Better understanding and handle sync. (by VBlank for ex.)
-            apuStepCounter++;
-            switch (apuStepCounter) {
-                case 3728:   // <- valid for my emu?
-                case 7456:   // <- valid for my emu?
-                case 11185:  // <- valid for my emu?
-                    APUFrameTick();
-                    break;
-                case 14914:  // <- valid for my emu?
-                    APUFrameTick();
-                    apuStepCounter = 0;
-                    break;
-                default:
-                    break;
+        // PPU ticks = 260 * 341 = 88660 per frame (256 * 240 - visible pixels)
+        // CPU tisks ~ 88660 / 3 ~ 29553 per frame
+        // APU ticks ~ 29553 / 2 ~ 14777 ((88660/3)/2) per frame
+        public void Step() {                         // TODO: impl. the higher frequency or smart clock generator?
+            switch (stepCounter) {
+                //case 3728:
+                //case 7456:
+                //case 11185:
+                //case 14914: APUFrameTick(); break; // <- by spec. 4-Step mode: http://wiki.nesdev.com/w/index.php/APU_Frame_Counter
+                //case 14915: stepCounter = 0; break;
+                //default: break;
+                case 3584:
+                case 7168:
+                case 10752:
+                case 14336: APUFrameTick(); break;   // <- tmp. audio align: just 1024 * 14 (crutch, chosen at random)
+                case 14337: stepCounter = 0; break;
+                default: break;
             }
+            stepCounter++;
         }
 
         private void APUFrameTick() {
@@ -86,13 +88,13 @@ namespace ASD.NES.Kernel.ConsoleComponents {
                 }
                 if (r.Status.TriangleEnabled && r.Triangle.CurrentLinearCounter != 0 && r.Triangle.CurrentLengthCounter != 0) {
                     triangle = r.Triangle.GetTriangleAudio(timeInSamples, sampleRate);
-                }                
+                }
 
                 // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer
                 (Buffer as AudioBuffer).Write(pulseA + pulseB + triangle);
                 timeInSamples++;
             }
-            if (timeInSamples > ushort.MaxValue) { // !!!
+            if (timeInSamples > sampleRate * 10) { // !!!
                 timeInSamples = 0;
             }
         }

@@ -4,7 +4,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts {
 
     internal sealed class AudioBuffer : IAudioBuffer {
 
-        private float[] circularBuffer = new float[65536];
+        private float[] circularBuffer = new float[1024 * 64];
         private ushort headPtr = 0;
         private ushort nextPtr = 0;
 

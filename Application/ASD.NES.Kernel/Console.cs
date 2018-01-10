@@ -33,13 +33,14 @@ namespace ASD.NES.Kernel {
 
         private void InitializeHardware() {
 
-            Clk = new Clock(TimeSpan.FromMilliseconds(1000.0 / 60.0988) /*TimeSpan.FromTicks(4)*/);
+            // change to hfq clk (1000ms / 60 / 88660 ~ 0.0001879... ~ every second timespan tick) ??
+            Clk = new Clock(TimeSpan.FromMilliseconds(1000.0 / 60.0988));
             Clk.Tick += () => NextFrameReady?.Invoke(Update());
 
             Cpu = new CentralProcessor();
             Ppu = new PictureProcessor();
 
-            if (Apu == null) { // ? TODO: impl. reset for pAPU
+            if (Apu == null) { // TODO: impl. reset for pAPU
                 Apu = new AudioProcessor();
             }
 
@@ -55,6 +56,7 @@ namespace ASD.NES.Kernel {
                 PpuStep(cycles);
                 ApuStep(cycles);
             }
+            // Apu.ResetStepCounter(); // here doesn't solve unsync. apu #8 issue
             return Ppu.ActualFrame;
         }
 
