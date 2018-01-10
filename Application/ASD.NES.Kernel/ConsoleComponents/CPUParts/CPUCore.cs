@@ -124,7 +124,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Add Memory to Accumulator with Carry </summary>
         private int ADC() {
 
-            var result = r.A + M + r.PS.C;
+            var result = r.A + M + r.PS.C.ToInt();
 
             r.PS.UpdateOverflow(result);
             r.PS.UpdateCarry(result);
@@ -140,7 +140,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Subtract Memory from Accumulator with Carry </summary>
         private int SBC() {
 
-            var result = r.A + (M ^ 0xFF) + r.PS.C;
+            var result = r.A + (M ^ 0xFF) + r.PS.C.ToInt();
 
             r.PS.UpdateOverflow(result);
             r.PS.UpdateCarry(result);
@@ -259,7 +259,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Arithmetic Shift Left one bit (Memory or Accumulator) </summary>
         private int ASL() {
 
-            r.PS.C.Set(M.HasBit(7));
+            r.PS.C = M.HasBit(7);
 
             M <<= 1;
 
@@ -272,7 +272,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Logical Shift Right one bit (Memory or Accumulator) </summary>
         private int LSR() {
 
-            r.PS.C.Set(M.HasBit(0));
+            r.PS.C = M.HasBit(0);
 
             M >>= 1;
 
@@ -287,9 +287,9 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
             var carry = M.HasBit(7);
 
-            M = (byte)((M << 1) | r.PS.C);
+            M = (byte)((M << 1) | r.PS.C.ToInt());
 
-            r.PS.C.Set(carry);
+            r.PS.C = carry;
             r.PS.UpdateSigned(M);
             r.PS.UpdateZero(M);
 
@@ -301,9 +301,9 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
             var carry = M.HasBit(0);
 
-            M = (byte)((M >> 1) | (r.PS.C << 7));
+            M = (byte)((M >> 1) | (r.PS.C.ToInt() << 7));
 
-            r.PS.C.Set(carry);
+            r.PS.C = carry;
             r.PS.UpdateSigned(M);
             r.PS.UpdateZero(M);
 
@@ -313,7 +313,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         /// <summary> Test bits in Memory with Accumulator </summary>
         private int BIT() {
 
-            r.PS.V.Set(r.A.HasBit(6));
+            r.PS.V = r.A.HasBit(6);
             r.PS.UpdateSigned(M);
             r.PS.UpdateZero(r.A & M);
 
@@ -327,7 +327,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
             var result = r.A - M;
 
-            r.PS.C.Set(result >= 0);
+            r.PS.C = result >= 0;
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
 
@@ -339,7 +339,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
             var result = r.X - M;
 
-            r.PS.C.Set(result >= 0);
+            r.PS.C = result >= 0;
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
 
@@ -351,7 +351,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
             var result = r.Y - M;
 
-            r.PS.C.Set(result >= 0);
+            r.PS.C = result >= 0;
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
 
@@ -361,29 +361,29 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
         #region Branch
 
         /// <summary> Branch if Carry Clear </summary>
-        private int BCC() => BranchIf(r.PS.C == 0);
+        private int BCC() => BranchIf(!r.PS.C);
 
         /// <summary> Branch if Zero Clear </summary>
-        private int BNE() => BranchIf(r.PS.Z == 0);
+        private int BNE() => BranchIf(!r.PS.Z);
 
         /// <summary> Branch if Plus (if Signed Clear) </summary>
-        private int BPL() => BranchIf(r.PS.S == 0);
+        private int BPL() => BranchIf(!r.PS.S);
 
         /// <summary> Branch if Overflow Clear </summary>
-        private int BVC() => BranchIf(r.PS.V == 0);
+        private int BVC() => BranchIf(!r.PS.V);
 
 
         /// <summary> Branch if Carry Set </summary>
-        private int BCS() => BranchIf(r.PS.C == 1);
+        private int BCS() => BranchIf(r.PS.C);
 
         /// <summary> Branch if Zero Set </summary>
-        private int BEQ() => BranchIf(r.PS.Z == 1);
+        private int BEQ() => BranchIf(r.PS.Z);
 
         /// <summary> Branch if Minus (if Signed Set) </summary>
-        private int BMI() => BranchIf(r.PS.S == 1);
+        private int BMI() => BranchIf(r.PS.S);
 
         /// <summary> Branch if Overflow Set </summary>
-        private int BVS() => BranchIf(r.PS.V == 1);
+        private int BVS() => BranchIf(r.PS.V);
 
 
         /// <summary> Isn't instruction </summary>
@@ -405,44 +405,44 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
         /// <summary> Clear Carry flag </summary>
         private int CLC() {
-            r.PS.C.Set(false);
+            r.PS.C = false;
             return 0;
         }
 
         /// <summary> Clear Decimal flag </summary>
         private int CLD() {
-            r.PS.D.Set(false);
+            r.PS.D = false;
             return 0;
         }
 
         /// <summary> Clear Interrupt Disable flag </summary>
         private int CLI() {
-            r.PS.I.Set(false);
+            r.PS.I = false;
             return 0;
         }
 
         /// <summary> Clear Overflow flag </summary>
         private int CLV() {
-            r.PS.V.Set(false);
+            r.PS.V = false;
             return 0;
         }
 
 
         /// <summary> Set Carry flag </summary>
         private int SEC() {
-            r.PS.C.Set(true);
+            r.PS.C = true;
             return 0;
         }
 
         /// <summary> Set Decimal flag </summary>
         private int SED() {
-            r.PS.D.Set(true);
+            r.PS.D = true;
             return 0;
         }
 
         /// <summary> Set Interrupt Disable flag </summary>
         private int SEI() {
-            r.PS.I.Set(true);
+            r.PS.I = true;
             return 0;
         }
         #endregion

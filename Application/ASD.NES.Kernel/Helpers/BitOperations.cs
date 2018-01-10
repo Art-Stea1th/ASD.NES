@@ -1,8 +1,4 @@
-﻿using System.Linq;
-
-namespace ASD.NES.Kernel.Helpers {
-
-    using Shared;
+﻿namespace ASD.NES.Kernel.Helpers {
 
     internal static class BitOperations {
 
@@ -31,9 +27,11 @@ namespace ASD.NES.Kernel.Helpers {
 
         public static byte MakeInt8(bool bit7, bool bit6, bool bit5, bool bit4, bool bit3, bool bit2, bool bit1, bool bit0) {
             return (byte)(
-                ((bit7 ? 1 : 0) << 7) | ((bit6 ? 1 : 0) << 6) | ((bit5 ? 1 : 0) << 5) | ((bit4 ? 1 : 0) << 4) |
-                ((bit3 ? 1 : 0) << 3) | ((bit2 ? 1 : 0) << 2) | ((bit1 ? 1 : 0) << 1) | ((bit0 ? 1 : 0) << 0)); // give me simple bool cast :\
+                (bit7.ToInt() << 7) | (bit6.ToInt() << 6) | (bit5.ToInt() << 5) | (bit4.ToInt() << 4) |
+                (bit3.ToInt() << 3) | (bit2.ToInt() << 2) | (bit1.ToInt() << 1) | (bit0.ToInt() << 0)); // give me a simple bool cast :\
         }
+
+        public static int ToInt(this bool value) => value ? 1 : 0;
 
         public static bool HasBit(this byte n, int bit) => ((int)n).HasBit(bit);
         public static bool HasBit(this sbyte n, int bit) => ((int)n).HasBit(bit);
@@ -54,16 +52,5 @@ namespace ASD.NES.Kernel.Helpers {
             => (uint)((int)n).WithChangedBit(bit, value);
         public static int WithChangedBit(this int n, int bit, bool value)
             => value ? (n | (1 << bit)) : (n & ~(1 << bit));
-
-    }
-
-    internal static class RefExtensions { // tmp
-
-        public static RefInt32[] Wrap(this uint[] array)
-            => array.Select(b => RefInt32.Wrap(b)).ToArray();
-        public static RefInt16[] Wrap(this ushort[] array)
-            => array.Select(b => RefInt16.Wrap(b)).ToArray();
-        public static RefInt8[] Wrap(this byte[] array)
-            => array.Select(b => RefInt8.Wrap(b)).ToArray();
     }
 }

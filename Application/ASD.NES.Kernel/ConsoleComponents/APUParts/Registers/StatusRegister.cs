@@ -5,18 +5,18 @@
     // https://wiki.nesdev.com/w/index.php/APU
     internal sealed class StatusRegister {
 
-        private byte octet;
-        public byte Value { get => octet; set => octet = value; }
+        private byte r;
+        public byte Value { get => r; set => r = value; }
 
-        public bool PulseAEnabled { get => octet.HasBit(0); set => octet = octet.WithChangedBit(0, value); }
-        public bool PulseBEnabled { get => octet.HasBit(1); set => octet = octet.WithChangedBit(1, value); }
-        public bool TriangleEnabled { get => octet.HasBit(2); set => octet = octet.WithChangedBit(2, value); }
-        public bool NoiseEnabled { get => octet.HasBit(3); set => octet = octet.WithChangedBit(3, value); }
-        public bool DmcEnabled { get => octet.HasBit(4); set => octet = octet.WithChangedBit(4, value); }
+        public bool PulseAEnabled { get => r.HasBit(0); set => r = r.WithChangedBit(0, value); }
+        public bool PulseBEnabled { get => r.HasBit(1); set => r = r.WithChangedBit(1, value); }
+        public bool TriangleEnabled { get => r.HasBit(2); set => r = r.WithChangedBit(2, value); }
+        public bool NoiseEnabled { get => r.HasBit(3); set => r = r.WithChangedBit(3, value); }
+        public bool DmcEnabled { get => r.HasBit(4); set => r = r.WithChangedBit(4, value); }
 
         // bit 5 - unused
 
-        public bool FrameInterrupt => octet.HasBit(6); // readonly
-        public bool DmcInterrupt => octet.HasBit(7);   // readonly
+        public bool FrameInterrupt => r.HasBit(6); // readonly
+        public bool DmcInterrupt => r.HasBit(7);   // readonly
     }
 }

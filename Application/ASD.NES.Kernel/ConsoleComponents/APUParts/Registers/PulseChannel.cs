@@ -11,38 +11,38 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
     // http://wiki.nesdev.com/w/index.php/APU_Pulse
     internal sealed class PulseChannel : IMemory<byte> { // Registers byte x 4 / 32bit
 
-        private byte[] registers = new byte[4];
-        public byte this[int address] {
-            get => registers[address & 3];
-            set => registers[address & 3] = value;
-        }
-        public int Cells => registers.Length;
-
         // ------- Registers -------
 
+        private byte[] r = new byte[4];
+        public byte this[int address] {
+            get => r[address & 3];
+            set => r[address & 3] = value;
+        }
+        public int Cells => r.Length;
+
         // register[0] - $4000 | $4004 : DDLC VVVV : Duty (D), envelope loop / length counter halt (L), constant volume (C), volume/envelope (V)
-        public byte Duty => (byte)(registers[0] >> 6 & 3);
-        public bool LengthCounterHalt => registers[0].HasBit(5);
-        public bool ConstantVolume => registers[0].HasBit(4);
-        public byte EnvelopeDividerPeriodOrVolume => (byte)(registers[0] & 0b1111);
+        public byte Duty => (byte)(r[0] >> 6 & 3);
+        public bool LengthCounterHalt => r[0].HasBit(5);
+        public bool ConstantVolume => r[0].HasBit(4);
+        public byte EnvelopeDividerPeriodOrVolume => (byte)(r[0] & 0b1111);
 
         // register[1] - $4001 | $4005 : EPPP NSSS : Sweep unit: enabled (E), period (P), negate (N), shift (S)
-        public bool SweepEnabled => registers[1].HasBit(7);
-        public byte SweepPeriod => (byte)((registers[1] >> 4) & 0b111);
-        public bool SweepNegate => registers[1].HasBit(3);
-        public byte SweepShift => (byte)(registers[1] & 0b111);
+        public bool SweepEnabled => r[1].HasBit(7);
+        public byte SweepPeriod => (byte)((r[1] >> 4) & 0b111);
+        public bool SweepNegate => r[1].HasBit(3);
+        public byte SweepShift => (byte)(r[1] & 0b111);
 
         // register[2] - $4002 | $4006 : TTTT TTTT : Timer low (T)
         // register[3] - $4003 | $4007 : LLLL LTTT : Length counter load (L), timer high (T)
 
         public ushort Timer {
-            get => (ushort)(((registers[3] & 0b111) << 8) | registers[2]);
+            get => (ushort)(((r[3] & 0b111) << 8) | r[2]);
             set {
-                registers[2] = (byte)value;
-                registers[3] = (byte)((registers[3] | 0b1111_1000) | ((value >> 8) & 0b111));
+                r[2] = (byte)value;
+                r[3] = (byte)((r[3] | 0b1111_1000) | ((value >> 8) & 0b111));
             }
         }
-        public byte LengthCounterLoad => (byte)(registers[3] >> 3);
+        public byte LengthCounterLoad => (byte)(r[3] >> 3);
 
         // ------- Additional -------
 

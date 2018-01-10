@@ -51,14 +51,7 @@
 
         public void ColdBoot() {
 
-            r.PpuCtrl.Clear();
-            r.PpuMask.Clear();
-            r.PpuStat.VBlank = false;
-
-            r.PpuScrl.Value = 0;
-            r.PpuAddr.Value = 0;
-            r.PpuData.Value = 0;
-
+            r.OnColdBoot();
             scan.Reset();
         }
 

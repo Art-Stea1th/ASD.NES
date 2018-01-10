@@ -1,24 +1,22 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.PPUParts.Registers {
 
     using Helpers;
-    using Shared;
 
     /// <summary> 0x2005 - PPU scrolling position register
     /// (Common name: PPUSCROLL)</summary>
     internal sealed class ScrollRegister {
 
-        private readonly RefInt16 r;
+        private ushort r;
 
-        public byte X { get => r.Value.H(); set => r.Value = BitOperations.MakeInt16(value, r.Value.L()); }
-        public byte Y { get => r.Value.L(); set => r.Value = BitOperations.MakeInt16(r.Value.H(), value); }
+        public byte X { get => r.H(); set => r = BitOperations.MakeInt16(value, r.L()); }
+        public byte Y { get => r.L(); set => r = BitOperations.MakeInt16(r.H(), value); }
 
-        public ScrollRegister(RefInt16 register) => r = register;
+        public ScrollRegister(byte register) => r = register;
 
-        public ushort Value { get => r.Value; set => r.Value = value; }
+        public ushort Value { get => r; set => r = value; }
 
-        public void Clear() => r.Value = 0;
+        public void Clear() => r = 0;
 
-
-        public static implicit operator ushort(ScrollRegister register) => register.r.Value;
+        public static implicit operator ushort(ScrollRegister register) => register.r;
     }
 }

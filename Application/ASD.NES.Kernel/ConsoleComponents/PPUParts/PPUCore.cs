@@ -173,7 +173,7 @@
 
         private void FillOAM(byte oamDmaAddress) {
 
-            int GetCPUMemoryAddress(int offset) => (oamDmaAddress << 8) + ((r.OamAddr.Value + offset));
+            int GetCPUMemoryAddress(int offset) => (oamDmaAddress << 8) + ((r.OamAddr + offset));
 
             for (var i = 0; i < oam.Cells; i++) {
                 oam[i] = BitOperations.MakeInt32(

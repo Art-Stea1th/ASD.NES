@@ -4,7 +4,6 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
     using BasicComponents;
     using Helpers;
-    using Shared;
 
     public enum Mirroring { FourScreen, SingleScreen, Vertical, Horizontal }
 
@@ -26,7 +25,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
         private int FixBankIndex(int index) => FixAddress((index & 0b11) << 10) >> 10;
         private int GetBankIndex(int fixedAddress) => fixedAddress >> 10; // n / 1024
 
-        private int FixAddress(int address) { // redirect
+        private int FixAddress(int address) { // redirect // TODO: Validate, handle another mirroring modes
 
             address &= 0xFFF;
 
@@ -42,11 +41,10 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
             return address;
         }
 
-
         internal sealed class Nametable : IMemory<byte> {
 
-            private readonly RefInt8[] symbols = new byte[960].Wrap();   // 32x30
-            private readonly RefInt8[] attributes = new byte[64].Wrap(); //  8x8
+            private readonly byte[] symbols = new byte[960];   // 32x30
+            private readonly byte[] attributes = new byte[64]; //  8x8
 
             public byte this[int address] {
                 get => Read(address);
@@ -71,11 +69,11 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
                 address &= 0x3FF;
 
                 if (address < 0x3C0) {
-                    symbols[address].Value = value;
+                    symbols[address] = value;
                 }
                 else {
                     address &= 0x3F;
-                    attributes[address].Value = value;
+                    attributes[address] = value;
                 }
             }
 

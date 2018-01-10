@@ -27,15 +27,15 @@ namespace ASD.NES.Kernel.ConsoleComponents {
 
         // Mode 0: 4-Step Sequence
         // http://wiki.nesdev.com/w/index.php/APU_Frame_Counter
-        public void Step() {
+        public void Step() { // TODO: Important! Better understanding and handle sync. (by VBlank for ex.)
             apuStepCounter++;
             switch (apuStepCounter) {
-                case 3728:
-                case 7456:
-                case 11185:
+                case 3728:   // <- valid for my emu?
+                case 7456:   // <- valid for my emu?
+                case 11185:  // <- valid for my emu?
                     APUFrameTick();
                     break;
-                case 14914:
+                case 14914:  // <- valid for my emu?
                     APUFrameTick();
                     apuStepCounter = 0;
                     break;

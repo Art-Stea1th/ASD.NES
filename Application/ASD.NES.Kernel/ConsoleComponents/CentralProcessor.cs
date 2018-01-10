@@ -35,9 +35,9 @@
 
         public void ColdBoot() {
 
-            registers.PS.B.Set(true);
-            registers.PS.I.Set(true);
-            registers.PS.U.Set(true);
+            registers.PS.B = true;
+            registers.PS.I = true;
+            registers.PS.U = true;
             registers.A = registers.X = registers.Y = 0;
             registers.SP = 0xFD;
 
@@ -52,7 +52,7 @@
             JumpToResetVector();
 
             registers.SP -= 3;
-            registers.PS.I.Set(true);
+            registers.PS.I = true;
             memory[0x4015] = 0x00;
         }
 

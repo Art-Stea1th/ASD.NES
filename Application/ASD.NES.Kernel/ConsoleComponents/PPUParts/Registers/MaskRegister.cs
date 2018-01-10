@@ -1,46 +1,46 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.PPUParts.Registers {
 
-    using Shared;
+    using Helpers;
 
     /// <summary> 0x2001 - PPU mask register,
     /// This register controls the rendering of sprites and backgrounds, as well as colour effects
     /// (Common name: PPUMASK) </summary>
     internal sealed class MaskRegister {
 
-        private readonly RefInt8 r;
-        public MaskRegister(RefInt8 register) => r = register;
+        private byte r;
+        public MaskRegister(byte register) => r = register;
 
         /// <summary> True: produce a greyscale display, False: normal color </summary>
-        public bool Greyscale { get => r[0]; set => r[0] = value; }
+        public bool Greyscale { get => r.HasBit(0); set => r.WithChangedBit(0, value); }
 
         /// <summary> True: need render background in leftmost 8 pixels of screen </summary>
-        public bool RenderLeftmostBG { get => r[1]; set => r[1] = value; }
+        public bool RenderLeftmostBG { get => r.HasBit(1); set => r.WithChangedBit(1, value); }
 
         /// <summary> True: need render sprites in leftmost 8 pixels of screen </summary>
-        public bool RenderLeftmostSpr { get => r[2]; set => r[2] = value; }
+        public bool RenderLeftmostSpr { get => r.HasBit(2); set => r.WithChangedBit(2, value); }
 
         /// <summary> True: need render background </summary>
-        public bool RenderBackground { get => r[3]; set => r[3] = value; }
+        public bool RenderBackground { get => r.HasBit(3); set => r.WithChangedBit(3, value); }
 
         /// <summary> True: need render sprites </summary>
-        public bool RenderSprites { get => r[4]; set => r[4] = value; }
+        public bool RenderSprites { get => r.HasBit(4); set => r.WithChangedBit(4, value); }
 
         /// <summary> Emphasize red, NTSC colors. PAL and Dendy swaps green and red </summary>
-        public bool EmphasizeRed { get => r[5]; set => r[5] = value; }
+        public bool EmphasizeRed { get => r.HasBit(5); set => r.WithChangedBit(5, value); }
 
         /// <summary> Emphasize green, NTSC colors. PAL and Dendy swaps green and red </summary>
-        public bool EmphasizeGreen { get => r[6]; set => r[6] = value; }
+        public bool EmphasizeGreen { get => r.HasBit(6); set => r.WithChangedBit(6, value); }
 
         /// <summary> Emphasize blue </summary>
-        public bool EmphasizeBlue { get => r[7]; set => r[7] = value; }
+        public bool EmphasizeBlue { get => r.HasBit(7); set => r.WithChangedBit(7, value); }
 
         // -----
 
-        public bool RenderAll => (r.Value & 0b0001_1110) == 0b0001_1110;
+        public bool RenderAll => (r & 0b0001_1110) == 0b0001_1110;
 
-        public byte Value { get => r.Value; set => r.Value = value; }
-        public void Clear() => r.Value = 0;
+        public byte Value { get => r; set => r = value; }
+        public void Clear() => r = 0;
 
-        public static implicit operator byte(MaskRegister register) => register.r.Value;
+        public static implicit operator byte(MaskRegister register) => register.r;
     }
 }

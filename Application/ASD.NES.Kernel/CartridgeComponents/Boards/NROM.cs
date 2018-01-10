@@ -3,15 +3,12 @@ using System.Collections.Generic;
 
 namespace ASD.NES.Kernel.CartridgeComponents.Boards {
 
-    using Helpers;
-    using Shared;
-
     internal abstract class NROM : Board {
 
-        private static RefInt8[] chrROM0; // $6000-$7FFF - 8 kb
+        private static byte[] chrROM0; // $6000-$7FFF - 8 kb
 
-        private static RefInt8[] prgROM1; // $8000-$BFFF - 16 kb NROM-256 additional
-        private static RefInt8[] prgROM0; // $C000-$FFFF - 16 kb NROM-128
+        private static byte[] prgROM1; // $8000-$BFFF - 16 kb NROM-256 additional
+        private static byte[] prgROM0; // $C000-$FFFF - 16 kb NROM-128
 
         public override int Cells => 1024 * 64;
 
@@ -35,7 +32,7 @@ namespace ASD.NES.Kernel.CartridgeComponents.Boards {
         protected override void Write(int address, byte value) {
 
             if (address == 0xFFFA) {
-                prgROM0[address - 0xC000].Value = value;
+                prgROM0[address - 0xC000] = value;
             }
             else {
                 throw new InvalidOperationException();
@@ -47,7 +44,7 @@ namespace ASD.NES.Kernel.CartridgeComponents.Boards {
             if (chr == null) { throw new ArgumentException(); }
             if (chr.Count < 1) { throw new ArgumentOutOfRangeException(); }
 
-            chrROM0 = chr[0].Wrap();
+            chrROM0 = chr[0];
         }
 
         public override void SetPRG(IReadOnlyList<byte[]> prg) {
@@ -55,10 +52,10 @@ namespace ASD.NES.Kernel.CartridgeComponents.Boards {
             if (prg == null) { throw new ArgumentException(); }
             if (prg.Count < 1) { throw new ArgumentOutOfRangeException(); }
 
-            prgROM1 = prgROM0 = prg[0].Wrap();
+            prgROM1 = prgROM0 = prg[0];
 
             if (prg.Count > 1) {
-                prgROM1 = prg[1].Wrap();
+                prgROM1 = prg[1];
             }
         }
     }

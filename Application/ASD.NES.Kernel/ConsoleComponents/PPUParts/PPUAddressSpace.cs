@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Linq;
 
 namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
     using BasicComponents;
     using CartridgeComponents.Boards;
-    using Helpers;
-    using Shared;
 
     internal sealed class PPUAddressSpace : IMemory<byte> {
 
@@ -20,7 +17,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
         private static Board externalMemory;           // $0000 - $1FFF: CHR-ROM Tite-set 0 and 1 - 8 kb (2x4 kb)
 
         private static readonly Nametables nametables; // $2000 - $2FFF: Nametables - 4 kb + $3000 - 3EFF: mirror
-        private static readonly RefInt8[] palettes;    // $3F00 - $3FFF: Palettes (BG - 16 b \ Sprite - 16 b) - Mirror x 8 (256 b)
+        private static readonly byte[] palettes;       // $3F00 - $3FFF: Palettes (BG - 16 b \ Sprite - 16 b) - Mirror x 8 (256 b)
 
         public Nametables.Nametable GetNametable(int index) => nametables.GetNametable(index);
 
@@ -38,7 +35,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
 
         static PPUAddressSpace() {
             nametables = new Nametables();
-            palettes = new byte[32].Wrap().Repeat(8).ToArray();
+            palettes = new byte[32];
         }
 
         public void SetExternalMemory(Board boardMemory) {
@@ -65,7 +62,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.PPUParts {
                 nametables[address] = value;
             }
             else {
-                palettes[address & 0xFF].Value = value;
+                palettes[address & 0xFF] = value;
             }
         }
     }
