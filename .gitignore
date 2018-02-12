@@ -14,6 +14,7 @@
 [Dd]ocuments
 _OldCode
 
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -23,8 +24,11 @@ x64/
 x86/
 bld/
 [Bb]in/
-[Oo]bj/
+#[Oo]bj/
 [Ll]og/
+
+Application/ASD.NES.Kernel/obj/*
+!project.assets.json
 
 # Visual Studio 2015 cache/options directory
 .vs/
