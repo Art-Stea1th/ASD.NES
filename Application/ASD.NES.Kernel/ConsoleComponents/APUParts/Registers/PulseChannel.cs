@@ -24,7 +24,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
         public byte Duty => (byte)(r[0] >> 6 & 3);
         public bool LengthCounterHalt => r[0].HasBit(5);
         public bool ConstantVolume => r[0].HasBit(4);
-        public byte EnvelopeDividerPeriodOrVolume => (byte)(r[0] & 0b1111);
+        public byte EnvelopeDividerPeriodOrVolume => r[0].L();
 
         // register[1] - $4001 | $4005 : EPPP NSSS : Sweep unit: enabled (E), period (P), negate (N), shift (S)
         public bool SweepEnabled => r[1].HasBit(7);

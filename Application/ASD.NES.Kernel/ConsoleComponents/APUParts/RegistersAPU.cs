@@ -5,13 +5,16 @@
 
     internal sealed class RegistersAPU : IMemory<byte> {
 
+        // TODO: Separate channels & registers, Add 'base-classes' for them
+
         public PulseChannel PulseA { get; }
         public PulseChannel PulseB { get; }
         public TriangleChannel Triangle { get; }
+        public NoiseChannel Noise { get; }
 
         public StatusRegister Status { get; }
 
-        public byte this[int address] { get => 0; set => Write(address, value); }
+        public byte this[int address] { get => 0; set => Write(address, value); } // - write only
         public int Cells => 20;
 
         // https://wiki.nesdev.com/w/index.php/APU_Length_Counter
@@ -24,10 +27,12 @@
             PulseA = new PulseChannel();
             PulseB = new PulseChannel();
             Triangle = new TriangleChannel();
+            Noise = new NoiseChannel();
 
             Status = new StatusRegister();
         }
 
+        // TODO: Refactor Write
         private void Write(int address, byte value) {
 
             if (address >= 0x4000 && address <= 0x4007) {
@@ -59,6 +64,13 @@
                         Triangle.CurrentLengthCounter = lengthCounterLookupTable[Triangle.LengthCounterLoad];
                         Triangle.CurrentLinearCounter = Triangle.LinearCounterLoad;
                         break;
+                    default:
+                        break;
+                }
+            }
+            else if (address >= 0x400C && address <= 0x400F) {
+                Noise[address] = value;
+                switch (address & 3) {
                     default:
                         break;
                 }

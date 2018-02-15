@@ -19,7 +19,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
 
         private static readonly byte[] internalMemory;     // 0x0000 - 0x1FFF: cpuRam - 8 kb (2 kb mirror x4) - [ZeroPage, Stack, WRAM]
         private static readonly RegistersPPU registersPPU; // 0x2000 - 0x3FFF: ppuReg - 8 kb (8 b mirror x1024) + 1b (0x4014)
-        private static readonly RegistersAPU registersAPU; // 0x4000 - 0x4013: apuReg - 20 b + 1 b (0x4015)
+        private static readonly RegistersAPU registersAPU; // 0x4000 - 0x4013: apuReg - 20 b (4 b x5: Pulse x2, Triangle, Noise, DMC) + 1 b [Status: 0x4015]
         private static readonly InputPort registersInput;  // 0x4016 - 0x4017: Input - 2 b
                                                            // 0x4018 - 0x4019: ??
         private static Board externalMemory;               // 0x4020 - 0xFFFF: cartrg - 49120 b
@@ -58,7 +58,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
                 return registersPPU[address];
             }
             if (address < 0x4014 || address == 0x4015) {
-                return registersAPU[address];
+                return 0; // registersAPU[address]; // - write only
             }
             if (address == 0x4016 || address == 0x4017) {
                 return registersInput[address];
