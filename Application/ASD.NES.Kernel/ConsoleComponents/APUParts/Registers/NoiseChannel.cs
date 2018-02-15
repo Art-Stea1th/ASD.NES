@@ -5,7 +5,7 @@
     using BasicComponents;
     using Helpers;
 
-    // http://wiki.nesdev.com/w/index.php/APU#Specification Pulse ($400C-400F)
+    // http://wiki.nesdev.com/w/index.php/APU#Specification Noise ($400C-400F)
     // http://wiki.nesdev.com/w/index.php/APU_Noise
     internal sealed class NoiseChannel : IMemory<byte> {
 

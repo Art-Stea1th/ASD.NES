@@ -5,7 +5,7 @@
     using BasicComponents;
     using Helpers;
 
-    // http://wiki.nesdev.com/w/index.php/APU#Specification Pulse ($4008-400B)
+    // http://wiki.nesdev.com/w/index.php/APU#Specification Triangle ($4008-400B)
     // http://wiki.nesdev.com/w/index.php/APU_Triangle
     internal sealed class TriangleChannel : IMemory<byte> {
 
