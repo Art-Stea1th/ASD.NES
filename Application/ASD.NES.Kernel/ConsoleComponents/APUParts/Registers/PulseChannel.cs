@@ -2,7 +2,7 @@
 
 namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
 
-    // TODO: Separate channel & registers
+    // TODO: Separate channels & registers, Add 'base-classes' for them
 
     using BasicComponents;
     using Helpers;

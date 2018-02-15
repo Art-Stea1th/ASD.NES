@@ -1,10 +1,12 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
 
-    // TODO: Separate channel & registers
+    // TODO: Separate channels & registers, Add 'base-classes' for them
 
     using BasicComponents;
     using Helpers;
 
+    // http://wiki.nesdev.com/w/index.php/APU#Specification Pulse ($4008-400B)
+    // http://wiki.nesdev.com/w/index.php/APU_Triangle
     internal sealed class TriangleChannel : IMemory<byte> {
 
         // ------- Registers -------
