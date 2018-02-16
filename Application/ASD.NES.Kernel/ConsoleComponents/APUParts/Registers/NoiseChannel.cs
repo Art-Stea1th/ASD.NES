@@ -62,12 +62,16 @@
 
         public void TickShiftRegister() {
 
-            var feedback = (ShiftRegister & 0b1) ^ (ModeFlagIsSet
-                ? (ShiftRegister >> 6 & 0b1)
-                : (ShiftRegister >> 1 & 0b1));
+            //var feedback = (ShiftRegister & 0b1) ^ (ModeFlagIsSet
+            //    ? (ShiftRegister >> 6 & 0b1)
+            //    : (ShiftRegister >> 1 & 0b1));
 
-            ShiftRegister >>= 1;
-            ShiftRegister = (ShiftRegister & 0x3FFF) | ((feedback & 1) << 14);
+            //ShiftRegister >>= 1;
+            //ShiftRegister = (ShiftRegister & 0x3FFF) | ((feedback & 1) << 14);
+
+            var shifter = ModeFlagIsSet ? 8 : 13;
+
+            ShiftRegister = (ShiftRegister << 1) | ((ShiftRegister >> 14 ^ ShiftRegister >> shifter) & 0x1);
 
         }
 
@@ -88,19 +92,83 @@
             }
         }
 
+        //int timer = 0;
+
         public float GetNoiseAudio(int timeInSamples, int sampleRate) {
 
             TickShiftRegister();
 
-            var frequency = 111860.0 / NoiseFrequencyTable[Period]; // ?? where timer
+            //var frequency = /*111.8600 **/ NoiseFrequencyTable[Period] * 0x10;
             //var normalizedSampleTime = ((timeInSamples * (int)frequency) % sampleRate) / (float)sampleRate;
+
+            //var active = CurrentLengthCounter != 0 && EnvelopeVolume != 0;
 
             var volume = EnvelopeVolume;
             if (ConstantVolume) {
                 volume = EnvelopeDividerPeriodOrVolume;
             }
 
-            return (ShiftRegister & 0b1) * (volume / 5)/* * normalizedSampleTime*/;
+            return (ShiftRegister & 0b1) * volume / 2/* * normalizedSampleTime*/;
+
+            //timer = timeInSamples;
+            //var sum = timer;
+            //var frequency = NoiseFrequencyTable[Period];
+            //var shifter = ModeFlagIsSet ? 8 : 13;
+
+            //timer -= sampleRate;
+
+            //if (active) {
+            //    if (false && timer > 0) {
+            //        if ((ShiftRegister & 0x4000) == 0) {
+            //            return volume * 2/* * (ShiftRegister & 0x1)*/;
+            //        }
+            //    }
+            //    else {
+
+            //        if ((ShiftRegister & 0x4000) == 0x4000) {
+            //            sum = 0;
+            //        }
+
+            //        do {
+            //            //ShiftRegister = (ShiftRegister << 1) | ((ShiftRegister >> 14 ^ ShiftRegister >> shifter) & 0x1);
+            //            TickShiftRegister();
+
+            //            if ((ShiftRegister & 0x4000) == 0) {
+            //                sum += Math.Min(-timer, frequency);
+            //            }
+
+            //            timer += frequency;
+            //        }
+            //        while (timer < 0);
+
+            //        return (float)(sum * volume + sampleRate / 2) / sampleRate * 2/* * (ShiftRegister & 0x1)*/;
+            //    }
+            //}
+            //else {
+            //    while (timer < 0) {
+            //        TickShiftRegister();
+            //        timer += frequency;
+            //    }
+            //}
+
+            //return 0;
+
+
+            //var volume = EnvelopeVolume;
+            //if (ConstantVolume) {
+            //    volume = EnvelopeDividerPeriodOrVolume;
+            //}
+
+            //if ((ShiftRegister & 0x4000) == 0) {
+            //    return volume * 2;
+            //}
+
+            //return (ShiftRegister & 0x1) * volume /** normalizedSampleTime*/;
+
+            //if (ShiftRegister < 32767) {
+            //    return (ShiftRegister & 0b1) * (volume / 5) * normalizedSampleTime;
+            //}
+            //return (ShiftRegister & 0b1) * (volume / 5);
         }
     }
 }

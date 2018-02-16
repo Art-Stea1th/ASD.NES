@@ -102,7 +102,7 @@ namespace ASD.NES.Kernel.ConsoleComponents {
                 (Buffer as AudioBuffer).Write(pulseA + pulseB + triangle + noise);
                 timeInSamples++;
             }
-            if (timeInSamples > sampleRate/* * 10*/) { // !!!
+            if (timeInSamples > sampleRate * 10) { // !!!
                 timeInSamples = 0;
             }
         }
