@@ -62,7 +62,6 @@ namespace ASD.NES.Kernel.ConsoleComponents {
             r.PulseB.TickEnvelopeCounter();
             r.Triangle.TickLinearCounter();
 
-            // r.Noise.TickShiftRegister();
             r.Noise.TickEnvelopeCounter();
 
             WriteFrameCounterAudio();
@@ -95,7 +94,7 @@ namespace ASD.NES.Kernel.ConsoleComponents {
                     triangle = r.Triangle.GetTriangleAudio(timeInSamples, sampleRate);
                 }
                 if (r.Status.NoiseEnabled && r.Noise.CurrentLengthCounter != 0 && r.Noise.CurrentLengthCounter != 0) {
-                    noise = r.Noise.GetNoiseAudio(timeInSamples, sampleRate);
+                    // noise = r.Noise.GetNoiseAudio(timeInSamples, sampleRate);
                 }
 
                 // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer
