@@ -1,4 +1,5 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
+    using System;
 
     // TODO: Separate channels & registers, Add 'base-classes' for them
 
@@ -38,8 +39,8 @@
 
         // flag is shared with LengthCounterHalt
         public byte EnvelopeVolume { get; set; }
-
-        public int ShiftRegister { get; set; }
+        public int EnvelopeCounter { get; set; }
+        public int ShiftRegister { get; set; } = 1;
         public int CurrentLengthCounter { get; set; }
 
         // http://wiki.nesdev.com/w/index.php/APU_Noise // NTSC
@@ -70,17 +71,36 @@
 
         }
 
-        public float GetNoiseAudio(int timeInSamples, int sampleRate) {
-
-            var frequency = 111860.0 / NoiseFrequencyTable[Period];
-            var normalizedSampleTime = ((timeInSamples * (int)frequency) % sampleRate) / (float)sampleRate;
-
-            if (normalizedSampleTime <= 0.5) {
-                return -1f + 4f * normalizedSampleTime;
+        public void TickEnvelopeCounter() {
+            if (EnvelopeCounter == 0) {
+                if (EnvelopeVolume == 0) {
+                    if (EnvelopeLoop) {
+                        EnvelopeVolume = 15;
+                    }
+                }
+                else {
+                    EnvelopeVolume--;
+                }
+                EnvelopeCounter = EnvelopeDividerPeriodOrVolume;
             }
             else {
-                return 3f - 4f * normalizedSampleTime;
+                EnvelopeCounter--;
             }
+        }
+
+        public float GetNoiseAudio(int timeInSamples, int sampleRate) {
+
+            TickShiftRegister();
+
+            var frequency = 111860.0 / NoiseFrequencyTable[Period]; // ?? where timer
+            //var normalizedSampleTime = ((timeInSamples * (int)frequency) % sampleRate) / (float)sampleRate;
+
+            var volume = EnvelopeVolume;
+            if (ConstantVolume) {
+                volume = EnvelopeDividerPeriodOrVolume;
+            }
+
+            return (ShiftRegister & 0b1) * (volume / 5)/* * normalizedSampleTime*/;
         }
     }
 }

@@ -72,10 +72,8 @@
                 Noise[address] = value;
                 switch (address & 3) {
                     case 0:
-                        break;
-                    case 1:
-                        break;
-                    case 2:
+                        Noise.EnvelopeVolume = 15;
+                        Noise.EnvelopeCounter = Noise.EnvelopeDividerPeriodOrVolume;
                         break;
                     case 3:
                         Noise.CurrentLengthCounter = lengthCounterLookupTable[Noise.LengthCounterLoad];

@@ -123,9 +123,9 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
             var fractionalNormalizedSampleTime = normalizedSampleTime - Math.Floor(normalizedSampleTime); // 0 ... 0.999
             float dutyPulse = fractionalNormalizedSampleTime < DutyMap[Duty] ? 1 : -1;
 
-            var volume = EnvelopeDividerPeriodOrVolume;
-            if (!ConstantVolume) {
-                volume = EnvelopeVolume;
+            var volume = EnvelopeVolume;
+            if (ConstantVolume) {
+                volume = EnvelopeDividerPeriodOrVolume;
             }
             return dutyPulse * volume / 15;
         }
