@@ -71,6 +71,15 @@
             else if (address >= 0x400C && address <= 0x400F) {
                 Noise[address] = value;
                 switch (address & 3) {
+                    case 0:
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        Noise.CurrentLengthCounter = lengthCounterLookupTable[Noise.LengthCounterLoad];
+                        break;
                     default:
                         break;
                 }

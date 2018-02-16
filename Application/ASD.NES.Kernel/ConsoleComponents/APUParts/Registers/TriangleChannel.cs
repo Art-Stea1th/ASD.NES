@@ -69,16 +69,14 @@
 
             // One octave lower than pulse frequency
             var frequency = 111860.0 / Timer / 2;
-            var normalizedSampleTime = timeInSamples * frequency / sampleRate;
-
-            var normalized = ((timeInSamples * (int)frequency) % sampleRate) / (float)sampleRate;
+            var normalizedSampleTime = ((timeInSamples * (int)frequency) % sampleRate) / (float)sampleRate;
 
             // Map [0,1) to the triangle in range [-1,1]
-            if (normalized <= 0.5) {
-                return -1f + 4f * normalized;
+            if (normalizedSampleTime <= 0.5) {
+                return -1f + 4f * normalizedSampleTime;
             }
             else {
-                return 3f - 4f * normalized;
+                return 3f - 4f * normalizedSampleTime;
             }
         }
     }
