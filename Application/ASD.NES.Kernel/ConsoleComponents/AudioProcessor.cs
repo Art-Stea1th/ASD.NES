@@ -62,6 +62,7 @@ namespace ASD.NES.Kernel.ConsoleComponents {
             r.PulseB.TickEnvelopeCounter();
             r.Triangle.TickLinearCounter();
 
+            // r.Noise.TickShiftRegister();
             r.Noise.TickEnvelopeCounter();
 
             WriteFrameCounterAudio();
@@ -80,25 +81,29 @@ namespace ASD.NES.Kernel.ConsoleComponents {
                 PlayAudio.Invoke();
             }
 
-            float pulseA = 0f, pulseB = 0f, triangle = 0f, noise = 0f;
+            float pulseA = 0f, pulseB = 0f, triangle = 0f, noise = 0f, dm = 0f;
 
             for (var i = 0; i < samplesPerAPUFrameTick; i++) {
 
                 if (r.Status.PulseAEnabled || r.PulseA.CurrentLengthCounter != 0) {
-                    pulseA = r.PulseA.GetPulseAudio(timeInSamples, sampleRate);
+                    pulseA = r.PulseA.GetAudio(timeInSamples, sampleRate);
                 }
                 if (r.Status.PulseBEnabled || r.PulseB.CurrentLengthCounter != 0) {
-                    pulseB = r.PulseB.GetPulseAudio(timeInSamples, sampleRate);
+                    pulseB = r.PulseB.GetAudio(timeInSamples, sampleRate);
                 }
                 if (r.Status.TriangleEnabled && r.Triangle.CurrentLinearCounter != 0 && r.Triangle.CurrentLengthCounter != 0) {
-                    triangle = r.Triangle.GetTriangleAudio(timeInSamples, sampleRate);
+                    triangle = r.Triangle.GetAudio(timeInSamples, sampleRate);
                 }
                 if (r.Status.NoiseEnabled && r.Noise.CurrentLengthCounter != 0 && r.Noise.CurrentLengthCounter != 0) {
-                    // noise = r.Noise.GetNoiseAudio(timeInSamples, sampleRate);
+                    // noise = r.Noise.GetAudio(timeInSamples, sampleRate);         // disabled, no pitch
+                }
+                if (r.Status.DmcEnabled) {
+                    // dm = r.DeltaModulation.GetAudio(timeInSamples, sampleRate);  // disabled, not impl.
                 }
 
-                // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer
-                (Buffer as AudioBuffer).Write(pulseA + pulseB + triangle + noise);
+                // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer instead of (n + n + n + n + n) / 5
+                (Buffer as AudioBuffer).Write((pulseA + pulseB + triangle + noise + dm) / 5f);
+
                 timeInSamples++;
             }
             if (timeInSamples > sampleRate * 10) { // !!!

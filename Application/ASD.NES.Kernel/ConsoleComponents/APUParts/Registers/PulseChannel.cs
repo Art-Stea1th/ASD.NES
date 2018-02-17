@@ -15,8 +15,8 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
 
         private byte[] r = new byte[4];
         public byte this[int address] {
-            get => r[address & 3];
-            set => r[address & 3] = value;
+            get => r[address & 0b11];
+            set => r[address & 0b11] = value;
         }
         public int Cells => r.Length;
 
@@ -113,7 +113,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
             }
         }
 
-        public float GetPulseAudio(int timeInSamples, int sampleRate) {
+        public float GetAudio(int timeInSamples, int sampleRate) {
 
             // http://wiki.nesdev.com/w/index.php/APU_Pulse
             // f = CPU / (16 * (t + 1)) | t = (CPU / (16 * f)) - 1 | 111860 ~ 1.789773 MHz / 16 / timer
@@ -127,7 +127,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
             if (ConstantVolume) {
                 volume = EnvelopeDividerPeriodOrVolume;
             }
-            return dutyPulse * volume / 15;
+            return dutyPulse * (volume / 15.0f);
         }
     }
 }

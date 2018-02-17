@@ -1,5 +1,4 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
-    using System;
 
     // TODO: Separate channels & registers, Add 'base-classes' for them
 
@@ -14,19 +13,19 @@
 
         private byte[] r = new byte[4];
         public byte this[int address] {
-            get => r[address & 3];
-            set => r[address & 3] = value;
+            get => r[address & 0b11];
+            set => r[address & 0b11] = value;
         }
         public int Cells => r.Length;
 
-        // register[0] - $400C : --LC VVVV : length counter halt (L), constant volume (C), volume/envelope (V)
+        // register[0] - $400C : --LC VVVV : Length counter halt (L), Constant volume (C), Volume/Envelope (V)
         public bool LengthCounterHalt => r[0].HasBit(5);
         public bool ConstantVolume => r[0].HasBit(4);
         public byte EnvelopeDividerPeriodOrVolume => r[0].L();
 
         // register[1] - $400D : ---- ---- : isn't used?
 
-        // register[2] - $400E : M--- PPPP : Mode flag (M), Timer period ndx from table
+        // register[2] - $400E : M--- PPPP : Mode flag (M), Timer period index from table
         public bool ModeFlagIsSet => r[2].HasBit(7);
         public byte Period => r[2].L();
 
@@ -44,7 +43,7 @@
         public int CurrentLengthCounter { get; set; }
 
         // http://wiki.nesdev.com/w/index.php/APU_Noise // NTSC
-        public int[] NoiseFrequencyTable { get; } = {
+        private int[] NoiseFrequencyTable { get; } = {
             4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
         };
 
@@ -86,7 +85,7 @@
         }
 
         // TODO: impl. pitch for this
-        public float GetNoiseAudio(int timeInSamples, int sampleRate) {
+        public float GetAudio(int timeInSamples, int sampleRate) {
 
             TickShiftRegister();
 
@@ -95,7 +94,9 @@
                 volume = EnvelopeDividerPeriodOrVolume;
             }
 
-            return (ShiftRegister & 0b1) * (volume / 2);
+            var res = (ShiftRegister & 0b1);
+
+            return (-1 + (res == 1 ? res <<= 1 : res)) * (volume / 15.0f);
         }
     }
 }

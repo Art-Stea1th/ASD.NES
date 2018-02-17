@@ -13,8 +13,8 @@
 
         private byte[] r = new byte[4];
         public byte this[int address] {
-            get => r[address & 3];
-            set => r[address & 3] = value;
+            get => r[address & 0b11];
+            set => r[address & 0b11] = value;
         }
         public int Cells => r.Length;
 
@@ -65,7 +65,7 @@
             }
         }
 
-        public float GetTriangleAudio(int timeInSamples, int sampleRate) {
+        public float GetAudio(int timeInSamples, int sampleRate) {
 
             // One octave lower than pulse frequency
             var frequency = 111860.0 / Timer / 2;
