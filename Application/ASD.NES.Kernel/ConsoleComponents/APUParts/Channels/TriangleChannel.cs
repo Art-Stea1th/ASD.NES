@@ -1,22 +1,17 @@
-﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
-
-    // TODO: Separate channels & registers, Add 'base-classes' for them
+﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
     using BasicComponents;
     using Helpers;
+    using Registers;
 
     // http://wiki.nesdev.com/w/index.php/APU#Specification Triangle ($4008-400B)
     // http://wiki.nesdev.com/w/index.php/APU_Triangle
-    internal sealed class TriangleChannel : IMemory<byte> {
+    internal sealed class TriangleChannel : AudioChannel {
 
         // ------- Registers -------
 
-        private byte[] r = new byte[4];
-        public byte this[int address] {
-            get => r[address & 0b11];
-            set => r[address & 0b11] = value;
-        }
-        public int Cells => r.Length;
+        private TriangleChannelRegisters r;
+        public override IMemory<byte> Registers => r;
 
         // register[0] - $4008 : CRRR RRRR : Length counter halt / linear counter control(C), linear counter load(R)
         public bool LengthCounterHalt => r[0].HasBit(7);
@@ -45,6 +40,12 @@
         public int CurrentLengthCounter { get; set; }
         public int CurrentLinearCounter { get; set; }
 
+
+        public TriangleChannel(TriangleChannelRegisters registers) {
+            r = registers;
+            r.Changed += OnRegisterChanged;
+        }
+
         public void TickLengthCounter() {
             if (!LengthCounterHalt) {
                 CurrentLengthCounter -= 1;
@@ -71,12 +72,27 @@
             var frequency = 111860.0 / Timer / 2;
             var normalizedSampleTime = ((timeInSamples * (int)frequency) % sampleRate) / (float)sampleRate;
 
-            // Map [0,1) to the triangle in range [-1,1]
             if (normalizedSampleTime <= 0.5) {
                 return -1f + 4f * normalizedSampleTime;
             }
             else {
                 return 3f - 4f * normalizedSampleTime;
+            }
+        }
+
+        public override float GetAudio() {
+            throw new System.NotImplementedException();
+        }
+
+        public override void OnRegisterChanged(int address) {
+            switch (address & 0b11) {
+                case 0b00:
+                    CurrentLinearCounter = LinearCounterLoad;
+                    break;
+                case 0b11:
+                    CurrentLengthCounter = lengthCounterLookupTable[LengthCounterLoad];
+                    CurrentLinearCounter = LinearCounterLoad;
+                    break;
             }
         }
     }

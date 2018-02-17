@@ -1,22 +1,17 @@
-﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
-
-    // TODO: Separate channels & registers, Add 'base-classes' for them
+﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
     using BasicComponents;
     using Helpers;
+    using Registers;
 
     // http://wiki.nesdev.com/w/index.php/APU#Specification Noise ($400C-400F)
     // http://wiki.nesdev.com/w/index.php/APU_Noise
-    internal sealed class NoiseChannel : IMemory<byte> {
+    internal sealed class NoiseChannel : AudioChannel {
 
         // ------- Registers -------
 
-        private byte[] r = new byte[4];
-        public byte this[int address] {
-            get => r[address & 0b11];
-            set => r[address & 0b11] = value;
-        }
-        public int Cells => r.Length;
+        private NoiseChannelRegisters r;
+        public override IMemory<byte> Registers => r;
 
         // register[0] - $400C : --LC VVVV : Length counter halt (L), Constant volume (C), Volume/Envelope (V)
         public bool LengthCounterHalt => r[0].HasBit(5);
@@ -47,6 +42,11 @@
             4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
         };
 
+
+        public NoiseChannel(NoiseChannelRegisters registers) {
+            r = registers;
+            r.Changed += OnRegisterChanged;
+        }
 
         // The length counter provides automatic duration control for the NES APU waveform channels.
         // http://wiki.nesdev.com/w/index.php/APU_Length_Counter
@@ -97,6 +97,22 @@
             var res = (ShiftRegister & 0b1);
 
             return (-1 + (res == 1 ? res <<= 1 : res)) * (volume / 15.0f);
+        }
+
+        public override float GetAudio() {
+            throw new System.NotImplementedException();
+        }
+
+        public override void OnRegisterChanged(int address) {
+            switch (address & 0b11) {
+                case 0b00:
+                    EnvelopeVolume = 15;
+                    EnvelopeCounter = EnvelopeDividerPeriodOrVolume;
+                    break;
+                case 0b11:
+                    CurrentLengthCounter = lengthCounterLookupTable[LengthCounterLoad];
+                    break;
+            }
         }
     }
 }

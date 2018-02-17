@@ -3,6 +3,7 @@
 namespace ASD.NES.Kernel.ConsoleComponents {
 
     using APUParts;
+    using APUParts.Channels;
     using CPUParts;
 
     internal sealed class AudioProcessor { // HARDCODE Impl.
@@ -10,12 +11,27 @@ namespace ASD.NES.Kernel.ConsoleComponents {
         private CPUAddressSpace cpuMemory = CPUAddressSpace.Instance;
         private RegistersAPU r;
 
+        private PulseChannel pulseA;
+        private PulseChannel pulseB;
+        private TriangleChannel triangle;
+        private NoiseChannel noise;
+        private DeltaModulationChannel modulation;
+
         public IAudioBuffer Buffer { get; private set; }
         public event Action PlayAudio;
 
         public AudioProcessor() {
             r = cpuMemory.RegistersAPU;
             Buffer = new AudioBuffer();
+            InitializeChannels();
+        }
+
+        private void InitializeChannels() {
+            pulseA = new PulseChannel(r.PulseA);
+            pulseB = new PulseChannel(r.PulseB);
+            triangle = new TriangleChannel(r.Triangle);
+            noise = new NoiseChannel(r.Noise);
+            modulation = new DeltaModulationChannel(r.Modulation);
         }
 
         private int stepCounter;
@@ -49,21 +65,21 @@ namespace ASD.NES.Kernel.ConsoleComponents {
         private void APUFrameTick() {
 
             if (tickLengthCounterAndSweep) {
-                r.PulseA.TickLengthCounter();
-                r.PulseB.TickLengthCounter();
-                r.Triangle.TickLengthCounter();
-                r.Noise.TickLengthCounter();
+                pulseA.TickLengthCounter();
+                pulseB.TickLengthCounter();
+                triangle.TickLengthCounter();
+                noise.TickLengthCounter();
 
-                r.PulseA.TickSweep();
-                r.PulseB.TickSweep();
+                pulseA.TickSweep();
+                pulseB.TickSweep();
             }
 
-            r.PulseA.TickEnvelopeCounter();
-            r.PulseB.TickEnvelopeCounter();
-            r.Triangle.TickLinearCounter();
+            pulseA.TickEnvelopeCounter();
+            pulseB.TickEnvelopeCounter();
+            triangle.TickLinearCounter();
 
-            // r.Noise.TickShiftRegister();
-            r.Noise.TickEnvelopeCounter();
+            // noise.TickShiftRegister();
+            noise.TickEnvelopeCounter();
 
             WriteFrameCounterAudio();
             tickLengthCounterAndSweep = !tickLengthCounterAndSweep;
@@ -81,29 +97,28 @@ namespace ASD.NES.Kernel.ConsoleComponents {
                 PlayAudio.Invoke();
             }
 
-            float pulseA = 0f, pulseB = 0f, triangle = 0f, noise = 0f, dm = 0f;
+            float paAudio = 0f, pbAudio = 0f, trAudio = 0f, nsAudio = 0f, dmAudio = 0f;
 
             for (var i = 0; i < samplesPerAPUFrameTick; i++) {
 
-                if (r.Status.PulseAEnabled || r.PulseA.CurrentLengthCounter != 0) {
-                    pulseA = r.PulseA.GetAudio(timeInSamples, sampleRate);
+                if (r.Status.PulseAEnabled || pulseA.CurrentLengthCounter != 0) {
+                    paAudio = pulseA.GetAudio(timeInSamples, sampleRate);
                 }
-                if (r.Status.PulseBEnabled || r.PulseB.CurrentLengthCounter != 0) {
-                    pulseB = r.PulseB.GetAudio(timeInSamples, sampleRate);
+                if (r.Status.PulseBEnabled || pulseB.CurrentLengthCounter != 0) {
+                    pbAudio = pulseB.GetAudio(timeInSamples, sampleRate);
                 }
-                if (r.Status.TriangleEnabled && r.Triangle.CurrentLinearCounter != 0 && r.Triangle.CurrentLengthCounter != 0) {
-                    triangle = r.Triangle.GetAudio(timeInSamples, sampleRate);
+                if (r.Status.TriangleEnabled && triangle.CurrentLinearCounter != 0 && triangle.CurrentLengthCounter != 0) {
+                    trAudio = triangle.GetAudio(timeInSamples, sampleRate);
                 }
-                if (r.Status.NoiseEnabled && r.Noise.CurrentLengthCounter != 0 && r.Noise.CurrentLengthCounter != 0) {
-                    // noise = r.Noise.GetAudio(timeInSamples, sampleRate);         // disabled, no pitch
+                if (r.Status.NoiseEnabled && noise.CurrentLengthCounter != 0 && noise.CurrentLengthCounter != 0) {
+                    nsAudio = noise.GetAudio(timeInSamples, sampleRate);         // disabled, no pitch
                 }
                 if (r.Status.DmcEnabled) {
-                    // dm = r.DeltaModulation.GetAudio(timeInSamples, sampleRate);  // disabled, not impl.
+                    dmAudio = modulation.GetAudio(timeInSamples, sampleRate);  // disabled, not impl. reason: No games with DMC on Mapper 0 (NROM)
                 }
 
                 // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer instead of (n + n + n + n + n) / 5
-                (Buffer as AudioBuffer).Write((pulseA + pulseB + triangle + noise + dm) / 5f);
-
+                (Buffer as AudioBuffer).Write(((paAudio + pbAudio + trAudio + nsAudio + dmAudio) / 5f) * 0.85f);
                 timeInSamples++;
             }
             if (timeInSamples > sampleRate * 10) { // !!!

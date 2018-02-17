@@ -3,7 +3,7 @@
     using Helpers;
 
     // https://wiki.nesdev.com/w/index.php/APU
-    internal sealed class StatusRegister {
+    internal sealed class AudioChannelStatusRegister {
 
         private byte r;
         public byte Value { get => r; set => r = value; }

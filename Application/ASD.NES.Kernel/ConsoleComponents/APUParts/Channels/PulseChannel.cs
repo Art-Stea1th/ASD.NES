@@ -1,24 +1,19 @@
 ﻿using System;
 
-namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
-
-    // TODO: Separate channels & registers, Add 'base-classes' for them
+namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
     using BasicComponents;
     using Helpers;
+    using Registers;
 
     // http://wiki.nesdev.com/w/index.php/APU#Specification Pulse ($4000-4007)
     // http://wiki.nesdev.com/w/index.php/APU_Pulse
-    internal sealed class PulseChannel : IMemory<byte> { // Registers byte x 4 / 32bit
+    internal sealed class PulseChannel : AudioChannel {
 
         // ------- Registers -------
 
-        private byte[] r = new byte[4];
-        public byte this[int address] {
-            get => r[address & 0b11];
-            set => r[address & 0b11] = value;
-        }
-        public int Cells => r.Length;
+        private PulseChannelRegisters r;
+        public override IMemory<byte> Registers => r;
 
         // register[0] - $4000 | $4004 : DDLC VVVV : Duty (D), envelope loop / length counter halt (L), constant volume (C), volume/envelope (V)
         public byte Duty => (byte)(r[0] >> 6 & 3);
@@ -56,6 +51,11 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
 
         // http://wiki.nesdev.com/w/index.php/APU_Pulse 
         private double[] DutyMap { get; set; } = new double[] { .125, .25, .5, .75 };
+
+        public PulseChannel(PulseChannelRegisters registers) {
+            r = registers;
+            r.Changed += OnRegisterChanged;
+        }
 
         // The length counter provides automatic duration control for the NES APU waveform channels.
         // http://wiki.nesdev.com/w/index.php/APU_Length_Counter
@@ -128,6 +128,25 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Registers {
                 volume = EnvelopeDividerPeriodOrVolume;
             }
             return dutyPulse * (volume / 15.0f);
+        }
+
+        public override float GetAudio() {
+            throw new NotImplementedException();
+        }
+
+        public override void OnRegisterChanged(int address) {
+            switch (address & 0b11) {
+                case 0b00:
+                    EnvelopeVolume = 15;
+                    EnvelopeCounter = EnvelopeDividerPeriodOrVolume;
+                    break;
+                case 0b01:
+                    SweepPeriodCounter = SweepPeriod;
+                    break;
+                case 0b11:
+                    CurrentLengthCounter = lengthCounterLookupTable[LengthCounterLoad];
+                    break;
+            }
         }
     }
 }

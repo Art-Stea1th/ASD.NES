@@ -58,7 +58,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.CPUParts {
                 return registersPPU[address];
             }
             if (address < 0x4014 || address == 0x4015) {
-                return 0; // registersAPU[address]; // - write only
+                return registersAPU[address];
             }
             if (address == 0x4016 || address == 0x4017) {
                 return registersInput[address];
