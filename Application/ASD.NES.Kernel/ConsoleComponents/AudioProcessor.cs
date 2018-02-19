@@ -115,7 +115,7 @@ namespace ASD.NES.Kernel.ConsoleComponents {
                     nsAudio = noise.GetAudio();
                 }
                 if (r.Status.DmcEnabled) {
-                    //dmAudio = modulation.GetAudio(); // disabled, not impl. reason: No games with DMC on Mapper 0 (NROM)
+                    // dmAudio = modulation.GetAudio(); // disabled, not impl. reason: No games with DMC on Mapper 0 (NROM)
                 }
 
                 // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer instead of (n + n + n + n + n) / 5

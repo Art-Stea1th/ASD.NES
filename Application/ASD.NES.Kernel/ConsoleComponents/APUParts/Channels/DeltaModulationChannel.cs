@@ -1,9 +1,11 @@
-﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
+﻿using System;
+
+namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
     using Helpers;
     using Registers;
 
-    // http://wiki.nesdev.com/w/index.php/APU#Specification Delta Modulation ($4010-4013)
+    // http://wiki.nesdev.com/w/index.php/APU#Specification
     // http://wiki.nesdev.com/w/index.php/APU_DMC
     internal sealed class DeltaModulationChannel : AudioChannel {
 
@@ -30,7 +32,7 @@
             : base(registers, clockSpeed, sampleRate) { }
 
         public override float GetAudio() {
-            return 0f;
+            throw new NotImplementedException(); // impl. after mappers
         }
 
         public override void OnRegisterChanged(int address) {

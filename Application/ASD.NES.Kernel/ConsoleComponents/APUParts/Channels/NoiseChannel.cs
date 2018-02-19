@@ -1,10 +1,9 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
-    using BasicComponents;
     using Helpers;
     using Registers;
 
-    // http://wiki.nesdev.com/w/index.php/APU#Specification Noise ($400C-400F)
+    // http://wiki.nesdev.com/w/index.php/APU#Specification
     // http://wiki.nesdev.com/w/index.php/APU_Noise
     internal sealed class NoiseChannel : AudioChannel {
 
@@ -21,8 +20,6 @@
 
         // register[3] - $400F : LLLL L--- : Length counter load and envelope restart
         protected override byte LengthIndex => (byte)(r[3] >> 3);
-
-        // flag is shared with LengthCounterHalt
         public int ShiftRegister { get; set; } = 1;
 
         // http://wiki.nesdev.com/w/index.php/APU_Noise // NTSC
@@ -38,7 +35,6 @@
             ShiftRegister = (ShiftRegister << 1) | ((ShiftRegister >> 14 ^ ShiftRegister >> shifter) & 0x1);
         }
 
-        // TODO: clarify
         public override float GetAudio() {
 
             Timer = NoiseFrequencyTable[FrequencyTableIndex];
@@ -46,23 +42,22 @@
 
             SampleCount++;
             if (SampleCount >= RenderedWaveLength) {
-                SampleCount -= RenderedWaveLength / 16;
+                SampleCount -= RenderedWaveLength;
                 TickShiftRegister();
             }
+            var randomBit = ShiftRegister & 1;
 
-            var regBit = ShiftRegister & 1;
-            var period = (-1 + (regBit == 1 ? regBit <<= 1 : regBit)); // <- normalize 0:1 to -1:1
+            var period = (-1 + (randomBit == 1 ? randomBit <<= 1 : randomBit));
             var volume = (EnvelopeDecayDisabled ? Volume : EnvelopeVolume) / 15.0f;
 
             return period * volume;
         }
 
-        // TODO: clarify
         public override void OnRegisterChanged(int address) {
             switch (address & 0b11) {
                 case 0b00:
-                    //EnvelopeVolume = Volume;
-                    //EnvelopeCounter = EnvelopeVolume;
+                    EnvelopeCounter = Volume;
+                    EnvelopeCounter++;
                     break;
                 case 0b11:
                     LengthCounter = waveLengths[LengthIndex];

@@ -51,7 +51,7 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
         public abstract void OnRegisterChanged(int address);
 
         protected virtual void UpdateFrequency() {
-            Frequency = ClockSpeed / ((Timer + 1) * 0x10);
+            Frequency = ClockSpeed / (Timer > 0 ? Timer : 1);
             RenderedWaveLength = SampleRate / Frequency;
         }
 

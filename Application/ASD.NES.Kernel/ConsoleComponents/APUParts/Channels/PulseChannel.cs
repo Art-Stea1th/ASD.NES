@@ -1,11 +1,9 @@
-﻿using System;
-
-namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
+﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
     using Helpers;
     using Registers;
 
-    // http://wiki.nesdev.com/w/index.php/APU#Specification Pulse ($4000-4007)
+    // http://wiki.nesdev.com/w/index.php/APU#Specification
     // http://wiki.nesdev.com/w/index.php/APU_Pulse
     internal sealed class PulseChannel : AudioChannel {
 
@@ -29,8 +27,6 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
             set { r[2] = (byte)value; r[3] = (byte)((r[3] | 0b1111_1000) | ((value >> 8) & 0b111)); }
         }
         protected override byte LengthIndex => (byte)(r[3] >> 3);
-
-        // flag is shared with LengthCounterHalt
         public int SweepCounter { get; set; }
 
         // http://wiki.nesdev.com/w/index.php/APU_Pulse 
@@ -63,26 +59,32 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
             }
         }
 
-        protected override void UpdateFrequency() {
-            Frequency = 111860.0f / Timer;
-        }
-
+        private bool squarePositive = false;
         public override float GetAudio() {
 
-            SampleCount++;
-            if (SampleCount < 0) { SampleCount = 0; }
             UpdateFrequency();
 
-            var normalizedSampleTime = SampleCount * Frequency / SampleRate;
+            var waveLength = default(double);
+            var period = default(float);
 
-            var fractionalNormalizedSampleTime = normalizedSampleTime - Math.Floor(normalizedSampleTime); // 0 ... 0.999
-            var dutyPulse = fractionalNormalizedSampleTime < DutyMap[Duty] ? 1f : -1f;
-
-            var volume = EnvelopeVolume;
-            if (EnvelopeDecayDisabled) {
-                volume = Volume;
+            if (squarePositive) {
+                waveLength = 16 * RenderedWaveLength * DutyMap[Duty];
+                period = 1.0f;
             }
-            return dutyPulse * (volume / 15.0f);
+            else {
+                waveLength = 16 * RenderedWaveLength * (1.0 - DutyMap[Duty]);
+                period = -1.0f;
+            }
+
+            SampleCount++;
+            if (SampleCount >= waveLength) {
+                SampleCount -= waveLength;
+                squarePositive = !squarePositive;
+            }
+
+            var volume = (EnvelopeDecayDisabled ? Volume : EnvelopeVolume) / 15.0f;
+
+            return period * volume;
         }
 
         public override void OnRegisterChanged(int address) {
@@ -99,7 +101,6 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
                     if (!EnvelopeDecayDisabled) { EnvelopeVolume = 15; }
                     break;
             }
-            
         }
     }
 }

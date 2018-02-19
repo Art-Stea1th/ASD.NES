@@ -3,12 +3,12 @@
     using Helpers;
     using Registers;
 
-    // http://wiki.nesdev.com/w/index.php/APU#Specification Triangle ($4008-400B)
+    // http://wiki.nesdev.com/w/index.php/APU#Specification
     // http://wiki.nesdev.com/w/index.php/APU_Triangle
     internal sealed class TriangleChannel : AudioChannel {
 
         // register[0] - $4008 : CRRR RRRR : Length counter halt / linear counter control(C), linear counter load(R)
-        public bool LengthCounterHalt => r[0].HasBit(7);
+        protected override bool LengthCounterDisabled => r[0].HasBit(7);
         public byte LinearCounterLoad {
             get => (byte)(r[0] & 0x7F);
             set => r[0] = (byte)((r[0] & 0x80) | (value & 0x7F));
@@ -25,47 +25,42 @@
                 r[3] = (byte)((r[3] | 0b1111_1000) | ((value >> 8) & 0b111));
             }
         }
-
         protected override byte LengthIndex => (byte)(r[3] >> 3);
-
-
-        // ------- Additional -------
-
         public int LinearCounter { get; set; }
 
         public TriangleChannel(AudioChannelRegisters registers, int clockSpeed, int sampleRate)
             : base(registers, clockSpeed, sampleRate) { }
 
         public void TickLinearCounter() {
-            if (!LengthCounterHalt) {
+            if (!LengthCounterDisabled) {
                 if (LinearCounterLoad == 0) {
                     LinearCounterLoad = 0;
                 }
                 else {
-                    LinearCounterLoad -= 1;
+                    LinearCounterLoad--;
                 }
             }
         }
 
-        protected override void UpdateFrequency() {
-            // One octave lower than pulse frequency
-            Frequency = 111860.0 / Timer / 2;
-        }
+        byte[] triangleForm = {
+            0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
+            0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0
+        };
 
+        uint tick = 0;
         public override float GetAudio() {
 
-            SampleCount++;
-            if (SampleCount < 0) { SampleCount = 0; }
             UpdateFrequency();
 
-            var normalizedSampleTime = ((int)(SampleCount * Frequency) % (int)SampleRate) / (float)SampleRate;
-
-            if (normalizedSampleTime <= 0.5) {
-                return -1f + 4f * normalizedSampleTime;
+            if (Timer > 0) {
+                SampleCount++;
+                if (SampleCount >= RenderedWaveLength) {
+                    SampleCount -= RenderedWaveLength;
+                    tick++;
+                }
+                return triangleForm[tick & 0x1F] / 15.0f;
             }
-            else {
-                return 3f - 4f * normalizedSampleTime;
-            }
+            return 0f;
         }
 
         public override void OnRegisterChanged(int address) {
