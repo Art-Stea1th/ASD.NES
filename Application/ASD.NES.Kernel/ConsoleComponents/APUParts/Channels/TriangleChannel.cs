@@ -26,26 +26,15 @@
             }
         }
 
-        public byte LengthCounterLoad => (byte)(r[3] >> 3);
+        protected override byte LengthIndex => (byte)(r[3] >> 3);
 
 
         // ------- Additional -------
 
-        public int LengthCounter { get; set; }
         public int LinearCounter { get; set; }
-
 
         public TriangleChannel(AudioChannelRegisters registers, int clockSpeed, int sampleRate)
             : base(registers, clockSpeed, sampleRate) { }
-
-        public override void TickLengthCounter() {
-            if (!LengthCounterHalt) {
-                LengthCounter -= 1;
-                if (LengthCounter < 0) {
-                    LengthCounter = 0;
-                }
-            }
-        }
 
         public void TickLinearCounter() {
             if (!LengthCounterHalt) {
@@ -69,7 +58,7 @@
             if (SampleCount < 0) { SampleCount = 0; }
             UpdateFrequency();
 
-            var normalizedSampleTime = ((uint)(SampleCount * Frequency) % SampleRate) / (float)SampleRate;
+            var normalizedSampleTime = ((int)(SampleCount * Frequency) % (int)SampleRate) / (float)SampleRate;
 
             if (normalizedSampleTime <= 0.5) {
                 return -1f + 4f * normalizedSampleTime;
@@ -87,7 +76,7 @@
                 case 0b10:
                     break;
                 case 0b11:
-                    LengthCounter = waveLengths[LengthCounterLoad];
+                    LengthCounter = waveLengths[LengthIndex];
                     LinearCounter = LinearCounterLoad;
                     break;
             }

@@ -66,34 +66,35 @@ namespace ASD.NES.Kernel.ConsoleComponents {
         private void APUFrameTick() {
 
             if (tickLengthCounterAndSweep) {
-                pulseA.TickLengthCounter();
-                pulseB.TickLengthCounter();
-                triangle.TickLengthCounter();
-                noise.TickLengthCounter();
 
+                pulseA.TickLength();
                 pulseA.TickSweep();
+
+                pulseB.TickLength();
                 pulseB.TickSweep();
+
+                triangle.TickLength();
+
+                noise.TickLength();
             }
 
-            pulseA.TickEnvelopeCounter();
-            pulseB.TickEnvelopeCounter();
+            pulseA.TickEnvelope();
+            pulseB.TickEnvelope();
             triangle.TickLinearCounter();
-
-            // noise.TickShiftRegister();
-            noise.TickEnvelopeCounter();
+            noise.TickEnvelope();
 
             WriteFrameCounterAudio();
             tickLengthCounterAndSweep = !tickLengthCounterAndSweep;
         }
 
-        private int apuFrameTicksFillAudio = 40; // !!!
+        private int apuFrameTicksBeforePlayAudio = 40; // church, delay before play
 
         private void WriteFrameCounterAudio() {
 
-            if (apuFrameTicksFillAudio > -1) { // !!!
-                apuFrameTicksFillAudio--;
+            if (apuFrameTicksBeforePlayAudio >= 1) {
+                apuFrameTicksBeforePlayAudio--;
             }
-            if (apuFrameTicksFillAudio == 0) { // !!!
+            if (apuFrameTicksBeforePlayAudio == 0) {
                 PlayAudio.Invoke();
             }
 
@@ -119,7 +120,7 @@ namespace ASD.NES.Kernel.ConsoleComponents {
 
                 // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer instead of (n + n + n + n + n) / 5
                 (Buffer as AudioBuffer).Write(((paAudio + pbAudio + trAudio + nsAudio + dmAudio) / 5f) * 0.85f);
-            }            
+            }
         }
     }
 }

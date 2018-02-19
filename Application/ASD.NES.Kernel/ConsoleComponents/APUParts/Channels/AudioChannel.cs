@@ -15,8 +15,8 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
             Exception Overflow(string param)
                 => new OverflowException($"{param} can't be less than or equal to 0");
 
-            ClockSpeed = clockSpeed > 0 ? (uint)clockSpeed : throw Overflow(nameof(clockSpeed));
-            SampleRate = sampleRate > 0 ? (uint)sampleRate : throw Overflow(nameof(sampleRate));
+            ClockSpeed = clockSpeed > 0 ? clockSpeed : throw Overflow(nameof(clockSpeed));
+            SampleRate = sampleRate > 0 ? sampleRate : throw Overflow(nameof(sampleRate));
         }
 
         // -- fields
@@ -28,14 +28,22 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
         public IMemory<byte> Registers => r;
 
-        protected uint ClockSpeed { get; }
-        protected uint SampleRate { get; }
+        protected double ClockSpeed { get; }
+        protected double SampleRate { get; }
 
         protected double SampleCount { get; set; }
         protected double Frequency { get; set; }
         protected double RenderedWaveLength { get; set; }
 
+        public virtual int LengthCounter { get; protected set; }
+        protected virtual bool LengthCounterDisabled { get; }
+        protected virtual bool EnvelopeDecayDisabled { get; }
+        protected virtual byte Volume { get; }
         protected virtual int Timer { get; set; }
+        protected virtual byte LengthIndex { get; }
+
+        protected int EnvelopeCounter { get; set; }
+        protected byte EnvelopeVolume { get; set; }
 
 
         // -- methods
@@ -47,12 +55,39 @@ namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
             RenderedWaveLength = SampleRate / Frequency;
         }
 
-        public virtual void TickEnvelope() { }
-        public virtual void TickLengthCounter() { }
+        // The length counter provides automatic duration control for the NES APU waveform channels.
+        // http://wiki.nesdev.com/w/index.php/APU_Length_Counter
+        public virtual void TickLength() {
+            if (!LengthCounterDisabled) {
+                LengthCounter--;
+                if (LengthCounter < 0) {
+                    LengthCounter = 0;
+                }
+            }
+        }
+
         public virtual void TickSweep() { }
 
-        public abstract float GetAudio();
+        // APU Envelope http://wiki.nesdev.com/w/index.php/APU_Envelope
+        // ADSR Envelope https://en.wikipedia.org/wiki/Synthesizer#ADSR_envelope
+        public virtual void TickEnvelope() {
+            if (EnvelopeCounter == 0) {
+                if (EnvelopeVolume == 0) {
+                    if (LengthCounterDisabled) {
+                        EnvelopeVolume = 15;
+                    }
+                }
+                else {
+                    EnvelopeVolume--;
+                }
+                EnvelopeCounter = Volume;
+            }
+            else {
+                EnvelopeCounter--;
+            }
+        }
 
+        public abstract float GetAudio();
 
         // -- static data
 

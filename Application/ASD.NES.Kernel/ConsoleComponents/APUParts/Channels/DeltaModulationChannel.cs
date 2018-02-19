@@ -30,22 +30,15 @@
             : base(registers, clockSpeed, sampleRate) { }
 
         public override float GetAudio() {
-            SampleCount++;
-            if (SampleCount < 0) { SampleCount = 0; }
-            UpdateFrequency();
             return 0f;
         }
 
         public override void OnRegisterChanged(int address) {
             switch (address & 0b11) {
-                case 0b00:
-                    break;
-                case 0b01:
-                    break;
-                case 0b10:
-                    break;
-                case 0b11:
-                    break;
+                case 0b00: break;
+                case 0b01: break;
+                case 0b10: break;
+                case 0b11: break;
             }
         }
     }
