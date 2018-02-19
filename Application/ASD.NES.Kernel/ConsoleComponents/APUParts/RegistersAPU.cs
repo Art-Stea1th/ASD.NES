@@ -5,11 +5,11 @@
 
     internal sealed class RegistersAPU : IMemory<byte> {
 
-        public PulseChannelRegisters PulseA { get; }
-        public PulseChannelRegisters PulseB { get; }
-        public TriangleChannelRegisters Triangle { get; }
-        public NoiseChannelRegisters Noise { get; }
-        public DeltaModulationChannelRegisters Modulation { get; }
+        public AudioChannelRegisters PulseA { get; }
+        public AudioChannelRegisters PulseB { get; }
+        public AudioChannelRegisters Triangle { get; }
+        public AudioChannelRegisters Noise { get; }
+        public AudioChannelRegisters Modulation { get; }
 
         public AudioChannelStatusRegister Status { get; }
 
@@ -18,11 +18,11 @@
 
         public RegistersAPU() {
 
-            PulseA = new PulseChannelRegisters();
-            PulseB = new PulseChannelRegisters();
-            Triangle = new TriangleChannelRegisters();
-            Noise = new NoiseChannelRegisters();
-            Modulation = new DeltaModulationChannelRegisters();
+            PulseA = new AudioChannelRegisters();
+            PulseB = new AudioChannelRegisters();
+            Triangle = new AudioChannelRegisters();
+            Noise = new AudioChannelRegisters();
+            Modulation = new AudioChannelRegisters();
 
             Status = new AudioChannelStatusRegister();
         }

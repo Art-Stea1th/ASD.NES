@@ -1,17 +1,11 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
-    using BasicComponents;
     using Helpers;
     using Registers;
 
     // http://wiki.nesdev.com/w/index.php/APU#Specification Delta Modulation ($4010-4013)
     // http://wiki.nesdev.com/w/index.php/APU_DMC
     internal sealed class DeltaModulationChannel : AudioChannel {
-
-        // ------- Registers -------
-
-        private DeltaModulationChannelRegisters r;
-        public override IMemory<byte> Registers => r;
 
         // register[0] - $4010 : IL-- RRRR : IRQ enabled (I), Loop (L), Rate index (R)
         public bool IRQEnabled => r[0].HasBit(7);
@@ -32,17 +26,14 @@
             428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106,  84,  72,  54
         };
 
-        public DeltaModulationChannel(DeltaModulationChannelRegisters registers) {
-            r = registers;
-            r.Changed += OnRegisterChanged;
-        }
-
-        public float GetAudio(int timeInSamples, int sampleRate) {
-            return 0f;
-        }
+        public DeltaModulationChannel(AudioChannelRegisters registers, int clockSpeed, int sampleRate)
+            : base(registers, clockSpeed, sampleRate) { }
 
         public override float GetAudio() {
-            throw new System.NotImplementedException();
+            SampleCount++;
+            if (SampleCount < 0) { SampleCount = 0; }
+            UpdateFrequency();
+            return 0f;
         }
 
         public override void OnRegisterChanged(int address) {

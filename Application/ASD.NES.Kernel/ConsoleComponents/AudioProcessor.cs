@@ -17,6 +17,14 @@ namespace ASD.NES.Kernel.ConsoleComponents {
         private NoiseChannel noise;
         private DeltaModulationChannel modulation;
 
+        private int stepCounter;
+        private bool tickLengthCounterAndSweep;
+
+        private const int clockSpeed = 1790000;                         // 1.79MHz
+        private const int sampleRate = 48000;                           // 48kHz
+        private const int samplesPerFrame = sampleRate / 60;            // 800
+        private const int samplesPerAPUFrameTick = samplesPerFrame / 4; // 200
+
         public IAudioBuffer Buffer { get; private set; }
         public event Action PlayAudio;
 
@@ -27,19 +35,12 @@ namespace ASD.NES.Kernel.ConsoleComponents {
         }
 
         private void InitializeChannels() {
-            pulseA = new PulseChannel(r.PulseA);
-            pulseB = new PulseChannel(r.PulseB);
-            triangle = new TriangleChannel(r.Triangle);
-            noise = new NoiseChannel(r.Noise);
-            modulation = new DeltaModulationChannel(r.Modulation);
+            pulseA = new PulseChannel(r.PulseA, clockSpeed, sampleRate);
+            pulseB = new PulseChannel(r.PulseB, clockSpeed, sampleRate);
+            triangle = new TriangleChannel(r.Triangle, clockSpeed, sampleRate);
+            noise = new NoiseChannel(r.Noise, clockSpeed, sampleRate);
+            modulation = new DeltaModulationChannel(r.Modulation, clockSpeed, sampleRate);
         }
-
-        private int stepCounter;
-        private bool tickLengthCounterAndSweep;
-
-        private const int sampleRate = 48000;                           // 48kHz
-        private const int samplesPerFrame = sampleRate / 60;            // 800
-        private const int samplesPerAPUFrameTick = samplesPerFrame / 4; // 200
 
         // PPU ticks = 260 * 341 = 88660 per frame (256 * 240 - visible pixels)
         // CPU tisks ~ 88660 / 3 ~ 29553 per frame
@@ -86,7 +87,6 @@ namespace ASD.NES.Kernel.ConsoleComponents {
         }
 
         private int apuFrameTicksFillAudio = 40; // !!!
-        private int timeInSamples = 0;           // !!!
 
         private void WriteFrameCounterAudio() {
 
@@ -101,29 +101,25 @@ namespace ASD.NES.Kernel.ConsoleComponents {
 
             for (var i = 0; i < samplesPerAPUFrameTick; i++) {
 
-                if (r.Status.PulseAEnabled || pulseA.CurrentLengthCounter != 0) {
-                    paAudio = pulseA.GetAudio(timeInSamples, sampleRate);
+                if (r.Status.PulseAEnabled || pulseA.LengthCounter != 0) {
+                    paAudio = pulseA.GetAudio();
                 }
-                if (r.Status.PulseBEnabled || pulseB.CurrentLengthCounter != 0) {
-                    pbAudio = pulseB.GetAudio(timeInSamples, sampleRate);
+                if (r.Status.PulseBEnabled || pulseB.LengthCounter != 0) {
+                    pbAudio = pulseB.GetAudio();
                 }
-                if (r.Status.TriangleEnabled && triangle.CurrentLinearCounter != 0 && triangle.CurrentLengthCounter != 0) {
-                    trAudio = triangle.GetAudio(timeInSamples, sampleRate);
+                if (r.Status.TriangleEnabled && triangle.LengthCounter != 0 && triangle.LinearCounter != 0) {
+                    trAudio = triangle.GetAudio();
                 }
-                if (r.Status.NoiseEnabled && noise.CurrentLengthCounter != 0 && noise.CurrentLengthCounter != 0) {
-                    nsAudio = noise.GetAudio(timeInSamples, sampleRate);         // disabled, no pitch
+                if (r.Status.NoiseEnabled && noise.LengthCounter != 0) {
+                    nsAudio = noise.GetAudio();
                 }
                 if (r.Status.DmcEnabled) {
-                    dmAudio = modulation.GetAudio(timeInSamples, sampleRate);  // disabled, not impl. reason: No games with DMC on Mapper 0 (NROM)
+                    //dmAudio = modulation.GetAudio(); // disabled, not impl. reason: No games with DMC on Mapper 0 (NROM)
                 }
 
                 // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer instead of (n + n + n + n + n) / 5
                 (Buffer as AudioBuffer).Write(((paAudio + pbAudio + trAudio + nsAudio + dmAudio) / 5f) * 0.85f);
-                timeInSamples++;
-            }
-            if (timeInSamples > sampleRate * 10) { // !!!
-                timeInSamples = 0;
-            }
+            }            
         }
     }
 }

@@ -8,15 +8,10 @@
     // http://wiki.nesdev.com/w/index.php/APU_Noise
     internal sealed class NoiseChannel : AudioChannel {
 
-        // ------- Registers -------
-
-        private NoiseChannelRegisters r;
-        public override IMemory<byte> Registers => r;
-
         // register[0] - $400C : --LC VVVV : Length counter halt (L), Constant volume (C), Volume/Envelope (V)
-        public bool LengthCounterHalt => r[0].HasBit(5);
-        public bool ConstantVolume => r[0].HasBit(4);
-        public byte EnvelopeDividerPeriodOrVolume => r[0].L();
+        public bool LengthCounterDisabled => r[0].HasBit(5);
+        public bool EnvelopeDecayDisabled => r[0].HasBit(4);
+        public byte Volume => r[0].L();
 
         // register[1] - $400D : ---- ---- : isn't used?
 
@@ -29,43 +24,32 @@
 
         // ------- Additional -------
 
-        public bool EnvelopeLoop => LengthCounterHalt;
+        public bool EnvelopeLoop => LengthCounterDisabled;
 
         // flag is shared with LengthCounterHalt
         public byte EnvelopeVolume { get; set; }
         public int EnvelopeCounter { get; set; }
         public int ShiftRegister { get; set; } = 1;
-        public int CurrentLengthCounter { get; set; }
+        public int LengthCounter { get; set; }
 
         // http://wiki.nesdev.com/w/index.php/APU_Noise // NTSC
         private int[] NoiseFrequencyTable { get; } = {
             4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
         };
 
-
-        public NoiseChannel(NoiseChannelRegisters registers) {
-            r = registers;
-            r.Changed += OnRegisterChanged;
-        }
+        public NoiseChannel(AudioChannelRegisters registers, int clockSpeed, int sampleRate)
+            : base(registers, clockSpeed, sampleRate) { }
 
         // The length counter provides automatic duration control for the NES APU waveform channels.
         // http://wiki.nesdev.com/w/index.php/APU_Length_Counter
-        public void TickLengthCounter() {
-            if (!LengthCounterHalt) {
-                CurrentLengthCounter -= 1;
-                if (CurrentLengthCounter < 0) {
-                    CurrentLengthCounter = 0;
+        public override void TickLengthCounter() { // TODO: clarify, bug, long-time
+            if (!LengthCounterDisabled) {
+                LengthCounter -= 1;
+                if (LengthCounter < 0) {
+                    LengthCounter = 0;
                 }
             }
-        }
-
-        public void TickShiftRegister() {
-
-            var shifter = ModeFlagIsSet ? 8 : 13;
-
-            ShiftRegister = (ShiftRegister << 1) | ((ShiftRegister >> 14 ^ ShiftRegister >> shifter) & 0x1);
-
-        }
+        }        
 
         public void TickEnvelopeCounter() {
             if (EnvelopeCounter == 0) {
@@ -77,40 +61,46 @@
                 else {
                     EnvelopeVolume--;
                 }
-                EnvelopeCounter = EnvelopeDividerPeriodOrVolume;
+                EnvelopeCounter = Volume;
             }
             else {
                 EnvelopeCounter--;
             }
         }
 
-        // TODO: impl. pitch for this
-        public float GetAudio(int timeInSamples, int sampleRate) {
+        public void TickShiftRegister() {
+            var shifter = ModeFlagIsSet ? 8 : 13;
+            ShiftRegister = (ShiftRegister << 1) | ((ShiftRegister >> 14 ^ ShiftRegister >> shifter) & 0x1);
+        }
 
-            TickShiftRegister();
+        // TODO: clarify
+        public override float GetAudio() {
 
-            var volume = EnvelopeVolume;
-            if (ConstantVolume) {
-                volume = EnvelopeDividerPeriodOrVolume;
+            SampleCount++;
+            if (SampleCount >= RenderedWaveLength) {
+                SampleCount -= RenderedWaveLength / 16;
+                TickShiftRegister();
             }
 
-            var res = (ShiftRegister & 0b1);
+            var regBit = ShiftRegister & 1;
+            var period = (-1 + (regBit == 1 ? regBit <<= 1 : regBit));
+            var volume = (EnvelopeDecayDisabled ? Volume : EnvelopeVolume) / 15.0f;
 
-            return (-1 + (res == 1 ? res <<= 1 : res)) * (volume / 15.0f);
+            Timer = NoiseFrequencyTable[Period];
+            UpdateFrequency();
+
+            return period * volume;
         }
 
-        public override float GetAudio() {
-            throw new System.NotImplementedException();
-        }
-
+        // TODO: clarify
         public override void OnRegisterChanged(int address) {
             switch (address & 0b11) {
                 case 0b00:
                     EnvelopeVolume = 15;
-                    EnvelopeCounter = EnvelopeDividerPeriodOrVolume;
+                    EnvelopeCounter = Volume;
                     break;
                 case 0b11:
-                    CurrentLengthCounter = lengthCounterLookupTable[LengthCounterLoad];
+                    LengthCounter = waveLengths[LengthCounterLoad];
                     break;
             }
         }

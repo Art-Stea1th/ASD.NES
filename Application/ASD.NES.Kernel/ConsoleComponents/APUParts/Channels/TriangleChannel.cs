@@ -1,17 +1,11 @@
 ﻿namespace ASD.NES.Kernel.ConsoleComponents.APUParts.Channels {
 
-    using BasicComponents;
     using Helpers;
     using Registers;
 
     // http://wiki.nesdev.com/w/index.php/APU#Specification Triangle ($4008-400B)
     // http://wiki.nesdev.com/w/index.php/APU_Triangle
     internal sealed class TriangleChannel : AudioChannel {
-
-        // ------- Registers -------
-
-        private TriangleChannelRegisters r;
-        public override IMemory<byte> Registers => r;
 
         // register[0] - $4008 : CRRR RRRR : Length counter halt / linear counter control(C), linear counter load(R)
         public bool LengthCounterHalt => r[0].HasBit(7);
@@ -24,8 +18,8 @@
         // register[2] - $400A : TTTT TTTT : Timer low(T)
         // register[3] - $400B : LLLL LTTT : Length counter load(L), timer high(T)
 
-        public ushort Timer {
-            get => (ushort)(((r[3] & 0b111) << 8) | r[2]);
+        protected override int Timer {
+            get => ((r[3] & 0b111) << 8) | r[2];
             set {
                 r[2] = (byte)value;
                 r[3] = (byte)((r[3] | 0b1111_1000) | ((value >> 8) & 0b111));
@@ -37,20 +31,18 @@
 
         // ------- Additional -------
 
-        public int CurrentLengthCounter { get; set; }
-        public int CurrentLinearCounter { get; set; }
+        public int LengthCounter { get; set; }
+        public int LinearCounter { get; set; }
 
 
-        public TriangleChannel(TriangleChannelRegisters registers) {
-            r = registers;
-            r.Changed += OnRegisterChanged;
-        }
+        public TriangleChannel(AudioChannelRegisters registers, int clockSpeed, int sampleRate)
+            : base(registers, clockSpeed, sampleRate) { }
 
-        public void TickLengthCounter() {
+        public override void TickLengthCounter() {
             if (!LengthCounterHalt) {
-                CurrentLengthCounter -= 1;
-                if (CurrentLengthCounter < 0) {
-                    CurrentLengthCounter = 0;
+                LengthCounter -= 1;
+                if (LengthCounter < 0) {
+                    LengthCounter = 0;
                 }
             }
         }
@@ -66,11 +58,18 @@
             }
         }
 
-        public float GetAudio(int timeInSamples, int sampleRate) {
-
+        protected override void UpdateFrequency() {
             // One octave lower than pulse frequency
-            var frequency = 111860.0 / Timer / 2;
-            var normalizedSampleTime = ((timeInSamples * (int)frequency) % sampleRate) / (float)sampleRate;
+            Frequency = 111860.0 / Timer / 2;
+        }
+
+        public override float GetAudio() {
+
+            SampleCount++;
+            if (SampleCount < 0) { SampleCount = 0; }
+            UpdateFrequency();
+
+            var normalizedSampleTime = ((uint)(SampleCount * Frequency) % SampleRate) / (float)SampleRate;
 
             if (normalizedSampleTime <= 0.5) {
                 return -1f + 4f * normalizedSampleTime;
@@ -80,18 +79,16 @@
             }
         }
 
-        public override float GetAudio() {
-            throw new System.NotImplementedException();
-        }
-
         public override void OnRegisterChanged(int address) {
             switch (address & 0b11) {
                 case 0b00:
-                    CurrentLinearCounter = LinearCounterLoad;
+                    LinearCounter = LinearCounterLoad;
+                    break;
+                case 0b10:
                     break;
                 case 0b11:
-                    CurrentLengthCounter = lengthCounterLookupTable[LengthCounterLoad];
-                    CurrentLinearCounter = LinearCounterLoad;
+                    LengthCounter = waveLengths[LengthCounterLoad];
+                    LinearCounter = LinearCounterLoad;
                     break;
             }
         }
