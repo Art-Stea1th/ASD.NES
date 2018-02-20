@@ -9,7 +9,7 @@
 
         // register[0] - $4008 : CRRR RRRR : Length counter halt / linear counter control(C), linear counter load(R)
         protected override bool LengthCounterDisabled => r[0].HasBit(7);
-        public byte LinearCounterLoad {
+        private byte LinearCounterLoad {
             get => (byte)(r[0] & 0x7F);
             set => r[0] = (byte)((r[0] & 0x80) | (value & 0x7F));
         }
@@ -26,26 +26,15 @@
             }
         }
         protected override byte LengthIndex => (byte)(r[3] >> 3);
-        public int LinearCounter { get; set; }
+        public int LinearCounter { get; private set; }
+
+        float[] triangleForm = {
+            0, +2, +4, +6, +8, +10, +12, +14, +15, +14, +12, +10, +8, +6, +4, +2,
+            0, -2, -4, -6, -8, -10, -12, -14, -15, -14, -12, -10, -8, -6, -4, -2
+        };
 
         public TriangleChannel(AudioChannelRegisters registers, int clockSpeed, int sampleRate)
-            : base(registers, clockSpeed, sampleRate) { }
-
-        public void TickLinearCounter() {
-            if (!LengthCounterDisabled) {
-                if (LinearCounterLoad == 0) {
-                    LinearCounterLoad = 0;
-                }
-                else {
-                    LinearCounterLoad--;
-                }
-            }
-        }
-
-        byte[] triangleForm = {
-            0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
-            0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0
-        };
+            : base(registers, clockSpeed, sampleRate) { }        
 
         uint tick = 0;
         public override float GetAudio() {
@@ -61,6 +50,17 @@
                 return triangleForm[tick & 0x1F] / 15.0f;
             }
             return 0f;
+        }
+
+        public void TickLinearCounter() {
+            if (!LengthCounterDisabled) {
+                if (LinearCounterLoad == 0) {
+                    LinearCounterLoad = 0;
+                }
+                else {
+                    LinearCounterLoad--;
+                }
+            }
         }
 
         public override void OnRegisterChanged(int address) {

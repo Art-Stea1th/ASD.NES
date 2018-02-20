@@ -18,9 +18,9 @@ namespace ASD.NES.Kernel.ConsoleComponents {
         private DeltaModulationChannel modulation;
 
         private int stepCounter;
-        private bool tickLengthCounterAndSweep;
+        private bool tickLengthAndSweep;
 
-        private const int clockSpeed = 1790000;                         // 1.79MHz
+        private const int clockSpeed = 1789773;                         // 1.79MHz
         private const int sampleRate = 48000;                           // 48kHz
         private const int samplesPerFrame = sampleRate / 60;            // 800
         private const int samplesPerAPUFrameTick = samplesPerFrame / 4; // 200
@@ -65,7 +65,7 @@ namespace ASD.NES.Kernel.ConsoleComponents {
 
         private void APUFrameTick() {
 
-            if (tickLengthCounterAndSweep) {
+            if (tickLengthAndSweep) {
 
                 pulseA.TickLength();
                 pulseA.TickSweep();
@@ -84,7 +84,7 @@ namespace ASD.NES.Kernel.ConsoleComponents {
             noise.TickEnvelope();
 
             WriteFrameCounterAudio();
-            tickLengthCounterAndSweep = !tickLengthCounterAndSweep;
+            tickLengthAndSweep = !tickLengthAndSweep;
         }
 
         private int apuFrameTicksBeforePlayAudio = 40; // church, delay before play

@@ -15,12 +15,12 @@
         // register[1] - $400D : ---- ---- : isn't used?
 
         // register[2] - $400E : M--- PPPP : Mode flag (M), Timer period index from table
-        public bool ModeFlagIsSet => r[2].HasBit(7);
-        public byte FrequencyTableIndex => r[2].L();
+        private bool ModeFlagIsSet => r[2].HasBit(7);
+        private byte FrequencyTableIndex => r[2].L();
 
         // register[3] - $400F : LLLL L--- : Length counter load and envelope restart
         protected override byte LengthIndex => (byte)(r[3] >> 3);
-        public int ShiftRegister { get; set; } = 1;
+        private int ShiftRegister { get; set; } = 1;
 
         // http://wiki.nesdev.com/w/index.php/APU_Noise // NTSC
         private int[] NoiseFrequencyTable { get; } = {
@@ -28,12 +28,7 @@
         };
 
         public NoiseChannel(AudioChannelRegisters registers, int clockSpeed, int sampleRate)
-            : base(registers, clockSpeed, sampleRate) { }
-
-        public void TickShiftRegister() {
-            var shifter = ModeFlagIsSet ? 8 : 13;
-            ShiftRegister = (ShiftRegister << 1) | ((ShiftRegister >> 14 ^ ShiftRegister >> shifter) & 0x1);
-        }
+            : base(registers, clockSpeed, sampleRate) { }        
 
         public override float GetAudio() {
 
@@ -51,6 +46,11 @@
             var volume = (EnvelopeDecayDisabled ? Volume : EnvelopeVolume) / 15.0f;
 
             return period * volume;
+        }
+
+        private void TickShiftRegister() {
+            var shifter = ModeFlagIsSet ? 8 : 13;
+            ShiftRegister = (ShiftRegister << 1) | ((ShiftRegister >> 14 ^ ShiftRegister >> shifter) & 0x1);
         }
 
         public override void OnRegisterChanged(int address) {
