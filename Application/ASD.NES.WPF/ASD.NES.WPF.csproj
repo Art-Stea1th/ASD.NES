@@ -73,11 +73,11 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-  </ItemGroup>
+  </ItemGroup>  
   <ItemGroup>
-    <ProjectReference Include="..\ASD.NES.Kernel\ASD.NES.Kernel.csproj">
-      <Project>{0538b45b-5541-4763-9008-d6cbd70ad9b5}</Project>
-      <Name>ASD.NES.Kernel</Name>
+    <ProjectReference Include="..\ASD.NES.Core\ASD.NES.Core.csproj">
+      <Project>{98d37a2a-2ca9-4fde-a12e-7ba8bf9ccd9f}</Project>
+      <Name>ASD.NES.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

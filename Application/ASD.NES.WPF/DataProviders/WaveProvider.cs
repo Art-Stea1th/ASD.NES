@@ -2,7 +2,7 @@
 
 namespace ASD.NES.WPF.DataProviders {
 
-    using Kernel;
+    using Core;
 
     // NAudio
     internal sealed class WaveProvider : IWaveProvider {

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.1</TargetFramework>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Authors>Stanislav Kuzmich [Art.Stea1th]</Authors>
+    <Company>Art of Software Development [ex. Art.Stea1th Design &amp; Development]</Company>
+    <Product>ASD.NES</Product>
+    <PackageId>asd.nes.core.library</PackageId>
+    <Version>0.1.0.0</Version>
+    <PackageProjectUrl></PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Art-Stea1th/ASD.NES</RepositoryUrl>
+    <Description>Emulator of the "Nintendo Entertainment System" game console</Description>
+  </PropertyGroup>
+
+</Project>

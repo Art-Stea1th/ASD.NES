@@ -11,7 +11,7 @@ namespace ASD.NES.WPF.ViewModels {
     using Controllers;
     using DataProviders;
     using Helpers;
-    using Kernel;
+    using Core;
     using Services;
 
     internal sealed partial class ShellViewModel : Observable {
