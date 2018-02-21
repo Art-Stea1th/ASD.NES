@@ -59,7 +59,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
                 BMI,  AND,  null, null, null, AND,  ROL,  null, SEC,  AND,  null, null, null, AND,  ROL,  null,
                 RTI,  EOR,  null, null, null, EOR,  LSR,  null, PHA,  EOR,  LSR,  null, JMP,  EOR,  LSR,  null,
                 BVC,  EOR,  null, null, null, EOR,  LSR,  null, CLI,  EOR,  null, null, null, EOR,  LSR,  null,
-                RTS,  ADC,  null, null, null, ADC,  ROR,  null, PLA,  ADC,  ROR,  null, JMP,  ADC,  ROR,  null,
+                RTS,  ADC,  null, null, null, ADC,  ROR,  null, PLA,  ADC,  ROR,  null, JMI,  ADC,  ROR,  null,
                 BVS,  ADC,  null, null, null, ADC,  ROR,  null, SEI,  ADC,  null, null, null, ADC,  ROR,  null,
                 null, STA,  null, null, STY,  STA,  STX,  null, DEY,  null, TXA,  null, STY,  STA,  STX,  null,
                 BCC,  STA,  null, null, STY,  STA,  STX,  null, TYA,  STA,  TXS,  null, null, STA,  null, null,
@@ -108,7 +108,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
                 2, 6, _, _, 3, 3, 5, _, 2, 2, 2, _, 4, 4, 6, _,
                 2, 5, _, _, _, 4, 6, _, 2, 4, _, _, _, 4, 7, _,
             };
-        }        
+        }
 
         public int Execute(byte opcode) {
             mode = addressing[opcode];
@@ -451,16 +451,27 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Force Break </summary>
         private int BRK() {
 
-            Push16(r.PC); // r.PS.B.Set(true); // ?
-            Push(r.PS);   // r.PS.I.Set(true); // ?
+            Push16(r.PC);  r.PS.B = true; // ?
+            Push(r.PS);    r.PS.I = true; // ?
 
             r.PC = BitOperations.MakeInt16(memory[0xFFFF], memory[0xFFFE]);
             return 0;
         }
 
         /// <summary> Jump to new location </summary>
-        private int JMP() { // Not impl.: JMP.IND has a bug where the indirect address wraps the page boundary
+        private int JMP() {
             r.PC = Address;
+            return 0;
+        }
+
+        /// <summary> Jump to new location (spec. for Indirect 0x6C, JMP.IND has a bug) </summary>
+        private int JMI() {
+
+            var addr = memory[r.PC + 1];
+            var low = addr;
+            var hig = (addr & 0xFF) == 0xFF ? addr & 0xFF00 : addr + 1;
+
+            r.PC = BitOperations.MakeInt16(memory[hig], memory[low]);
             return 0;
         }
 
