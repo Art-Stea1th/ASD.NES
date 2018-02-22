@@ -111,10 +111,21 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         }
 
         public int Execute(byte opcode) {
+
             mode = addressing[opcode];
-            var ticks = cycles[opcode];
-            ticks += instruction[opcode]();
-            r.PC += bytes[opcode];
+
+            var ticks = 0;
+
+            if (instruction[opcode] != null) {
+                ticks = cycles[opcode];
+                ticks += instruction[opcode]();
+                r.PC += bytes[opcode];
+            }
+            else {
+                ticks = cycles[0xEA];
+                ticks += NOP();
+                r.PC += bytes[0xEA];
+            }
             return ticks;
         }
 
@@ -443,6 +454,10 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Set Interrupt Disable flag </summary>
         private int SEI() {
             r.PS.I = true;
+
+            memory.Nmi = false; // !
+            r.PS.B = false;     // !?
+
             return 0;
         }
         #endregion
@@ -451,8 +466,8 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Force Break </summary>
         private int BRK() {
 
-            Push16(r.PC);  r.PS.B = true; // ?
-            Push(r.PS);    r.PS.I = true; // ?
+            Push16(r.PC); //r.PS.B = true; // ?
+            Push(r.PS);   //r.PS.I = true; // ?
 
             r.PC = BitOperations.MakeInt16(memory[0xFFFF], memory[0xFFFE]);
             return 0;
@@ -503,7 +518,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         #region Load / Store
 
         /// <summary> Load Accumulator from Memory </summary>
-        private int LDA() {
+        private int LDA() { // bugged ??
 
             r.A = M;
 

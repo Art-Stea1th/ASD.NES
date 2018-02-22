@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -9,9 +10,9 @@ using NAudio.Wave;
 namespace ASD.NES.WPF.ViewModels {
 
     using Controllers;
+    using Core;
     using DataProviders;
     using Helpers;
-    using Core;
     using Services;
 
     internal sealed partial class ShellViewModel : Observable {
@@ -72,6 +73,18 @@ namespace ASD.NES.WPF.ViewModels {
             => dispatcher.Invoke(()
                 => screen.WritePixels(new Int32Rect(0, 0, 256, 240), data, 256 * sizeof(uint), 0));
 
-        protected override void OnDispose() => console?.Dispose();
+        protected override void OnDispose() {
+            // SaveOpcodesLog(); // TMP for dbg
+            console?.Dispose();
+        }
+
+        private void SaveOpcodesLog() { // TMP for dbg
+            var opcodes = console.OpcodeSequence;
+            using (var writer = new StreamWriter("D:\\emu_logs\\excitebike\\asdnes.txt", false)) {
+                for (var i = 0; i < opcodes.Count; i++) {
+                    writer.WriteLine($"{opcodes[i]:X}");
+                }
+            }
+        }
     }
 }

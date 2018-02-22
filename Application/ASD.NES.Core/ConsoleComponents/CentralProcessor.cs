@@ -1,4 +1,6 @@
-﻿namespace ASD.NES.Core.ConsoleComponents {
+﻿using System.Collections.Generic;
+
+namespace ASD.NES.Core.ConsoleComponents {
 
     using CPUParts;
     using Helpers;
@@ -21,24 +23,41 @@
             core = new CPUCore(registers);
         }
 
+        public IList<byte> OpcodeSequence { get; } = new List<byte>(); // TMP for dbg
+
+        private uint step = 0; // TMP for dbg
+
         public int Step() {
+
+            step++; // TMP for dbg
+
+            var opcode = memory[registers.PC];
+
+            // OpcodeSequence.Add(opcode);  // TMP for dbg
+
+            var ticks = core.Execute(opcode);
+
+            if (step == 19004) {
+                step++; // TMP for dbg (break point catch)
+                step--;
+            }
 
             if (memory.Nmi) {
                 memory.Nmi = false;
                 JumpToNMIVector();
                 return 1;
             }
-
-            var opcode = memory[registers.PC];
-            return core.Execute(opcode);
+            return ticks;
         }
 
         public void ColdBoot() {
 
+            registers.A = registers.X = registers.Y = 0;
+
             registers.PS.B = true;
             registers.PS.I = true;
             registers.PS.U = true;
-            registers.A = registers.X = registers.Y = 0;
+
             registers.SP = 0xFD;
 
             JumpToResetVector();
@@ -53,6 +72,7 @@
 
             registers.SP -= 3;
             registers.PS.I = true;
+
             memory[0x4015] = 0x00;
         }
 

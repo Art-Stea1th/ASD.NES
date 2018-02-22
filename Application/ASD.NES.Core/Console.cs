@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ASD.NES.Core {
 
@@ -21,6 +22,8 @@ namespace ASD.NES.Core {
         public IAudioBuffer AudioBuffer => Apu.Buffer;
         public IGamepad PlayerOneController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.One); }
         public IGamepad PlayerTwoController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.Two); }
+
+        public IList<byte> OpcodeSequence => Cpu.OpcodeSequence; // TMP for dbg
 
         public Console() {
             State = State.Off;

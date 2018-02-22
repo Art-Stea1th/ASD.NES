@@ -119,7 +119,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 return returnValue;
             }
 
-            throw new ArgumentOutOfRangeException($"Unimplemented read to RegisteraPPU @ {(0x2000 + address):X}");
+            throw new ArgumentOutOfRangeException($"Unimplemented read to RegistersPPU @ {(0x2000 + address):X}");
         }
 
         public void Write(int address, byte value) {
