@@ -20,3 +20,5 @@
 | **Start**        | **Enter**         | **Enter**          |
 | **B**            | *K*               | *Insert (Num "0")* |
 | **A**            | *L*               | *Delete (Num ",")* |
+
+[![Releases](https://img.shields.io/badge/Releases-All-green.svg?style=flat-square&colorB=9FB861)](https://github.com/Art-Stea1th/ASD.NES/releases) [![v 0.1](https://img.shields.io/badge/v%200.1-Latest-green.svg?style=flat-square&colorB=9FB861)](https://github.com/Art-Stea1th/ASD.NES/releases/latest)
