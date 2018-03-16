@@ -60,8 +60,13 @@
                     Header="{Binding TurnOnOff.Name}"
                     Command="{Binding TurnOnOff}"/>
             </MenuItem>
-            <MenuItem Header="TOOLS">
+            <!--<MenuItem Header="TOOLS">
                 <MenuItem Header="Options"/>
+            </MenuItem>-->
+            <MenuItem Header="HELP">
+                <MenuItem
+                    Header="{Binding ViewHelp.Name}"
+                    Command="{Binding ViewHelp}"/>
             </MenuItem>
         </Menu>
 

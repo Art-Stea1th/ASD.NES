@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reflection;
 using Microsoft.Win32;
 
 namespace ASD.NES.WPF.Services {
@@ -16,6 +17,15 @@ namespace ASD.NES.WPF.Services {
                 Filter = " iNES, NES 2.0 (*.nes) |*.nes;",
                 ValidateNames = true
             };
+
+            string GetExecutionAssemblyPath()
+                => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+            var gamesFullPath = $"{GetExecutionAssemblyPath()}\\Games\\";
+
+            if (Directory.Exists(gamesFullPath)) {
+                openFileDialog.InitialDirectory = gamesFullPath;
+            }
 
             if (openFileDialog.ShowDialog() == true) {
                 return Cartridge.Create(File.ReadAllBytes(openFileDialog.FileName));

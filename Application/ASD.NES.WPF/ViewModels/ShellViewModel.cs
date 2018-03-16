@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -29,6 +30,9 @@ namespace ASD.NES.WPF.ViewModels {
 
         public ICommand OpenFile => new RelayCommand(OpenFileCommandExecute);
         public ICommand Exit => new RelayCommand<Window>(w => w.Close());
+        public ICommand ViewHelp => new RelayCommand(
+            () => Process.Start("https://github.com/Art-Stea1th/ASD.NES/blob/master/README.md"),
+            () => true, "View Help (Online)");
 
         private Dispatcher dispatcher;
 
@@ -53,7 +57,7 @@ namespace ASD.NES.WPF.ViewModels {
 
             console.PlayerOneController = new KeyboardController(dispatcher) {
                 Left = Key.A, Up = Key.W, Right = Key.D, Down = Key.S,
-                Select = Key.RightShift, Start = Key.Enter, B = Key.K, A = Key.L
+                Select = Key.LeftShift, Start = Key.Enter, B = Key.K, A = Key.L
             };
             console.PlayerTwoController = new KeyboardController(dispatcher) {
                 Left = Key.Left, Up = Key.Up, Right = Key.Right, Down = Key.Down,
