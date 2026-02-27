@@ -482,21 +482,21 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         /// <summary> Jump to new location (spec. for Indirect 0x6C, JMP.IND has a bug) </summary>
         private int JMI() {
 
-            // Operand is a 16-bit pointer (low, high) following the opcode.
-            // Emulate 6502 hardware bug: if the low byte of the pointer is 0xFF,
+            // Operand is a 16-bit ptr (low, high) following the opcode.
+            // Emulate 6502 hardware bug: if the low byte of the ptr is 0xFF,
             // the high byte is fetched from the beginning of the same page
-            // (i.e. (pointer & 0xFF00)) instead of pointer+1.
+            // (i.e. (ptr & 0xFF00)) instead of ptr+1.
 
-            var ptrLow = memory[r.PC + 1];
-            var ptrHigh = memory[r.PC + 2];
+            var addrL = memory[r.PC + 1];
+            var addrH = memory[r.PC + 2];
 
-            var pointer = BitOperations.MakeInt16(ptrHigh, ptrLow);
+            var ptr = BitOperations.MakeInt16(addrH, addrL);
 
-            var targetLow = memory[pointer];
-            var nextAddr = (pointer & 0x00FF) == 0x00FF ? (ushort)(pointer & 0xFF00) : (ushort)(pointer + 1);
-            var targetHigh = memory[nextAddr];
+            var tgtL = memory[ptr];
+            var nextAddr = (ptr & 0x00FF) == 0x00FF ? (ushort)(ptr & 0xFF00) : (ushort)(ptr + 1);
+            var tgtH = memory[nextAddr];
 
-            r.PC = BitOperations.MakeInt16(targetHigh, targetLow);
+            r.PC = BitOperations.MakeInt16(tgtH, tgtL);
             return 0;
         }
 
