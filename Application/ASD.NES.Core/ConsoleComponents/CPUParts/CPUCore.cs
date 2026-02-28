@@ -328,10 +328,12 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
         /// <summary> Test bits in Memory with Accumulator </summary>
         private int BIT() {
-
-            r.PS.V = r.A.HasBit(6);
+            // V flag is taken from bit 6 of the memory operand
+            r.PS.V = M.HasBit(6);
+            // N flag reflects bit 7 of memory operand
             r.PS.UpdateSigned(M);
-            r.PS.UpdateZero(r.A & M);
+            // Z flag is set if A & M == 0 (byte-aware)
+            r.PS.UpdateZero((byte)(r.A & M));
 
             return 0;
         }
