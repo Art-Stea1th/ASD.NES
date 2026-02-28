@@ -136,14 +136,16 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         private int ADC() {
 
             var result = r.A + M + r.PS.C.ToInt();
+            var resByte = (byte)result;
 
-            r.PS.UpdateOverflow(result);
-            r.PS.UpdateCarry(result);
+            // update flags using correct formulas
+            r.PS.UpdateOverflowAdd((byte)r.A, (byte)M, resByte);
+            r.PS.UpdateCarryAdd(result);
 
-            r.A = (byte)(result);
+            r.A = resByte;
 
-            r.PS.UpdateSigned(r.A);
-            r.PS.UpdateZero(r.A);
+            r.PS.UpdateSigned(resByte);
+            r.PS.UpdateZero(resByte);
 
             return PageCrossed ? 1 : 0;
         }
@@ -152,14 +154,17 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         private int SBC() {
 
             var result = r.A + (M ^ 0xFF) + r.PS.C.ToInt();
+            var resByte = (byte)result;
 
-            r.PS.UpdateOverflow(result);
-            r.PS.UpdateCarry(result);
+            // For subtraction overflow uses different formula
+            r.PS.UpdateOverflowSub((byte)r.A, (byte)M, resByte);
+            // Carry behavior for SBC after using A + (~M) + C matches checking bit 8 of result
+            r.PS.UpdateCarryAdd(result);
 
-            r.A = (byte)(result);
+            r.A = resByte;
 
-            r.PS.UpdateSigned(r.A);
-            r.PS.UpdateZero(r.A);
+            r.PS.UpdateSigned(resByte);
+            r.PS.UpdateZero(resByte);
 
             return PageCrossed ? 1 : 0;
         }
