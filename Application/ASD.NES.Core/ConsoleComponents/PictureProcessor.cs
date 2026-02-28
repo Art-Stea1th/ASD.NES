@@ -1,4 +1,4 @@
-﻿namespace ASD.NES.Core.ConsoleComponents {
+namespace ASD.NES.Core.ConsoleComponents {
 
     using CPUParts;
     using PPUParts;

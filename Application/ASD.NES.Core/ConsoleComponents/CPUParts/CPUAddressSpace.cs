@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
@@ -23,6 +23,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         private static readonly InputPort registersInput;  // 0x4016 - 0x4017: Input - 2 b
                                                            // 0x4018 - 0x4019: ??
         private static Board externalMemory;               // 0x4020 - 0xFFFF: cartrg - 49120 b
+        private static bool nmiLatch;                      // NMI pending (do not use 0xFFFA - that is the NMI vector!)
 
         public byte this[int address] {
             get => Read(address);
@@ -31,8 +32,8 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         public int Cells => 1024 * 64;
 
         public bool Nmi {
-            get => Read(0xFFFA).HasBit(0);
-            set { var nmi = Read(0xFFFA); Write(0xFFFA, nmi.WithChangedBit(0, value)); }
+            get => nmiLatch;
+            set => nmiLatch = value;
         }
 
         public RegistersPPU RegistersPPU => registersPPU;

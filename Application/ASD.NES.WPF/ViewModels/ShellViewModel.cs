@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -73,13 +74,22 @@ namespace ASD.NES.WPF.ViewModels {
             }
         }
 
-        private void UpdateScreen(uint[] data)
-            => dispatcher.Invoke(()
-                => screen.WritePixels(new Int32Rect(0, 0, 256, 240), data, 256 * sizeof(uint), 0));
+        private void UpdateScreen(uint[] data) {
+            if (dispatcher.HasShutdownStarted) return;
+            try {
+                dispatcher.Invoke(()
+                    => screen.WritePixels(new Int32Rect(0, 0, 256, 240), data, 256 * sizeof(uint), 0));
+            } catch (OperationCanceledException) { /* shutdown: dispatcher canceled the invoke */ }
+        }
 
         protected override void OnDispose() {
-            // SaveOpcodesLog(); // TMP for dbg
-            console?.Dispose();
+            try {
+                if (console != null) {
+                    console.PowerOff();
+                    console.Dispose();
+                    console = null;
+                }
+            } catch (Exception) { /* avoid crash on close */ }
         }
 
         private void SaveOpcodesLog() { // TMP for dbg

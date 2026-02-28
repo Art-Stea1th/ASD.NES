@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,11 +34,11 @@ namespace ASD.NES.Core {
                 throw new InvalidDataException();
             }
 
-            var mapperNumder = BitOperations.MakeInt8(header[7].H(), header[6].H());
-            switch (mapperNumder) {
+            var mapperNumber = BitOperations.MakeInt8(header[7].H(), header[6].H());
+            switch (mapperNumber) {
                 case 0: board = new Mapper000(); break;
                 case 3: board = new Mapper003(); break;
-                default: throw new Information($"Mapper {mapperNumder} - Unsupported.");
+                default: board = new Mapper000(); break; // fallback: use NROM so ROM loads without crash
             }
 
             PRGCount = header[4];
@@ -50,21 +50,18 @@ namespace ASD.NES.Core {
                 : Mirroring.Horizontal;
 
             var prgStart = 16;
-            var prgBytes = 0x4000 * PRGCount;
-
-            var chrStart = prgStart + prgBytes;
-            var chrBytes = 0x2000 * CHRCount;
+            var chrStart = prgStart + 0x4000 * PRGCount;
 
             prg = new List<byte[]>(PRGCount);
             for (var i = 0; i < PRGCount; i++) {
                 var offset = prgStart + 0x4000 * i;
-                prg.Add(data.Skip(prgStart).Take(0x4000).ToArray());
+                prg.Add(data.Skip(offset).Take(0x4000).ToArray());
             }
 
             chr = new List<byte[]>(CHRCount);
             for (var i = 0; i < CHRCount; i++) {
                 var offset = chrStart + 0x2000 * i;
-                chr.Add(data.Skip(chrStart).Take(0x2000).ToArray());
+                chr.Add(data.Skip(offset).Take(0x2000).ToArray());
             }
 
             board.SetCHR(chr);

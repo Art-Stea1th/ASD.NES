@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
@@ -47,10 +47,13 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             if (address < 0x2000) {
                 return externalMemory[address | 0x6000];
             }
-            if (address < 0x3EFF) {
+            if (address < 0x3F00) {
                 return nametables[address];
             }
-            return palettes[address & 0xFF];
+            var i = address & 0x1F;
+            if (i == 4 || i == 8 || i == 12) return palettes[0];
+            if (i == 20 || i == 24 || i == 28) return palettes[16];
+            return palettes[i];
         }
 
         private void Write(int address, byte value) {
@@ -58,11 +61,15 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             if (address < 0x2000) {
                 externalMemory[address | 0x6000] = value;
             }
-            else if (address < 0x3EFF) {
+            else if (address < 0x3F00) {
                 nametables[address] = value;
             }
             else {
-                palettes[address & 0xFF] = value;
+                var i = address & 0x1F;
+                palettes[i] = value;
+                // NES quirk: $3F04/$3F08/$3F0C mirror $3F00 (backdrop); $3F14/$3F18/$3F1C mirror $3F10
+                if (i == 4 || i == 8 || i == 12) palettes[0] = value;
+                if (i == 20 || i == 24 || i == 28) palettes[16] = value;
             }
         }
     }

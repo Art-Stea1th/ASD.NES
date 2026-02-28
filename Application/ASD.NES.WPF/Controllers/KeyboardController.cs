@@ -1,4 +1,5 @@
-﻿using System.Windows.Input;
+using System;
+using System.Windows.Input;
 using System.Windows.Threading;
 
 namespace ASD.NES.WPF.Controllers {
@@ -38,7 +39,13 @@ namespace ASD.NES.WPF.Controllers {
             return false;
         }
 
-        private bool IsKeyDown(Key key)
-            => dispatcher.Invoke(() => Keyboard.IsKeyDown(key));
+        private bool IsKeyDown(Key key) {
+            if (dispatcher.HasShutdownStarted) return false;
+            try {
+                return dispatcher.Invoke(() => Keyboard.IsKeyDown(key));
+            } catch (OperationCanceledException) {
+                return false;
+            }
+        }
     }
 }

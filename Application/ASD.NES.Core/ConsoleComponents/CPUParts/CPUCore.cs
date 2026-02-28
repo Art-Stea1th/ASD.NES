@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
@@ -342,37 +342,31 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
 
         /// <summary> Compare Memory and Accumulator </summary>
         private int CMP() {
-
-            var result = r.A - M;
-
-            r.PS.C = result >= 0;
+            int diff = r.A - M;
+            var result = (byte)diff;
+            r.PS.C = diff >= 0;
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
-
             return PageCrossed ? 1 : 0;
         }
 
         /// <summary> Compare Memory and Index Register X </summary>
         private int CPX() {
-
-            var result = r.X - M;
-
-            r.PS.C = result >= 0;
+            int diff = r.X - M;
+            var result = (byte)diff;
+            r.PS.C = diff >= 0;
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
-
             return 0;
         }
 
         /// <summary> Compare Memory and Index Register Y </summary>
         private int CPY() {
-
-            var result = r.Y - M;
-
-            r.PS.C = result >= 0;
+            int diff = r.Y - M;
+            var result = (byte)diff;
+            r.PS.C = diff >= 0;
             r.PS.UpdateSigned(result);
             r.PS.UpdateZero(result);
-
             return 0;
         }
         #endregion
@@ -404,7 +398,7 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         private int BVS() => BranchIf(r.PS.V);
 
 
-        /// <summary> Isn't instruction </summary>
+        /// <summary> Branch: REL.Address setter updates r.PC directly; bytes[opcode]=0 so Execute() does not add. </summary>
         private int BranchIf(bool condition) {
 
             if (condition) {
@@ -470,12 +464,10 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         #endregion
         #region Jumps
 
-        /// <summary> Force Break </summary>
+        /// <summary> Force Break (P pushed with B and U bits set per 6502; PC/vector left as in working version) </summary>
         private int BRK() {
-
-            Push16(r.PC); //r.PS.B = true; // ?
-            Push(r.PS);   //r.PS.I = true; // ?
-
+            Push16(r.PC);
+            Push((byte)((byte)r.PS | 0x30));
             r.PC = BitOperations.MakeInt16(memory[0xFFFF], memory[0xFFFE]);
             return 0;
         }
@@ -659,15 +651,17 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             return 0;
         }
 
-        /// <summary> Push Processor Status on Stack </summary>
+        /// <summary> Push Processor Status on Stack (B and U bits always pushed as 1 per 6502) </summary>
         private int PHP() {
-            Push(r.PS);
+            Push((byte)((byte)r.PS | 0x30));
             return 0;
         }
 
         /// <summary> Pull Accumulator on Stack </summary>
         private int PLA() {
-            r.A = Pull(); // r.PS.UpdateSigned(r.A); r.PS.UpdateZero(r.A); // ???
+            r.A = Pull();
+            r.PS.UpdateSigned(r.A);
+            r.PS.UpdateZero(r.A);
             return 0;
         }
 

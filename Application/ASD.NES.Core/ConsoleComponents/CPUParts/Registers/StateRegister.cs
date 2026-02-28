@@ -1,4 +1,4 @@
-﻿namespace ASD.NES.Core.ConsoleComponents.CPUParts.Registers {
+namespace ASD.NES.Core.ConsoleComponents.CPUParts.Registers {
 
     using Helpers;
 
@@ -56,7 +56,7 @@
             V = (((a ^ m) & (a ^ result)) & 0x80) != 0;
         }
 
-        public void SetNew(byte vatue) => r = vatue;
+        public void SetNew(byte value) => r = value;
         public static implicit operator byte(StateRegister state) => state.r;
     }
 }

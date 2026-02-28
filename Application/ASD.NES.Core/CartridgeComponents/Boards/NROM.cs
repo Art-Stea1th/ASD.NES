@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 
 namespace ASD.NES.Core.CartridgeComponents.Boards {
@@ -27,13 +27,11 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         }
 
         protected override void Write(int address, byte value) {
-
-            if (address == 0xFFFA) {
-                prg[0][address - 0xC000] = value;
+            // 0xFFFA-0xFFFF are vectors (NMI, RESET, IRQ) — read-only in cartridge ROM
+            if (address >= 0xFFFA) {
+                return;
             }
-            else {
-                throw new InvalidOperationException();
-            }
+            throw new InvalidOperationException();
         }
     }
 }

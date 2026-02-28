@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace ASD.NES.Core.ConsoleComponents {
 
@@ -25,22 +25,9 @@ namespace ASD.NES.Core.ConsoleComponents {
 
         public IList<byte> OpcodeSequence { get; } = new List<byte>(); // TMP for dbg
 
-        private uint step = 0; // TMP for dbg
-
         public int Step() {
-
-            step++; // TMP for dbg
-
             var opcode = memory[registers.PC];
-
-            // OpcodeSequence.Add(opcode);  // TMP for dbg
-
             var ticks = core.Execute(opcode);
-
-            if (step == 19004) {
-                step++; // TMP for dbg (break point catch)
-                step--;
-            }
 
             if (memory.Nmi) {
                 memory.Nmi = false;
