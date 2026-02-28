@@ -45,11 +45,10 @@ namespace ASD.NES.Core {
             PRGCount = header[4];
             CHRCount = header[5];
 
-            // iNES byte 6 bit 0: 0 = horizontal mirroring, 1 = vertical mirroring
+            // iNES byte 6: bit 0 = mirroring (0=horizontal, 1=vertical). Many NROM dumps use bit 1; use bit 0 for mappers 1+, bit 1 for mapper 0 for compatibility.
+            var mirrorVertical = mapperNumber == 0 ? header[6].HasBit(1) : header[6].HasBit(0);
             PPUAddressSpace.Instance.NametableMirroring
-                = header[6].HasBit(0)
-                ? Mirroring.Vertical
-                : Mirroring.Horizontal;
+                = mirrorVertical ? Mirroring.Vertical : Mirroring.Horizontal;
 
             var hasTrainer = header[6].HasBit(2);
             var prgStart = 16 + (hasTrainer ? 512 : 0);

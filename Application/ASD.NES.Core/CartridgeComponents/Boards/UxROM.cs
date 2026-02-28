@@ -11,8 +11,9 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         private readonly byte[] chrRam = new byte[0x2000];
 
         protected override byte Read(int address) {
+            // 0x4020–0x5FFF: expansion / open bus; not mapped by UxROM (CPUAddressSpace sends all >= 0x4020 here)
             if (address < 0x6000) {
-                throw new IndexOutOfRangeException();
+                return 0;
             }
             if (address < 0x8000) {
                 if (chr.Count > 0)

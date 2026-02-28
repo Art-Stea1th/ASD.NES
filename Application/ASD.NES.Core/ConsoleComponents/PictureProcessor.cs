@@ -47,6 +47,8 @@ namespace ASD.NES.Core.ConsoleComponents {
             scan++;
         }
 
+        public void ClearVideoState() => PPUAddressSpace.Instance.ClearVideoState();
+
         public void WarmBoot() => ColdBoot();
 
         public void ColdBoot() {

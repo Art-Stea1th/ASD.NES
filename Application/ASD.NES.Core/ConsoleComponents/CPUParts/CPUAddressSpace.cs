@@ -51,6 +51,11 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             externalMemory = boardMemory;
         }
 
+        /// <summary> Clears internal 2KB RAM (e.g. when swapping cartridge so the new game starts with a clean state). </summary>
+        internal static void ClearRAM() {
+            Array.Clear(internalMemory, 0, internalMemory.Length);
+        }
+
         private byte Read(int address) {
             if (address < 0x2000) {
                 return internalMemory[address & 0x7FF];

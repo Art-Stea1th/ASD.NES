@@ -69,6 +69,17 @@ namespace ASD.NES.WPF.ViewModels {
         private void OpenFileCommandExecute() {
             cartridge = OpenFileService.OpenCartridgeFile();
             if (cartridge != null) {
+                var oldConsole = console;
+                console.NextFrameReady -= UpdateScreen;
+                console.PlayAudio -= audioDevice.Play;
+                oldConsole.PowerOff();
+                oldConsole.Dispose();
+
+                console = new Console();
+                ConfigureAudioDevice();
+                ConfigureControllers();
+                console.NextFrameReady += UpdateScreen;
+                console.PlayAudio += audioDevice.Play;
                 console.InsertCartridge(cartridge);
                 (Reset as RelayCommand).Execute();
             }
@@ -90,15 +101,6 @@ namespace ASD.NES.WPF.ViewModels {
                     console = null;
                 }
             } catch (Exception) { /* avoid crash on close */ }
-        }
-
-        private void SaveOpcodesLog() { // TMP for dbg
-            var opcodes = console.OpcodeSequence;
-            using (var writer = new StreamWriter("D:\\emu_logs\\excitebike\\asdnes.txt", false)) {
-                for (var i = 0; i < opcodes.Count; i++) {
-                    writer.WriteLine($"{opcodes[i]:X}");
-                }
-            }
         }
     }
 }

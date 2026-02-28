@@ -94,10 +94,14 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
             address &= 0x0007;
 
+            if (address == 0) {
+                // 0x2000 PPUCTRL — write-only on NES; read returns open bus, emulator returns last written value
+                return (byte)PpuCtrl;
+            }
             if (address == 1) {
                 return PpuMask;
             }
-            else if (address == 2) {
+            if (address == 2) {
 
                 var prevStatusWithData = (byte)(PpuStat.StatusOnly | (PpuData & 0b0001_1111));
                 PpuStat.VBlank = false;
@@ -106,7 +110,23 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
                 return prevStatusWithData;
             }
-            else if (address == 7) {
+            if (address == 3) {
+                // 0x2003 OAMADDR — write-only; return last written value
+                return OamAddr;
+            }
+            if (address == 4) {
+                // 0x2004 OAMDATA — read returns OAM byte at OamAddr (or last value); no increment on read
+                return OamData;
+            }
+            if (address == 5) {
+                // 0x2005 PPUSCROLL — write-only; return first byte of scroll latch (X)
+                return PpuScrl.X;
+            }
+            if (address == 6) {
+                // 0x2006 PPUADDR — write-only; return high byte of address latch
+                return (byte)(PpuAddr >> 8);
+            }
+            if (address == 7) {
 
                 var readAddress = (ushort)(PpuAddr & ppuMemory.LastAddress);
 
@@ -125,7 +145,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 return returnValue;
             }
 
-            throw new ArgumentOutOfRangeException($"Unimplemented read to RegistersPPU @ {(0x2000 + address):X}");
+            return 0;
         }
 
         public void Write(int address, byte value) {

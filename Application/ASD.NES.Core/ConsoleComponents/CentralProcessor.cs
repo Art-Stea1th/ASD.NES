@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ASD.NES.Core.ConsoleComponents {
 
     using CPUParts;
@@ -23,8 +21,6 @@ namespace ASD.NES.Core.ConsoleComponents {
             core = new CPUCore(registers);
         }
 
-        public IList<byte> OpcodeSequence { get; } = new List<byte>(); // TMP for dbg
-
         public int Step() {
             var opcode = memory[registers.PC];
             var ticks = core.Execute(opcode);
@@ -36,6 +32,8 @@ namespace ASD.NES.Core.ConsoleComponents {
             }
             return ticks;
         }
+
+        public void ClearRAM() => CPUAddressSpace.ClearRAM();
 
         public void ColdBoot() {
 

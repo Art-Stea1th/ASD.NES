@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using System;
+using System.Linq;
 
 namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
@@ -10,6 +11,12 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
     internal sealed class Nametables : IMemory<byte> {
 
         private readonly Nametable[] nametable = new Nametable[4].Initialize<Nametable>();
+
+        internal void Clear() {
+            for (var i = 0; i < nametable.Length; i++) {
+                nametable[i].Clear();
+            }
+        }
 
         public Nametable GetNametable(int index) => nametable[FixBankIndex(index)];
 
@@ -51,6 +58,11 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 set => Write(address, value);
             }
             public int Cells => symbols.Length + attributes.Length;
+
+            internal void Clear() {
+                Array.Clear(symbols, 0, symbols.Length);
+                Array.Clear(attributes, 0, attributes.Length);
+            }
 
             public byte Read(int address) {
 

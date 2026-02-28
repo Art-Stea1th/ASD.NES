@@ -42,6 +42,12 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             externalMemory = boardMemory;
         }
 
+        /// <summary> Clears nametables and palettes (e.g. when swapping cartridge so the new game starts with a clean PPU). </summary>
+        internal void ClearVideoState() {
+            nametables.Clear();
+            Array.Clear(palettes, 0, palettes.Length);
+        }
+
         private byte Read(int address) {
 
             if (address < 0x2000) {
