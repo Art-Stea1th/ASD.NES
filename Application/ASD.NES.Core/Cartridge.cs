@@ -37,6 +37,7 @@ namespace ASD.NES.Core {
             var mapperNumber = BitOperations.MakeInt8(header[7].H(), header[6].H());
             switch (mapperNumber) {
                 case 0: board = new Mapper000(); break;
+                case 2: board = new Mapper002(); break;
                 case 3: board = new Mapper003(); break;
                 default: board = new Mapper000(); break; // fallback: use NROM so ROM loads without crash
             }
@@ -44,12 +45,14 @@ namespace ASD.NES.Core {
             PRGCount = header[4];
             CHRCount = header[5];
 
+            // iNES byte 6 bit 0: 0 = horizontal mirroring, 1 = vertical mirroring
             PPUAddressSpace.Instance.NametableMirroring
-                = header[6].HasBit(1)
+                = header[6].HasBit(0)
                 ? Mirroring.Vertical
                 : Mirroring.Horizontal;
 
-            var prgStart = 16;
+            var hasTrainer = header[6].HasBit(2);
+            var prgStart = 16 + (hasTrainer ? 512 : 0);
             var chrStart = prgStart + 0x4000 * PRGCount;
 
             prg = new List<byte[]>(PRGCount);
