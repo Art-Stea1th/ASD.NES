@@ -31,10 +31,30 @@
         /// <summary> "Carry" (bit 0) - set when the last addition or shift resulted in a carry, or last subtraction resulted in no borrow. </summary>
         public bool C { get => r.HasBit(0); set => r = r.WithChangedBit(0, value); }
 
-        public void UpdateSigned(int value) => S = ((sbyte)value) < 0;
-        public void UpdateOverflow(int value) => V = value > 255;
-        public void UpdateZero(int value) => Z = value == 0;
-        public void UpdateCarry(int value) => C = (value >> 8) != 0;
+        /// <summary> Keep legacy int-based methods but forward to byte-aware implementations
+        public void UpdateSigned(int value) => UpdateSigned((byte)value);
+        public void UpdateSigned(byte value) => S = (value & 0x80) != 0;
+
+        /// <summary> Overflow depends on operands (A, M) and result; use specific helpers for add/sub
+        /// <summary> Legacy API kept as no-op to avoid breaking callers — use UpdateOverflowAdd/UpdateOverflowSub from CPUCore.
+        public void UpdateOverflow(int value) => V = false;
+
+        public void UpdateZero(int value) => UpdateZero((byte)value);
+        public void UpdateZero(byte value) => Z = value == 0;
+
+        public void UpdateCarry(int value) => UpdateCarryAdd(value);
+        public void UpdateCarryAdd(int result) => C = (result & 0x100) != 0;
+
+        /// <summary> Proper overflow helpers
+        public void UpdateOverflowAdd(byte a, byte m, byte result) {
+            // Overflow for addition: (~(A ^ M) & (A ^ R)) & 0x80
+            V = (((~(a ^ m)) & (a ^ result)) & 0x80) != 0;
+        }
+
+        public void UpdateOverflowSub(byte a, byte m, byte result) {
+            // Overflow for subtraction: ((A ^ M) & (A ^ R)) & 0x80
+            V = (((a ^ m) & (a ^ result)) & 0x80) != 0;
+        }
 
         public void SetNew(byte vatue) => r = vatue;
         public static implicit operator byte(StateRegister state) => state.r;
