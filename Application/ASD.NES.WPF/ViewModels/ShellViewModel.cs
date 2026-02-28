@@ -70,9 +70,9 @@ namespace ASD.NES.WPF.ViewModels {
             cartridge = OpenFileService.OpenCartridgeFile();
             if (cartridge != null) {
                 var oldConsole = console;
+                oldConsole.PowerOff();
                 console.NextFrameReady -= UpdateScreen;
                 console.PlayAudio -= audioDevice.Play;
-                oldConsole.PowerOff();
                 oldConsole.Dispose();
 
                 console = new Console();

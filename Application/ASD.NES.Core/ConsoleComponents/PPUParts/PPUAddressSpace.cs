@@ -26,6 +26,12 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             set => nametables.Mirroring = value;
         }
 
+        /// <summary> For SingleScreen mirroring: which 1KB page (0 or 1) is used. AxROM sets this via register bit 4. </summary>
+        internal int SingleScreenPage {
+            get => nametables.SingleScreenPage;
+            set => nametables.SingleScreenPage = value;
+        }
+
         public byte this[int address] {
             get => Read(address);
             set => Write(address, value);

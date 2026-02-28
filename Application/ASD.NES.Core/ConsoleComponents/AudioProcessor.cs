@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ASD.NES.Core.ConsoleComponents {
 
@@ -95,7 +95,7 @@ namespace ASD.NES.Core.ConsoleComponents {
                 apuFrameTicksBeforePlayAudio--;
             }
             if (apuFrameTicksBeforePlayAudio == 0) {
-                PlayAudio.Invoke();
+                PlayAudio?.Invoke();
             }
 
             float paAudio = 0f, pbAudio = 0f, trAudio = 0f, nsAudio = 0f, dmAudio = 0f;

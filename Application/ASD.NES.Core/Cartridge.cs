@@ -39,6 +39,7 @@ namespace ASD.NES.Core {
                 case 0: board = new Mapper000(); break;
                 case 2: board = new Mapper002(); break;
                 case 3: board = new Mapper003(); break;
+                case 7: board = new Mapper007(); break;
                 default: board = new Mapper000(); break; // fallback: use NROM so ROM loads without crash
             }
 
@@ -46,9 +47,15 @@ namespace ASD.NES.Core {
             CHRCount = header[5];
 
             // iNES byte 6: bit 0 = mirroring (0=horizontal, 1=vertical). Many NROM dumps use bit 1; use bit 0 for mappers 1+, bit 1 for mapper 0 for compatibility.
-            var mirrorVertical = mapperNumber == 0 ? header[6].HasBit(1) : header[6].HasBit(0);
-            PPUAddressSpace.Instance.NametableMirroring
-                = mirrorVertical ? Mirroring.Vertical : Mirroring.Horizontal;
+            var ppu = PPUAddressSpace.Instance;
+            if (mapperNumber == 7) {
+                ppu.NametableMirroring = Mirroring.SingleScreen;
+                ppu.SingleScreenPage = 0;
+            }
+            else {
+                var mirrorVertical = mapperNumber == 0 ? header[6].HasBit(1) : header[6].HasBit(0);
+                ppu.NametableMirroring = mirrorVertical ? Mirroring.Vertical : Mirroring.Horizontal;
+            }
 
             var hasTrainer = header[6].HasBit(2);
             var prgStart = 16 + (hasTrainer ? 512 : 0);

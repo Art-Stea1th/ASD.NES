@@ -18,19 +18,25 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             }
         }
 
-        public Nametable GetNametable(int index) => nametable[FixBankIndex(index)];
+        /// <summary> For SingleScreen: which 1KB page (0 or 1) is used for all 4 nametables. Used by AxROM bit 4. </summary>
+        internal int SingleScreenPage { get; set; }
+
+        public Nametable GetNametable(int index) => nametable[GetPhysicalBankIndex((index & 3) << 10)];
 
         public Mirroring Mirroring { get; set; }
 
         public byte this[int address] {
-            get => nametable[GetBankIndex(FixAddress(address))][address & 0x3FF];
-            set => nametable[GetBankIndex(FixAddress(address))][address & 0x3FF] = value;
+            get => nametable[GetPhysicalBankIndex(FixAddress(address))][address & 0x3FF];
+            set => nametable[GetPhysicalBankIndex(FixAddress(address))][address & 0x3FF] = value;
+        }
+
+        private int GetPhysicalBankIndex(int fixedAddress) {
+            if (Mirroring == Mirroring.SingleScreen)
+                return SingleScreenPage & 1;
+            return fixedAddress >> 10;
         }
 
         public int Cells => nametable.Sum(n => n.Cells);
-
-        private int FixBankIndex(int index) => FixAddress((index & 0b11) << 10) >> 10;
-        private int GetBankIndex(int fixedAddress) => fixedAddress >> 10; // n / 1024
 
         private int FixAddress(int address) { // redirect // TODO: Validate, handle another mirroring modes
 
