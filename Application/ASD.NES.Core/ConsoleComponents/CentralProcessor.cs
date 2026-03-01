@@ -30,6 +30,10 @@ namespace ASD.NES.Core.ConsoleComponents {
                 JumpToNMIVector();
                 return 1;
             }
+            if (memory.Irq && !registers.PS.I) {
+                JumpToIRQVector();
+                return 1;
+            }
             return ticks;
         }
 
@@ -49,6 +53,7 @@ namespace ASD.NES.Core.ConsoleComponents {
 
             memory[0x4017] = 0x00;
             memory[0x4015] = 0x00;
+            memory.Irq = false;
         }
 
         public void WarmBoot() {
@@ -71,6 +76,14 @@ namespace ASD.NES.Core.ConsoleComponents {
             PushStack(registers.PS);
 
             registers.PC = ReadX2(0xFFFA);
+        }
+
+        private void JumpToIRQVector() {
+
+            PushStack16(registers.PC);
+            PushStack((byte)(((byte)registers.PS & 0xEF) | 0x20)); // B=0, U=1
+            registers.PS.I = true;
+            registers.PC = ReadX2(0xFFFE);
         }
 
         #region Helpers

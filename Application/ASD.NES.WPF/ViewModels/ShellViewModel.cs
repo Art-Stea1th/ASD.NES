@@ -67,8 +67,9 @@ namespace ASD.NES.WPF.ViewModels {
         }
 
         private void OpenFileCommandExecute() {
-            cartridge = OpenFileService.OpenCartridgeFile();
-            if (cartridge != null) {
+            var (loadedCartridge, filePath) = OpenFileService.OpenCartridgeFile();
+            if (loadedCartridge != null) {
+                cartridge = loadedCartridge;
                 var oldConsole = console;
                 oldConsole.PowerOff();
                 console.NextFrameReady -= UpdateScreen;
@@ -80,6 +81,13 @@ namespace ASD.NES.WPF.ViewModels {
                 ConfigureControllers();
                 console.NextFrameReady += UpdateScreen;
                 console.PlayAudio += audioDevice.Play;
+                // Prefer PAL for European dumps "(E)" that often lack the PAL flag in iNES header
+                var fileName = filePath != null ? Path.GetFileName(filePath) : "";
+                console.PreferRegion = (fileName.IndexOf("(E)", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                        fileName.IndexOf("(Europe)", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                        fileName.IndexOf("(PAL)", StringComparison.OrdinalIgnoreCase) >= 0)
+                    ? TvRegion.PAL
+                    : (TvRegion?)null;
                 console.InsertCartridge(cartridge);
                 (Reset as RelayCommand).Execute();
             }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ASD.NES.Core.ConsoleComponents.APUParts.Channels {
 
@@ -32,7 +32,7 @@ namespace ASD.NES.Core.ConsoleComponents.APUParts.Channels {
             : base(registers, clockSpeed, sampleRate) { }
 
         public override float GetAudio() {
-            throw new NotImplementedException(); // impl. after mappers
+            return 0f; // DMC not fully implemented; return silence to avoid hang/crash
         }
 
         public override void OnRegisterChanged(int address) {

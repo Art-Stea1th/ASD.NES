@@ -10,7 +10,8 @@ namespace ASD.NES.WPF.Services {
 
     internal static class OpenFileService {
 
-        public static Cartridge OpenCartridgeFile() {
+        /// <summary> Returns (cartridge, filePath) or (null, null) on cancel/error. File path is used to detect PAL from "(E)" etc. </summary>
+        public static (Cartridge cartridge, string filePath) OpenCartridgeFile() {
             var openFileDialog = new OpenFileDialog() {
                 Title = "Open .NES file",
                 Multiselect = false,
@@ -29,13 +30,14 @@ namespace ASD.NES.WPF.Services {
             }
 
             if (openFileDialog.ShowDialog() != true)
-                return null;
+                return (null, null);
 
             try {
-                return Cartridge.Create(File.ReadAllBytes(openFileDialog.FileName));
+                var data = File.ReadAllBytes(openFileDialog.FileName);
+                return (Cartridge.Create(data), openFileDialog.FileName);
             } catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Cannot load ROM", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return null;
+                return (null, null);
             }
         }
     }

@@ -23,6 +23,9 @@ namespace ASD.NES.Core {
 
         private static readonly uint iNesFileSignature = 0x1A53454E;
 
+        /// <summary> TV region from iNES header: Flags 9 bit 0 (0=NTSC, 1=PAL), or Flags 10 bits 0-1 (2=PAL). Default NTSC if not specified. </summary>
+        public TvRegion Region { get; }
+
         public static Cartridge Create(byte[] data) => new Cartridge(data);
 
         private Cartridge(byte[] data) {
@@ -34,12 +37,24 @@ namespace ASD.NES.Core {
                 throw new InvalidDataException();
             }
 
+            // iNES Flags 9: bit 0 = TV system (0: NTSC; 1: PAL). Flags 10 (unofficial): bits 0-1 = 2 means PAL.
+            var palFrom9 = header.Length > 9 && (header[9] & 1) != 0;
+            var palFrom10 = header.Length > 10 && (header[10] & 3) == 2;
+            Region = (palFrom9 || palFrom10) ? TvRegion.PAL : TvRegion.NTSC;
+
             var mapperNumber = BitOperations.MakeInt8(header[7].H(), header[6].H());
             switch (mapperNumber) {
                 case 0: board = new Mapper000(); break;
+                case 1: board = new Mapper001(); break;
                 case 2: board = new Mapper002(); break;
                 case 3: board = new Mapper003(); break;
+                case 4: board = new Mapper004(); break;
                 case 7: board = new Mapper007(); break;
+                case 11: board = new Mapper011(); break;
+                case 34: board = new Mapper034(); break;
+                case 66: board = new Mapper066(); break;
+                case 71: board = new Mapper071(); break;
+                case 79: board = new Mapper079(); break;
                 default: board = new Mapper000(); break; // fallback: use NROM so ROM loads without crash
             }
 

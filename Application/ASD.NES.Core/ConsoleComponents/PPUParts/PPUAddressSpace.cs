@@ -48,6 +48,11 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             externalMemory = boardMemory;
         }
 
+        /// <summary> Notify current board of a new scanline (for MMC3 IRQ counter). </summary>
+        internal void NotifyScanline() {
+            externalMemory?.OnScanline();
+        }
+
         /// <summary> Clears nametables and palettes (e.g. when swapping cartridge so the new game starts with a clean PPU). </summary>
         internal void ClearVideoState() {
             nametables.Clear();
@@ -57,7 +62,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         private byte Read(int address) {
 
             if (address < 0x2000) {
-                return externalMemory[address | 0x6000];
+                return externalMemory.ReadChr(address);
             }
             if (address < 0x3F00) {
                 return nametables[address];
@@ -71,7 +76,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         private void Write(int address, byte value) {
 
             if (address < 0x2000) {
-                externalMemory[address | 0x6000] = value;
+                externalMemory.WriteChr(address, value);
             }
             else if (address < 0x3F00) {
                 nametables[address] = value;

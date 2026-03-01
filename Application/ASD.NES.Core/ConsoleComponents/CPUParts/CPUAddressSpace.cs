@@ -24,6 +24,8 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
                                                            // 0x4018 - 0x4019: ??
         private static Board externalMemory;               // 0x4020 - 0xFFFF: cartrg - 49120 b
         private static bool nmiLatch;                      // NMI pending (do not use 0xFFFA - that is the NMI vector!)
+        private static bool irqLatch;                      // IRQ pending (e.g. MMC3 scanline counter)
+        private static bool apuIrqPending;                 // APU status bits 6/7 (frame/DMC interrupt)
 
         public byte this[int address] {
             get => Read(address);
@@ -35,6 +37,14 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             get => nmiLatch;
             set => nmiLatch = value;
         }
+
+        public bool Irq {
+            get => irqLatch || apuIrqPending;
+            set => irqLatch = value;
+        }
+
+        internal static void SetApuIrq() => apuIrqPending = true;
+        internal static void ClearApuIrq() => apuIrqPending = false;
 
         public RegistersPPU RegistersPPU => registersPPU;
         public RegistersAPU RegistersAPU => registersAPU;

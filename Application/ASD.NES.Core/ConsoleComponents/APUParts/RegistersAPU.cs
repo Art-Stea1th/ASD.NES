@@ -1,6 +1,9 @@
-﻿namespace ASD.NES.Core.ConsoleComponents.APUParts {
+using System;
+
+namespace ASD.NES.Core.ConsoleComponents.APUParts {
 
     using BasicComponents;
+    using CPUParts;
     using Registers;
 
     internal sealed class RegistersAPU : IMemory<byte> {
@@ -13,8 +16,16 @@
 
         public AudioChannelStatusRegister Status { get; }
 
-        public byte this[int address] { get => 0; set => Write(address, value); } // - write only
-        public int Cells => 20; // 0x4000 - 0x4013 // +1 - 'status register' at 0x4015   
+        private bool frameInterruptFlag;
+        private bool dmcInterruptFlag;
+
+        public byte this[int address] { get => Read(address); set => Write(address, value); }
+
+        internal void SetDmcInterrupt() {
+            dmcInterruptFlag = true;
+            CPUAddressSpace.SetApuIrq();
+        }
+        public int Cells => 20; // 0x4000 - 0x4013 // +1 - 'status register' at 0x4015
 
         public RegistersAPU() {
 
@@ -25,6 +36,14 @@
             Modulation = new AudioChannelRegisters();
 
             Status = new AudioChannelStatusRegister();
+        }
+
+        private byte Read(int address) {
+            if (address != 0x4015) return 0;
+            var v = (byte)((Status.Value & 0x1F) | (frameInterruptFlag ? 0x40 : 0) | (dmcInterruptFlag ? 0x80 : 0));
+            frameInterruptFlag = false;
+            dmcInterruptFlag = false;
+            return v;
         }
 
         private void Write(int address, byte value) {
@@ -46,6 +65,10 @@
             }
             else if (address == 0x4015) {
                 Status.Value = value;
+                if ((value & 0x10) != 0) {
+                    dmcInterruptFlag = true;
+                    CPUAddressSpace.SetApuIrq();
+                }
             }
             else {
                 return;

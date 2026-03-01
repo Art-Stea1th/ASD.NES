@@ -22,12 +22,20 @@ namespace ASD.NES.Core {
         public IGamepad PlayerOneController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.One); }
         public IGamepad PlayerTwoController { set => Cpu.AddressSpace.InputPort.ConnectController(value, PlayerNumber.Two); }
 
+        /// <summary> If set, overrides cartridge region (e.g. PAL for "(E)" dumps that lack the header flag). Null = use cartridge.Region. </summary>
+        public TvRegion? PreferRegion { get; set; }
+
         public Console() {
             State = State.Off;
             InitializeHardware();
         }
 
         public void InsertCartridge(Cartridge cartridge) {
+            var region = PreferRegion ?? cartridge.Region;
+            Clk.Interval = region == TvRegion.PAL
+                ? TimeSpan.FromMilliseconds(1000.0 / 50.0)
+                : TimeSpan.FromMilliseconds(1000.0 / 60.0988);
+            Ppu.SetRegion(region);
             Cpu.ClearRAM();
             Ppu.ClearVideoState();
             ColdBoot();
