@@ -1,4 +1,4 @@
-﻿namespace ASD.NES.Core.ConsoleComponents.APUParts.Channels {
+namespace ASD.NES.Core.ConsoleComponents.APUParts.Channels {
 
     using Helpers;
     using Registers;
@@ -26,7 +26,8 @@
             }
         }
         protected override byte LengthIndex => (byte)(r[3] >> 3);
-        public int LinearCounter { get; private set; }
+        public int LinearCounter { get; set; }
+        private bool linearCounterReloadFlag;
 
         float[] triangleForm = {
             0, +2, +4, +6, +8, +10, +12, +14, +15, +14, +12, +10, +8, +6, +4, +2,
@@ -34,14 +35,23 @@
         };
 
         public TriangleChannel(AudioChannelRegisters registers, int clockSpeed, int sampleRate)
-            : base(registers, clockSpeed, sampleRate) { }        
+            : base(registers, clockSpeed, sampleRate) { }
+
+        /// <summary> Triangle timer runs at CPU rate; one step = (Timer+1) CPU cycles. f = CPU/(32*(tval+1)). </summary>
+        protected override void UpdateFrequency() {
+            if (Timer <= 0) {
+                return;
+            }
+            Frequency = ClockSpeed / (32.0 * (Timer + 1));
+            RenderedWaveLength = SampleRate * (Timer + 1) / ClockSpeed;
+        }
 
         uint tick = 0;
         public override float GetAudio() {
 
             UpdateFrequency();
 
-            if (Timer > 0) {
+            if (Timer > 0 && LinearCounter != 0 && LengthCounter != 0) {
                 SampleCount++;
                 if (SampleCount >= RenderedWaveLength) {
                     SampleCount -= RenderedWaveLength;
@@ -52,27 +62,28 @@
             return 0f;
         }
 
+        /// <summary> NESDEV: on linear counter clock — if control clear, clear reload flag; if reload flag set reload counter (flag stays set); else if counter &gt; 0 decrement. </summary>
         public void TickLinearCounter() {
             if (!LengthCounterDisabled) {
-                if (LinearCounterLoad == 0) {
-                    LinearCounterLoad = 0;
-                }
-                else {
-                    LinearCounterLoad--;
-                }
+                linearCounterReloadFlag = false;
+            }
+            if (linearCounterReloadFlag) {
+                LinearCounter = r[0] & 0x7F;
+            } else if (LinearCounter > 0) {
+                LinearCounter--;
             }
         }
 
         public override void OnRegisterChanged(int address) {
             switch (address & 0b11) {
                 case 0b00:
-                    LinearCounter = LinearCounterLoad;
+                    linearCounterReloadFlag = true;
                     break;
                 case 0b10:
                     break;
                 case 0b11:
                     LengthCounter = waveLengths[LengthIndex];
-                    LinearCounter = LinearCounterLoad;
+                    linearCounterReloadFlag = true;
                     break;
             }
         }

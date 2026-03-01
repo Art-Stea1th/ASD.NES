@@ -51,6 +51,8 @@ namespace ASD.NES.WPF.ViewModels {
         private void ConfigureAudioDevice() {
             var waveProvider = new WaveProvider(console.AudioBuffer);
             audioDevice = new WaveOut();
+            audioDevice.DesiredLatency = 50;  // ms; lower = less input-to-sound delay (default 300)
+            audioDevice.NumberOfBuffers = 2;
             audioDevice.Init(waveProvider);
         }
 

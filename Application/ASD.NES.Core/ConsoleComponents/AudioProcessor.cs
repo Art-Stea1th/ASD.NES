@@ -17,13 +17,23 @@ namespace ASD.NES.Core.ConsoleComponents {
         private NoiseChannel noise;
         private DeltaModulationChannel modulation;
 
-        private int stepCounter;
-        private bool tickLengthAndSweep;
+        // NTSC: NESDEV APU Frame Counter 4-step mode — quarter/half frame at 3728, 7456, 11185, 14914 CPU cycles
+        private const int FrameCounterCycle = 14914;
+        private const int Step1 = 3728;
+        private const int Step2 = 7456;
+        private const int Step3 = 11185;
 
-        private const int clockSpeed = 1789773;                         // 1.79MHz
-        private const int sampleRate = 48000;                           // 48kHz
-        private const int samplesPerFrame = sampleRate / 60;            // 800
-        private const int samplesPerAPUFrameTick = samplesPerFrame / 4; // 200
+        private int frameCounterAccumulator;
+        private int frameCounterStep; // 0..3, which step we've last completed
+
+        private const int clockSpeed = 1789773;                         // NTSC 1.789773 MHz
+        private const int sampleRate = 48000;                           // 48 kHz
+        private const double cyclesPerSample = (double)clockSpeed / sampleRate; // ~37.306 CPU cycles per sample
+        private double sampleCycleAccumulator;
+
+        private const int samplesPerFrame = 800;                        // ~48kHz/60Hz, one frame worth
+        private int samplesBeforeFirstPlay = samplesPerFrame;           // warmup: one frame before first PlayAudio
+        private int samplesSincePlay;                                    // invoke PlayAudio every frame worth
 
         public IAudioBuffer Buffer { get; private set; }
         public event Action PlayAudio;
@@ -42,39 +52,52 @@ namespace ASD.NES.Core.ConsoleComponents {
             modulation = new DeltaModulationChannel(r.Modulation, clockSpeed, sampleRate);
         }
 
-        // PPU ticks = 260 * 341 = 88660 per frame (256 * 240 - visible pixels)
-        // CPU tisks ~ 88660 / 3 ~ 29553 per frame
-        // APU ticks ~ 29553 / 2 ~ 14777 ((88660/3)/2) per frame
-        public void Step() {                         // TODO: impl. the higher frequency or smart clock generator?
-            switch (stepCounter) {
-                //case 3728:
-                //case 7456:
-                //case 11185:
-                //case 14914: APUFrameTick(); break; // <- by spec. 4-Step mode: http://wiki.nesdev.com/w/index.php/APU_Frame_Counter
-                //case 14915: stepCounter = 0; break;
-                //default: break;
-                case 3584:
-                case 7168:
-                case 10752:
-                case 14336: APUFrameTick(); break;   // <- tmp. audio align: just 1024 * 14 (crutch, chosen at random)
-                case 14337: stepCounter = 0; break;
-                default: break;
+        /// <summary> Drive APU by CPU cycles: frame counter at 3728,7456,11185,14914 (NTSC 4-step); sample output at 48 kHz. </summary>
+        /// <see href="https://www.nesdev.org/wiki/APU_Frame_Counter">NESDEV APU Frame Counter</see>
+        /// <see href="https://www.nesdev.org/wiki/Cycle_reference_chart">NESDEV Cycle reference</see>
+        public void StepCpuCycles(int cpuCycles) {
+
+            frameCounterAccumulator += cpuCycles;
+            while (true) {
+                if (frameCounterAccumulator >= Step1 && frameCounterStep < 1) {
+                    APUFrameTick(quarterOnly: true);
+                    frameCounterStep = 1;
+                    continue;
+                }
+                if (frameCounterAccumulator >= Step2 && frameCounterStep < 2) {
+                    APUFrameTick(quarterOnly: false);
+                    frameCounterStep = 2;
+                    continue;
+                }
+                if (frameCounterAccumulator >= Step3 && frameCounterStep < 3) {
+                    APUFrameTick(quarterOnly: true);
+                    frameCounterStep = 3;
+                    continue;
+                }
+                if (frameCounterAccumulator >= FrameCounterCycle) {
+                    APUFrameTick(quarterOnly: false);
+                    frameCounterStep = 0;
+                    frameCounterAccumulator -= FrameCounterCycle;
+                    continue;
+                }
+                break;
             }
-            stepCounter++;
+
+            sampleCycleAccumulator += cpuCycles;
+            while (sampleCycleAccumulator >= cyclesPerSample) {
+                sampleCycleAccumulator -= cyclesPerSample;
+                WriteOneSample();
+            }
         }
 
-        private void APUFrameTick() {
+        private void APUFrameTick(bool quarterOnly) {
 
-            if (tickLengthAndSweep) {
-
+            if (!quarterOnly) {
                 pulseA.TickLength();
                 pulseA.TickSweep();
-
                 pulseB.TickLength();
                 pulseB.TickSweep();
-
                 triangle.TickLength();
-
                 noise.TickLength();
             }
 
@@ -82,45 +105,41 @@ namespace ASD.NES.Core.ConsoleComponents {
             pulseB.TickEnvelope();
             triangle.TickLinearCounter();
             noise.TickEnvelope();
-
-            WriteFrameCounterAudio();
-            tickLengthAndSweep = !tickLengthAndSweep;
         }
 
-        private int apuFrameTicksBeforePlayAudio = 40; // church, delay before play
+        private void WriteOneSample() {
 
-        private void WriteFrameCounterAudio() {
-
-            if (apuFrameTicksBeforePlayAudio >= 1) {
-                apuFrameTicksBeforePlayAudio--;
+            if (samplesBeforeFirstPlay > 0) {
+                samplesBeforeFirstPlay--;
+                if (samplesBeforeFirstPlay == 0) {
+                    PlayAudio?.Invoke();
+                }
             }
-            if (apuFrameTicksBeforePlayAudio == 0) {
+            samplesSincePlay++;
+            if (samplesSincePlay >= samplesPerFrame) {
+                samplesSincePlay = 0;
                 PlayAudio?.Invoke();
             }
 
             float paAudio = 0f, pbAudio = 0f, trAudio = 0f, nsAudio = 0f, dmAudio = 0f;
 
-            for (var i = 0; i < samplesPerAPUFrameTick; i++) {
-
-                if (r.Status.PulseAEnabled || pulseA.LengthCounter != 0) {
-                    paAudio = pulseA.GetAudio();
-                }
-                if (r.Status.PulseBEnabled || pulseB.LengthCounter != 0) {
-                    pbAudio = pulseB.GetAudio();
-                }
-                if (r.Status.TriangleEnabled && triangle.LengthCounter != 0 && triangle.LinearCounter != 0) {
-                    trAudio = triangle.GetAudio();
-                }
-                if (r.Status.NoiseEnabled && noise.LengthCounter != 0) {
-                    nsAudio = noise.GetAudio();
-                }
-                if (r.Status.DmcEnabled) {
-                    // dmAudio = modulation.GetAudio(); // disabled, not impl. reason: No games with DMC on Mapper 0 (NROM)
-                }
-
-                // TODO: impl. APU Mixer http://wiki.nesdev.com/w/index.php/APU_Mixer instead of (n + n + n + n + n) / 5
-                (Buffer as AudioBuffer).Write(((paAudio + pbAudio + trAudio + nsAudio + dmAudio) / 5f) * 0.85f);
+            if (r.Status.PulseAEnabled || pulseA.LengthCounter != 0) {
+                paAudio = pulseA.GetAudio();
             }
+            if (r.Status.PulseBEnabled || pulseB.LengthCounter != 0) {
+                pbAudio = pulseB.GetAudio();
+            }
+            if (r.Status.TriangleEnabled && triangle.LengthCounter != 0 && triangle.LinearCounter != 0) {
+                trAudio = triangle.GetAudio();
+            }
+            if (r.Status.NoiseEnabled && noise.LengthCounter != 0) {
+                nsAudio = noise.GetAudio();
+            }
+            if (r.Status.DmcEnabled) {
+                // dmAudio = modulation.GetAudio();
+            }
+
+            (Buffer as AudioBuffer).Write(((paAudio + pbAudio + trAudio + nsAudio + dmAudio) / 5f) * 0.85f);
         }
     }
 }

@@ -76,13 +76,8 @@ namespace ASD.NES.Core {
             }
         }
 
-        int extraCpuCycle = 0;
         public void ApuStep(int cpuCycles) {
-            cpuCycles += extraCpuCycle;
-            for (var i = 0; i < cpuCycles / 2; i++) {
-                Apu.Step();
-            }
-            extraCpuCycle = cpuCycles & 0x1;
+            Apu.StepCpuCycles(cpuCycles);
         }
 
         private void ColdBoot() {
