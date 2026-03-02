@@ -26,6 +26,9 @@ namespace ASD.NES.Core {
         /// <summary> TV region from iNES header: Flags 9 bit 0 (0=NTSC, 1=PAL), or Flags 10 bits 0-1 (2=PAL). Default NTSC if not specified. </summary>
         public TvRegion Region { get; }
 
+        /// <summary> Reset vector from PRG (0xFFFC/0xFFFD) for tests. </summary>
+        internal ushort ResetVector { get; private set; }
+
         public static Cartridge Create(byte[] data) => new Cartridge(data);
 
         private Cartridge(byte[] data) {
@@ -90,6 +93,10 @@ namespace ASD.NES.Core {
 
             board.SetCHR(chr);
             board.SetPRG(prg);
+
+            ResetVector = PRGCount > 0
+                ? (ushort)(prg[0][0x3FFC] | (prg[0][0x3FFD] << 8))
+                : (ushort)0;
 
             CPUAddressSpace.Instance.SetExternalMemory(board);
             PPUAddressSpace.Instance.SetExternalMemory(board);

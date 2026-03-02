@@ -68,8 +68,12 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 return nametables[address];
             }
             var i = address & 0x1F;
-            if (i == 4 || i == 8 || i == 12) return palettes[0];
-            if (i == 20 || i == 24 || i == 28) return palettes[16];
+            if (i == 4 || i == 8 || i == 12) {
+                return palettes[0];
+            }
+            if (i == 20 || i == 24 || i == 28) {
+                return palettes[16];
+            }
             return palettes[i];
         }
 
@@ -85,8 +89,12 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                 var i = address & 0x1F;
                 palettes[i] = value;
                 // NES quirk: $3F04/$3F08/$3F0C mirror $3F00 (backdrop); $3F14/$3F18/$3F1C mirror $3F10
-                if (i == 4 || i == 8 || i == 12) palettes[0] = value;
-                if (i == 20 || i == 24 || i == 28) palettes[16] = value;
+                if (i == 4 || i == 8 || i == 12) {
+                    palettes[0] = value;
+                }
+                if (i == 20 || i == 24 || i == 28) {
+                    palettes[16] = value;
+                }
             }
         }
     }

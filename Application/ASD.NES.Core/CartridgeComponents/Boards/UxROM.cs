@@ -16,13 +16,16 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
                 return 0;
             }
             if (address < 0x8000) {
-                if (chr.Count > 0)
+                if (chr.Count > 0) {
                     return chr[0][address - 0x6000];
+                }
                 return chrRam[address - 0x6000];
             }
             if (address < 0xC000) {
                 var bank = prgBank;
-                if (bank >= prg.Count) bank = prg.Count - 1;
+                if (bank >= prg.Count) {
+                    bank = prg.Count - 1;
+                }
                 return prg[bank][address - 0x8000];
             }
             if (address < 0x10000) {
@@ -32,10 +35,13 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         }
 
         protected override void Write(int address, byte value) {
-            if (address >= 0xFFFA) return; // vectors read-only
+            if (address >= 0xFFFA) {
+                return; // vectors read-only
+            }
             if (address >= 0x6000 && address < 0x8000) {
-                if (chr.Count == 0)
+                if (chr.Count == 0) {
                     chrRam[address - 0x6000] = value;
+                }
                 return;
             }
             if (address >= 0x8000 && address < 0x10000) {

@@ -119,7 +119,10 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             if (instruction[opcode] != null) {
                 ticks = cycles[opcode];
                 ticks += instruction[opcode]();
-                r.PC += bytes[opcode];
+                // Do not add instruction length when instruction already set PC (6502 spec)
+                if (opcode != 0x00 && opcode != 0x4C && opcode != 0x6C && opcode != 0x20 && opcode != 0x60 && opcode != 0x40) {
+                    r.PC += bytes[opcode];
+                }
             }
             else {
                 ticks = cycles[0xEA];
@@ -464,9 +467,9 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
         #endregion
         #region Jumps
 
-        /// <summary> Force Break (P pushed with B and U bits set per 6502; PC/vector left as in working version) </summary>
+        /// <summary> Force Break: push PC+2 (return address after 2-byte BRK), then P with B and U set; jump to IRQ vector (6502 spec). </summary>
         private int BRK() {
-            Push16(r.PC);
+            Push16((ushort)(r.PC + 2));
             Push((byte)((byte)r.PS | 0x30));
             r.PC = BitOperations.MakeInt16(memory[0xFFFF], memory[0xFFFE]);
             return 0;
@@ -513,9 +516,9 @@ namespace ASD.NES.Core.ConsoleComponents.CPUParts {
             return 0;
         }
 
-        /// <summary> Return from Subroutine </summary>
+        /// <summary> Return from Subroutine: pull address and set PC to address+1 (6502 spec). </summary>
         private int RTS() {
-            r.PC = Pull16();
+            r.PC = (ushort)(Pull16() + 1);
             return 0;
         }
 

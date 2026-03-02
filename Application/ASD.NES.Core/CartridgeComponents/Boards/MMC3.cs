@@ -22,25 +22,34 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         private bool irqEnabled;
 
         protected override byte Read(int address) {
-            if (address < 0x6000)
+            if (address < 0x6000) {
                 return 0;
+            }
             if (address < 0x8000) {
-                if (!prgRamEnabled) return 0;
+                if (!prgRamEnabled) {
+                    return 0;
+                }
                 return prgRam[address - 0x6000];
             }
-            if (address < 0x10000)
+            if (address < 0x10000) {
                 return GetPrgByte(address);
+            }
             return 0;
         }
 
         protected override void Write(int address, byte value) {
-            if (address >= 0xFFFA) return;
-            if (address >= 0x6000 && address < 0x8000) {
-                if (prgRamEnabled && !prgRamWriteProtected)
-                    prgRam[address - 0x6000] = value;
+            if (address >= 0xFFFA) {
                 return;
             }
-            if (address < 0x8000) return;
+            if (address >= 0x6000 && address < 0x8000) {
+                if (prgRamEnabled && !prgRamWriteProtected) {
+                    prgRam[address - 0x6000] = value;
+                }
+                return;
+            }
+            if (address < 0x8000) {
+                return;
+            }
             switch (address & 0xE001) {
                 case 0x8000: bankSelect = value; return;
                 case 0x8001: regs[bankSelect & 7] = value; return;
@@ -60,12 +69,15 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         }
 
         public override void OnScanline() {
-            if (irqCounter == 0 && irqEnabled)
+            if (irqCounter == 0 && irqEnabled) {
                 CPUAddressSpace.Instance.Irq = true;
-            if (irqCounter == 0)
+            }
+            if (irqCounter == 0) {
                 irqCounter = irqLatch;
-            else
+            }
+            else {
                 irqCounter--;
+            }
         }
 
         public override void SetPRG(IReadOnlyList<byte[]> prg) {
@@ -79,7 +91,9 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         }
 
         private byte GetPrgByte(int address) {
-            if (prg == null || prg.Count == 0) return 0;
+            if (prg == null || prg.Count == 0) {
+                return 0;
+            }
             var slot = (address >> 13) & 3; // 0=$8000, 1=$A000, 2=$C000, 3=$E000
             bool prgMode = (bankSelect & 0x40) != 0;
             int bank8;
@@ -98,14 +112,18 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
                     default: bank8 = numPrg8K - 1; break;
                 }
             }
-            if (bank8 >= numPrg8K) bank8 = numPrg8K - 1;
+            if (bank8 >= numPrg8K) {
+                bank8 = numPrg8K - 1;
+            }
             var offset = address & 0x1FFF;
             var lo = prg[bank8 / 2];
             return lo[(bank8 % 2) * 0x2000 + offset];
         }
 
         public override byte ReadChr(int ppuAddress) {
-            if (chr == null || chr.Count == 0) return 0;
+            if (chr == null || chr.Count == 0) {
+                return 0;
+            }
             var offset = ppuAddress & 0x1FFF;
             bool chrMode = (bankSelect & 0x80) != 0;
             int bank1K;
@@ -119,7 +137,9 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
                 else if (offset < 0x1800) { bank1K = (regs[0] & 0xFE) + ((offset - 0x1000) >> 10); off1K = (offset - 0x1000) & 0x3FF; }
                 else { bank1K = (regs[1] & 0xFE) + ((offset - 0x1800) >> 10); off1K = (offset - 0x1800) & 0x3FF; }
             }
-            if (bank1K >= numChr1K) bank1K = numChr1K - 1;
+            if (bank1K >= numChr1K) {
+                bank1K = numChr1K - 1;
+            }
             var chunk = chr[bank1K / 8];
             return chunk[(bank1K % 8) * 0x400 + off1K];
         }

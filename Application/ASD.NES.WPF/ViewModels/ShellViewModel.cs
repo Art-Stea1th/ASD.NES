@@ -96,7 +96,9 @@ namespace ASD.NES.WPF.ViewModels {
         }
 
         private void UpdateScreen(uint[] data) {
-            if (dispatcher.HasShutdownStarted) return;
+            if (dispatcher.HasShutdownStarted) {
+                return;
+            }
             try {
                 dispatcher.Invoke(()
                     => screen.WritePixels(new Int32Rect(0, 0, 256, 240), data, 256 * sizeof(uint), 0));

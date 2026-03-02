@@ -40,7 +40,9 @@ namespace ASD.NES.WPF.Controllers {
         }
 
         private bool IsKeyDown(Key key) {
-            if (dispatcher.HasShutdownStarted) return false;
+            if (dispatcher.HasShutdownStarted) {
+                return false;
+            }
             try {
                 return dispatcher.Invoke(() => Keyboard.IsKeyDown(key));
             } catch (OperationCanceledException) {

@@ -1,5 +1,6 @@
 namespace ASD.NES.Core.ConsoleComponents {
 
+    using ASD.NES.Core;
     using CPUParts;
     using Helpers;
 
@@ -85,6 +86,10 @@ namespace ASD.NES.Core.ConsoleComponents {
             registers.PS.I = true;
             registers.PC = ReadX2(0xFFFE);
         }
+
+        /// <summary> For tests: current CPU state (6502 spec). </summary>
+        internal CpuState GetState() =>
+            new CpuState { A = registers.A, X = registers.X, Y = registers.Y, SP = registers.SP, PC = registers.PC, P = (byte)registers.PS };
 
         #region Helpers
         public ushort ReadX2(ushort address) {

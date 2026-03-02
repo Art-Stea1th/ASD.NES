@@ -89,5 +89,20 @@ namespace ASD.NES.Core {
             Cpu.WarmBoot();
             Ppu.WarmBoot();
         }
+
+        /// <summary> For tests: run exactly n CPU steps (each step = one instruction + PPU/APU cycles). </summary>
+        internal void RunCpuSteps(int n) {
+            for (var i = 0; i < n; i++) {
+                var cycles = Cpu.Step();
+                PpuStep(cycles);
+                ApuStep(cycles);
+            }
+        }
+
+        /// <summary> For tests: current CPU state. </summary>
+        internal CpuState GetCpuState() => Cpu.GetState();
+
+        /// <summary> For tests: read one byte from CPU address space. </summary>
+        internal byte GetMemory(ushort address) => Cpu.AddressSpace[address];
     }
 }

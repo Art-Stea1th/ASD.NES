@@ -31,8 +31,9 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         }
 
         private int GetPhysicalBankIndex(int fixedAddress) {
-            if (Mirroring == Mirroring.SingleScreen)
+            if (Mirroring == Mirroring.SingleScreen) {
                 return SingleScreenPage & 1;
+            }
             return fixedAddress >> 10;
         }
 

@@ -29,8 +29,9 @@ namespace ASD.NES.WPF.Services {
                 openFileDialog.InitialDirectory = gamesFullPath;
             }
 
-            if (openFileDialog.ShowDialog() != true)
+            if (openFileDialog.ShowDialog() != true) {
                 return (null, null);
+            }
 
             try {
                 var data = File.ReadAllBytes(openFileDialog.FileName);

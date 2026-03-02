@@ -39,7 +39,9 @@ namespace ASD.NES.Core.ConsoleComponents.APUParts {
         }
 
         private byte Read(int address) {
-            if (address != 0x4015) return 0;
+            if (address != 0x4015) {
+                return 0;
+            }
             var v = (byte)((Status.Value & 0x1F) | (frameInterruptFlag ? 0x40 : 0) | (dmcInterruptFlag ? 0x80 : 0));
             frameInterruptFlag = false;
             dmcInterruptFlag = false;

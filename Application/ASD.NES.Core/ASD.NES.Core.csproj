@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ASD.NES.Tests" />
+  </ItemGroup>
   <PropertyGroup>
     <TargetFramework>netstandard1.1</TargetFramework>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>

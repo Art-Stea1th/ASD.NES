@@ -1,0 +1,26 @@
+---
+description: C# — всегда скобки у if/for/while; expression-bodied (=>) не трогать
+globs: "**/*.cs"
+alwaysApply: false
+---
+
+# Стиль: скобки в C#
+
+- В конструкциях **if**, **for**, **while** всегда используй фигурные скобки `{ }`, даже если тело однострочное.
+- Там, где уместен **expression-bodied** синтаксис (свойства, методы с `=>`) — не заменяй на блок с скобками, оставляй как есть.
+
+Примеры:
+
+```csharp
+// Правильно
+if (condition) {
+    DoSomething();
+}
+for (int i = 0; i < n; i++) {
+    list.Add(i);
+}
+
+// Свойства / лямбды — не трогать
+public int Value => _value;
+private int Foo() => 1;
+```
