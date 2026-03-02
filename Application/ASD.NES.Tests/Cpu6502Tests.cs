@@ -232,4 +232,279 @@ public sealed class Cpu6502Tests
         Assert.True((s.P & 0x80) != 0, "N (bit 7) should be set from memory bit 7");
         Assert.True((s.P & 0x40) != 0, "V (bit 6) should be set from memory bit 6");
     }
+
+    // --- 6502.txt: LDX, LDY, index registers, transfers ---
+    [Fact]
+    public void LDX_immediate_loads_X_and_sets_Z_N()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA2, 0x00,       // LDX #0
+            0x86, 0x10,       // STX $10
+            0xA2, 0x80,       // LDX #$80
+            0x86, 0x11,       // STX $11
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(8);
+        Assert.Equal(0, console.GetMemory(0x10));
+        Assert.Equal(0x80, console.GetMemory(0x11));
+        var s = console.GetCpuState();
+        Assert.Equal(0x80, s.X);
+        Assert.True((s.P & 0x80) != 0);
+    }
+
+    [Fact]
+    public void LDY_immediate_loads_Y()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA0, 0x42,       // LDY #$42
+            0x84, 0x20,       // STY $20
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(5);
+        Assert.Equal(0x42, console.GetMemory(0x20));
+        Assert.Equal(0x42, console.GetCpuState().Y);
+    }
+
+    [Fact]
+    public void TAX_transfers_A_to_X()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA9, 0xAB,       // LDA #$AB
+            0xAA,             // TAX
+            0x86, 0x00,       // STX $00
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(6);
+        Assert.Equal(0xAB, console.GetMemory(0x00));
+        Assert.Equal(0xAB, console.GetCpuState().X);
+    }
+
+    [Fact]
+    public void TYA_transfers_Y_to_A()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA0, 0xCD,       // LDY #$CD
+            0x98,             // TYA
+            0x85, 0x00,       // STA $00
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(6);
+        Assert.Equal(0xCD, console.GetMemory(0x00));
+        Assert.Equal(0xCD, console.GetCpuState().A);
+    }
+
+    [Fact]
+    public void DEX_decrements_X_and_sets_Z_at_zero()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA2, 0x01,       // LDX #1
+            0xCA,             // DEX -> X=0, Z=1
+            0x86, 0x00,       // STX $00
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(6);
+        Assert.Equal(0, console.GetMemory(0x00));
+        var s = console.GetCpuState();
+        Assert.Equal(0, s.X);
+        Assert.True((s.P & 2) != 0);
+    }
+
+    [Fact]
+    public void INX_increments_X_wraps_to_zero()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA2, 0xFF,       // LDX #$FF
+            0xE8,             // INX -> X=0, Z=1
+            0x86, 0x00,       // STX $00
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(6);
+        Assert.Equal(0, console.GetMemory(0x00));
+        Assert.True((console.GetCpuState().P & 2) != 0);
+    }
+
+    [Fact]
+    public void CMP_sets_Z_when_equal_and_C_when_A_ge_M()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA9, 0x40,       // LDA #$40
+            0xC9, 0x40,       // CMP #$40 -> Z=1, C=1
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(2);
+        var s = console.GetCpuState();
+        Assert.True((s.P & 2) != 0, "Z set after CMP #$40,#$40");
+        Assert.True((s.P & 1) != 0, "C set when A>=M");
+
+        rom = BuildMinimalRom(new byte[]
+        {
+            0xA9, 0x30,       // LDA #$30
+            0xC9, 0x40,       // CMP #$40 -> C=0 (borrow)
+            0x00
+        });
+        cart = Cartridge.Create(rom);
+        console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(2);
+        s = console.GetCpuState();
+        Assert.True((s.P & 1) == 0, "C clear when A<M");
+    }
+
+    [Fact]
+    public void JMP_absolute_jumps_to_address()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0x4C, 0x06, 0xC0, // JMP $C006
+            0x00,             // BRK (skip)
+            0xEA, 0xEA,       // NOPs so $C006 = LDA
+            0xA9, 0x77,       // LDA #$77 at $C006
+            0x85, 0x00,       // STA $00
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(4);
+        Assert.Equal(0x77, console.GetMemory(0x00));
+    }
+
+    [Fact]
+    public void NOP_advances_PC_by_one()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xEA,             // NOP
+            0xEA,             // NOP
+            0xA9, 0x11,       // LDA #$11
+            0x85, 0x00,       // STA $00
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(6);
+        Assert.Equal(0x11, console.GetMemory(0x00));
+    }
+
+    [Fact]
+    public void EOR_immediate_xors_A_sets_N_Z()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA9, 0xFF,       // LDA #$FF
+            0x49, 0x0F,       // EOR #$0F -> A=$F0
+            0x85, 0x00,       // STA $00
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(6);
+        Assert.Equal(0xF0, console.GetMemory(0x00));
+        Assert.True((console.GetCpuState().P & 0x80) != 0);
+    }
+
+    [Fact]
+    public void ORA_immediate_ors_A()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA9, 0x0F,       // LDA #$0F
+            0x09, 0xF0,       // ORA #$F0 -> A=$FF
+            0x85, 0x00,       // STA $00
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(6);
+        Assert.Equal(0xFF, console.GetMemory(0x00));
+    }
+
+    [Fact]
+    public void INC_zero_page_increments_memory()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA9, 0xFE,       // LDA #$FE
+            0x85, 0x30,       // STA $30
+            0xE6, 0x30,       // INC $30
+            0xE6, 0x30,       // INC $30 -> $30=0, Z=1
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(8);
+        Assert.Equal(0, console.GetMemory(0x30));
+    }
+
+    [Fact]
+    public void DEC_zero_page_decrements_memory()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA9, 0x02,       // LDA #2
+            0x85, 0x40,       // STA $40
+            0xC6, 0x40,       // DEC $40
+            0xC6, 0x40,       // DEC $40 -> $40=0, Z=1
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(8);
+        Assert.Equal(0, console.GetMemory(0x40));
+    }
+
+    [Fact]
+    public void PLP_restores_P_from_stack()
+    {
+        var rom = BuildMinimalRom(new byte[]
+        {
+            0xA9, 0xFF,       // LDA #$FF
+            0x48,             // PHA
+            0x08,             // PHP (push P)
+            0x18,             // CLC
+            0xD8,             // CLD
+            0x28,             // PLP (restore P with C=1 etc from stack)
+            0x85, 0x00,       // STA $00 (A still $FF)
+            0x00
+        });
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(10);
+        var s = console.GetCpuState();
+        Assert.Equal(0xFF, s.A);
+    }
 }
