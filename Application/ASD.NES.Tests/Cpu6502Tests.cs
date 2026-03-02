@@ -29,14 +29,14 @@ public sealed class Cpu6502Tests
         rom[6] = 0;
         rom[7] = 0;
 
-        int offset = HeaderLen;
-        for (int i = 0; i < codeAtC000.Length && i < 0x4000; i++) {
+        var offset = HeaderLen;
+        for (var i = 0; i < codeAtC000.Length && i < 0x4000; i++) {
             rom[offset + i] = codeAtC000[i];
         }
-        for (int i = 0x3FFC; i < 0x4000 && (i - 0x3FFC) < 2; i++) {
+        for (var i = 0x3FFC; i < 0x4000 && (i - 0x3FFC) < 2; i++) {
             rom[offset + i] = (byte)((i == 0x3FFC) ? (resetVector & 0xFF) : (resetVector >> 8));
         }
-        ushort irqVector = (ushort)(resetVector + codeAtC000.Length);
+        var irqVector = (ushort)(resetVector + codeAtC000.Length);
         rom[offset + 0x3FFA] = (byte)(resetVector & 0xFF);
         rom[offset + 0x3FFB] = (byte)(resetVector >> 8);
         rom[offset + 0x3FFE] = (byte)(irqVector & 0xFF);
@@ -154,7 +154,7 @@ public sealed class Cpu6502Tests
         console.InsertCartridge(cart);
         console.RunCpuSteps(6);
         var s = console.GetCpuState();
-        byte pushedP = console.GetMemory((ushort)(0x100 + s.SP + 1));
+        var pushedP = console.GetMemory((ushort)(0x100 + s.SP + 1));
         Assert.True((pushedP & 0x30) == 0x30, "PHP must push P with B(bit4) and bit5 set per 6502");
     }
 

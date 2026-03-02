@@ -1,4 +1,4 @@
-﻿namespace ASD.NES.Core.ConsoleComponents.PPUParts {
+namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
     using CPUParts;
     using Helpers;
@@ -29,7 +29,7 @@
             r.OAMDMAWritten += FillOAM;
         }
 
-        internal void RenderStep(int scanpoint, int scanline) {
+        internal void RenderStep(int scanpoint, int scanline, int scrollX, int scrollY, int startX, int startY) {
 
             var backgroundColorIndex = default(byte);
 
@@ -37,19 +37,21 @@
 
                 if (scanpoint >= 8 || r.PpuMask.RenderLeftmostBG) {
 
-                    var absX = (r.PpuCtrl.StartX + r.PpuScrl.X + scanpoint) % 512;
-                    var absY = (r.PpuCtrl.StartY + r.PpuScrl.Y + scanline) % 480;
-
-                    var nametableIndex = 0;
-
-                    int mapX = absX, mapY = absY;
-
-                    if (absX >= 256) { mapX -= 256; nametableIndex |= 0b01; } // r.PpuCtrl.Add256ToX = true; // tmp. until cpu-ppu - out of sync
-                    if (absY >= 240) { mapY -= 240; nametableIndex |= 0b10; } // r.PpuCtrl.Add240ToY = true; // tmp. until cpu-ppu - out of sync
+                    ScrollFormula.GetBackgroundCoords(
+                        startX,
+                        startY,
+                        scrollX,
+                        scrollY,
+                        scanpoint,
+                        scanline,
+                        out int nametableIndex,
+                        out int mapX,
+                        out int mapY);
 
                     var nametable = ppuMemory.GetNametable(nametableIndex);
 
-                    int symbolX = mapX >> 3, symbolY = mapY >> 3;
+                    var symbolX = mapX >> 3;
+                    var symbolY = mapY >> 3;
 
                     var backgroundTileNumber = nametable.GetSymbol(symbolX, symbolY);
 
@@ -78,7 +80,7 @@
 
                         if (scanpoint < 8 && !r.PpuMask.RenderAll) { continue; }
 
-                        int oamIndex = oamIndexes[spriteIndex];
+                        var oamIndex = oamIndexes[spriteIndex];
                         var sprite = oam[oamIndex]; // oamEntry
 
                         if (scanline < sprite.Y || scanline - sprite.Y >= r.PpuCtrl.SpriteSizeY) { continue; }

@@ -16,7 +16,7 @@ public sealed class ApuTests
     {
         var console = new Console();
         console.SetMemory(0x4015, 0x1F);
-        byte status = console.GetMemory(0x4015);
+        var status = console.GetMemory(0x4015);
         Assert.Equal(0x1F, status & 0x1F);
     }
 
@@ -26,7 +26,7 @@ public sealed class ApuTests
         var console = new Console();
         console.SetMemory(0x4015, 0x1F);
         console.SetMemory(0x4015, 0x00);
-        byte status = console.GetMemory(0x4015);
+        var status = console.GetMemory(0x4015);
         Assert.Equal(0x00, status & 0x1F);
     }
 
@@ -36,7 +36,7 @@ public sealed class ApuTests
         var console = new Console();
         console.SetMemory(0x4015, 0x00);
         console.GetMemory(0x4015);
-        byte secondRead = console.GetMemory(0x4015);
+        var secondRead = console.GetMemory(0x4015);
         Assert.Equal(0x00, secondRead & 0xC0);
     }
 

@@ -41,11 +41,31 @@ namespace ASD.NES.WPF.ViewModels {
             dispatcher = Dispatcher.CurrentDispatcher;
             screen = new WriteableBitmap(256, 240, 96, 96, PixelFormats.Bgr32, null);
             console = new Console();
+            ConfigurePpuScrollLog();
             ConfigureAudioDevice();
             ConfigureControllers();
             console.NextFrameReady += UpdateScreen;
             console.PlayAudio += audioDevice.Play;
             InitializeControlCommands();
+        }
+
+        private void ConfigurePpuScrollLog() {
+            if (string.Equals(Environment.GetEnvironmentVariable("ASD_NES_PPU_SCROLL_LOG"), "1", StringComparison.OrdinalIgnoreCase)) {
+                var path = Path.Combine(Path.GetTempPath(), "ASD_NES_ppu_scroll_log.txt");
+                var pathSl = Path.Combine(Path.GetTempPath(), "ASD_NES_ppu_scanline_log.txt");
+                Console.SetPpuScrollLog(line => {
+                    try {
+                        File.AppendAllText(path, line + Environment.NewLine);
+                    }
+                    catch (Exception) { /* ignore */ }
+                });
+                Console.SetPpuScanlineLog(line => {
+                    try {
+                        File.AppendAllText(pathSl, line + Environment.NewLine);
+                    }
+                    catch (Exception) { /* ignore */ }
+                });
+            }
         }
 
         private void ConfigureAudioDevice() {
@@ -79,6 +99,7 @@ namespace ASD.NES.WPF.ViewModels {
                 oldConsole.Dispose();
 
                 console = new Console();
+                ConfigurePpuScrollLog();
                 ConfigureAudioDevice();
                 ConfigureControllers();
                 console.NextFrameReady += UpdateScreen;

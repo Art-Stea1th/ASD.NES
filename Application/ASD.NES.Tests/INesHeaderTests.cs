@@ -23,10 +23,10 @@ public sealed class INesHeaderTests
         byte[]? bytes8to15 = null,
         bool withTrainer = false)
     {
-        int headerLen = 16;
-        int trainerLen = withTrainer ? 512 : 0;
-        int prgLen = prgPages * 0x4000;
-        int chrLen = chrPages * 0x2000;
+        var headerLen = 16;
+        var trainerLen = withTrainer ? 512 : 0;
+        var prgLen = prgPages * 0x4000;
+        var chrLen = chrPages * 0x2000;
         var data = new byte[headerLen + trainerLen + prgLen + chrLen];
 
         data[0] = 0x4E;
@@ -37,11 +37,11 @@ public sealed class INesHeaderTests
         data[5] = (byte)chrPages;
         data[6] = byte6;
         data[7] = byte7;
-        for (int i = 8; i < 16; i++) {
+        for (var i = 8; i < 16; i++) {
             data[i] = bytes8to15 != null && i - 8 < bytes8to15.Length ? bytes8to15[i - 8] : (byte)0;
         }
 
-        for (int i = headerLen + trainerLen; i < data.Length; i++) {
+        for (var i = headerLen + trainerLen; i < data.Length; i++) {
             data[i] = 0xFF;
         }
         return data;

@@ -21,39 +21,71 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         /// <summary> For SingleScreen: which 1KB page (0 or 1) is used for all 4 nametables. Used by AxROM bit 4. </summary>
         internal int SingleScreenPage { get; set; }
 
-        public Nametable GetNametable(int index) => nametable[GetPhysicalBankIndex((index & 3) << 10)];
+        /// <summary> Returns the physical nametable (0 or 1 for H/V, 0-3 for FourScreen) for rendering. Index 0=$2000, 1=$2400, 2=$2800, 3=$2C00. </summary>
+        public Nametable GetNametable(int index) {
+            var i = index & 3;
+            int bank;
+            switch (Mirroring) {
+                case Mirroring.SingleScreen:
+                    bank = SingleScreenPage & 1;
+                    break;
+                case Mirroring.Vertical:
+                    bank = i >> 1;
+                    break;
+                case Mirroring.Horizontal:
+                    bank = i & 1;
+                    break;
+                default:
+                    bank = i;
+                    break;
+            }
+            return nametable[bank];
+        }
 
         public Mirroring Mirroring { get; set; }
 
         public byte this[int address] {
-            get => nametable[GetPhysicalBankIndex(FixAddress(address))][address & 0x3FF];
-            set => nametable[GetPhysicalBankIndex(FixAddress(address))][address & 0x3FF] = value;
+            get {
+                GetBankAndOffset(address, out int packed);
+                return nametable[packed >> 10][packed & 0x3FF];
+            }
+            set {
+                GetBankAndOffset(address, out int packed);
+                nametable[packed >> 10][packed & 0x3FF] = value;
+            }
         }
 
-        private int GetPhysicalBankIndex(int fixedAddress) {
-            if (Mirroring == Mirroring.SingleScreen) {
-                return SingleScreenPage & 1;
+        /// <summary> Packs (physicalBank, offset) into a single int: bank in high bits, offset (0-0x3FF) in low. </summary>
+        private void GetBankAndOffset(int address, out int packedBankAndOffset) {
+            address &= 0xFFF;
+            int bank;
+            int offset;
+            switch (Mirroring) {
+                case Mirroring.FourScreen:
+                    bank = address >> 10;
+                    offset = address & 0x3FF;
+                    break;
+                case Mirroring.SingleScreen:
+                    bank = SingleScreenPage & 1;
+                    offset = address & 0x3FF;
+                    break;
+                case Mirroring.Vertical:
+                    bank = address >= 0x800 ? 1 : 0;
+                    offset = address & 0x3FF;
+                    break;
+                case Mirroring.Horizontal:
+                    bank = (address >> 10) & 1;
+                    offset = address & 0x3FF;
+                    break;
+                default:
+                    bank = address >> 10;
+                    offset = address & 0x3FF;
+                    break;
             }
-            return fixedAddress >> 10;
+            packedBankAndOffset = (bank << 10) | offset;
         }
 
         public int Cells => nametable.Sum(n => n.Cells);
-
-        private int FixAddress(int address) { // redirect // TODO: Validate, handle another mirroring modes
-
-            address &= 0xFFF;
-
-            switch (Mirroring) {
-                case Mirroring.FourScreen: break;
-                case Mirroring.SingleScreen: address &= 0x3FF; break;
-                case Mirroring.Vertical: address &= 0x7FF; break;
-                case Mirroring.Horizontal:
-                    address = address < 0x800
-                        ? address & 0x3FF
-                        : address & 0xBFF; break;
-            }
-            return address;
-        }
 
         internal sealed class Nametable : IMemory<byte> {
 

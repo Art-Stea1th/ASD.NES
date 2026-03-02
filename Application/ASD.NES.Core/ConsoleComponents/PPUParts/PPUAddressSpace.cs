@@ -62,7 +62,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         private byte Read(int address) {
 
             if (address < 0x2000) {
-                return externalMemory.ReadChr(address);
+                return externalMemory != null ? externalMemory.ReadChr(address) : (byte)0;
             }
             if (address < 0x3F00) {
                 return nametables[address];
@@ -80,7 +80,9 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         private void Write(int address, byte value) {
 
             if (address < 0x2000) {
-                externalMemory.WriteChr(address, value);
+                if (externalMemory != null) {
+                    externalMemory.WriteChr(address, value);
+                }
             }
             else if (address < 0x3F00) {
                 nametables[address] = value;

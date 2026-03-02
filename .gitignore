@@ -293,3 +293,9 @@ __pycache__/
 *.xsd.cs
 /Application/ASD.NES.Core/ConsoleComponents/CPUParts/CPUCore-REPORT.md
 *.md
+
+# Local only: commit messages, debug logs (never commit)
+COMMIT_MSG.txt
+COMMIT_MSG*
+*_ppu_scroll_log.txt
+*_ppu_scanline_log.txt
