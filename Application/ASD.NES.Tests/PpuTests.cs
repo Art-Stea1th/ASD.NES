@@ -88,6 +88,7 @@ public sealed class PpuTests
     public void PPUADDR0x2006TwoWritesHighThenLow()
     {
         var console = new Console();
+        _ = console.GetMemory(0x2002);
         console.SetMemory(0x2006, 0x21);
         console.SetMemory(0x2006, 0x08);
         console.SetMemory(0x2007, 0x00);
@@ -221,29 +222,29 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void HorizontalMirroring2000And2800SamePhysical()
+    public void HorizontalMirroring2000And2400SamePhysical()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
         console.SetPpuMirroring(Mirroring.Horizontal);
         SetPpuAddr(console, 0x2000);
         WritePpuData(console, 0x2000, 0x55);
-        WritePpuData(console, 0x2800, 0x66);
+        WritePpuData(console, 0x2400, 0x66);
         var at2000 = ReadPpuDataAfterSeek(console, 0x2000);
         Assert.Equal(0x66, at2000);
     }
 
     [Fact]
-    public void HorizontalMirroring2400And2C00SamePhysical()
+    public void HorizontalMirroring2800And2C00SamePhysical()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
         console.SetPpuMirroring(Mirroring.Horizontal);
-        SetPpuAddr(console, 0x2400);
-        WritePpuData(console, 0x2400, 0x77);
+        SetPpuAddr(console, 0x2800);
+        WritePpuData(console, 0x2800, 0x77);
         WritePpuData(console, 0x2C00, 0x88);
-        var at2400 = ReadPpuDataAfterSeek(console, 0x2400);
-        Assert.Equal(0x88, at2400);
+        var at2800 = ReadPpuDataAfterSeek(console, 0x2800);
+        Assert.Equal(0x88, at2800);
     }
 
 }

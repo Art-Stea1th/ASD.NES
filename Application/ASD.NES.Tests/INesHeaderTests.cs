@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using ASD.NES.Core;
 using Xunit;
+using Console = ASD.NES.Core.Console;
 
 namespace ASD.NES.Tests;
 
@@ -13,8 +14,33 @@ namespace ASD.NES.Tests;
 /// Byte 7: high nibble = mapper high (mapper = (byte7 & 0xF0) | (byte6 >> 4)).
 /// Bytes 8-15: zero for standard; flags 9 (bit 0) and 10 (bits 0-1) for TV system.
 /// </summary>
+[Collection("CPU")]
 public sealed class INesHeaderTests
 {
+    /// <summary>Optional: path to unpacked NES ROMs (e.g. EmulatorsPack). If present, RunRealRomRunsAFewFrames uses one.</summary>
+    private static readonly string OptionalRomsPath = @"e:\Games\NES\EmulatorsPack\NES\roms";
+
+    [Fact]
+    public void RunRealRomRunsAFewFrames()
+    {
+        var romPath = Path.Combine(OptionalRomsPath, "Battle City (J).nes");
+        if (!File.Exists(romPath)) {
+            return;
+        }
+        var rom = File.ReadAllBytes(romPath);
+        var cart = Cartridge.Create(rom);
+        Assert.NotNull(cart);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        var resetLo = console.GetMemory(0xFFFC);
+        var resetHi = console.GetMemory(0xFFFD);
+        Assert.Equal(rom[16 + 0x3FFC], resetLo);
+        Assert.Equal(rom[16 + 0x3FFD], resetHi);
+        console.RunCpuSteps(100);
+        var state = console.GetCpuState();
+        Assert.True(state.PC >= 0x8000 && state.PC <= 0xFFFF);
+    }
+
     private static byte[] BuildRom(
         int prgPages = 1,
         int chrPages = 1,

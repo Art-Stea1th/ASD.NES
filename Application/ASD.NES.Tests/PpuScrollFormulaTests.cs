@@ -83,7 +83,7 @@ public sealed class PpuScrollFormulaTests
         Assert.Equal(0, mapY);
     }
 
-    /// <summary>Per nestech.txt: Horizontal has NT#0 $000, NT#1 $000 — so $2000 and $2400 are same physical; scroll 0 vs 256 reads different logical NTs, different tiles.</summary>
+    /// <summary>Per nestech.txt: Horizontal has NT#0 $000, NT#1 $000 — same physical bank; scroll 0 and 256 both read that bank, last write (0x22) wins.</summary>
     [Fact]
     public void HorizontalMirroringScroll0ReadsTileFrom2000Scroll256From2400() {
         var console = new Console();
@@ -100,8 +100,8 @@ public sealed class PpuScrollFormulaTests
         var tile0 = PPUAddressSpace.Instance.GetNametable(nt0).GetSymbol(mx0 >> 3, my0 >> 3);
         var tile1 = PPUAddressSpace.Instance.GetNametable(nt1).GetSymbol(mx1 >> 3, my1 >> 3);
         Assert.Equal(0, nt0);
-        Assert.Equal(0x11, tile0);
         Assert.Equal(1, nt1);
+        Assert.Equal(0x22, tile0);
         Assert.Equal(0x22, tile1);
     }
 

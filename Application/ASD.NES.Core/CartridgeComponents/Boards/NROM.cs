@@ -33,5 +33,8 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
             }
             throw new InvalidOperationException();
         }
+
+        /// <summary> NROM has CHR-ROM; PPU writes to 0x0000-0x1FFF are no-ops on hardware. </summary>
+        public override void WriteChr(int ppuAddress, byte value) { }
     }
 }

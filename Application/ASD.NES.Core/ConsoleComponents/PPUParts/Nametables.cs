@@ -70,12 +70,13 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                     offset = address & 0x3FF;
                     break;
                 case Mirroring.Vertical:
-                    // Same as original (rev 27bd3d2): address & 0x7FF folds $2800→$2000, $2C00→$2400; then bank = folded >> 10 → NT0+NT2→0, NT1+NT3→1
-                    bank = (address & 0x7FF) >> 10;
+                    // nestech.txt: Vertical NT#0 $000, NT#1 $400, NT#2 $000, NT#3 $400 => bank 0 for 0,2; bank 1 for 1,3
+                    bank = (address >> 10) & 1;
                     offset = address & 0x3FF;
                     break;
                 case Mirroring.Horizontal:
-                    bank = (address >> 10) & 1;
+                    // nestech.txt: Horizontal NT#0 $000, NT#1 $000, NT#2 $400, NT#3 $400 => bank 0 for 0,1; bank 1 for 2,3
+                    bank = address >> 11;
                     offset = address & 0x3FF;
                     break;
                 default:
