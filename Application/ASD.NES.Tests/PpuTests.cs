@@ -9,7 +9,7 @@ namespace ASD.NES.Tests;
 /// <summary>
 /// PPU register and memory-map behavior per NES docs (nes.txt, NESDEV PPU).
 /// CPU maps 0x2000-0x3FFF to PPU registers (mirrored every 8 bytes); write-only on hardware, emulator returns last written.
-/// Parameterized tests cover each register and mirroring modes.
+/// Nametable mirroring: Specification/Other/nestech.txt (G. Name Table Mirroring) and nes.txt — Vertical: ($2000,$2800) and ($2400,$2C00) same; Horizontal: ($2000,$2400) and ($2800,$2C00) same.
 /// </summary>
 [Collection("CPU")]
 public sealed class PpuTests
@@ -166,30 +166,58 @@ public sealed class PpuTests
         Assert.Equal(0xCC, console.GetMemory(0x2007));
     }
 
+    // Name table mirroring per Specification/Other/nestech.txt (G. Name Table Mirroring) and nes.txt:
+    //   Horizontal: NT#0 $000, NT#1 $000, NT#2 $400, NT#3 $400  => ($2000,$2400) same, ($2800,$2C00) same
+    //   Vertical:   NT#0 $000, NT#1 $400, NT#2 $000, NT#3 $400  => ($2000,$2800) same, ($2400,$2C00) same
+    // nes.txt: "With vertical mirroring, tables 2 and 3 are the mirrors of pages 0 and 1. With horizontal mirroring, pages 1 and 3 are the mirrors of pages 0 and 2."
+
     [Fact]
-    public void Vertical_mirroring_2000_and_2400_same_physical()
+    public void Nametable_mirroring_matches_nestech_and_nes_spec()
+    {
+        var console = new Console();
+        _ = console.GetMemory(0x2002);
+        // Vertical: $2000↔$2800, $2400↔$2C00 (nestech.txt table)
+        console.SetPpuMirroring(Mirroring.Vertical);
+        WritePpuData(console, 0x2000, 0xA0);
+        WritePpuData(console, 0x2800, 0xB0);
+        Assert.Equal(0xB0, ReadPpuDataAfterSeek(console, 0x2000));
+        WritePpuData(console, 0x2400, 0xC0);
+        WritePpuData(console, 0x2C00, 0xD0);
+        Assert.Equal(0xD0, ReadPpuDataAfterSeek(console, 0x2400));
+        // Horizontal: $2000↔$2400, $2800↔$2C00 (nestech.txt table)
+        console.SetPpuMirroring(Mirroring.Horizontal);
+        WritePpuData(console, 0x2000, 0xE0);
+        WritePpuData(console, 0x2400, 0xF0);
+        Assert.Equal(0xF0, ReadPpuDataAfterSeek(console, 0x2000));
+        WritePpuData(console, 0x2800, 0x11);
+        WritePpuData(console, 0x2C00, 0x22);
+        Assert.Equal(0x22, ReadPpuDataAfterSeek(console, 0x2800));
+    }
+
+    [Fact]
+    public void Vertical_mirroring_2000_and_2800_same_physical()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
         console.SetPpuMirroring(Mirroring.Vertical);
         SetPpuAddr(console, 0x2000);
         WritePpuData(console, 0x2000, 0x11);
-        WritePpuData(console, 0x2400, 0x22);
+        WritePpuData(console, 0x2800, 0x22);
         var at2000 = ReadPpuDataAfterSeek(console, 0x2000);
         Assert.Equal(0x22, at2000);
     }
 
     [Fact]
-    public void Vertical_mirroring_2800_and_2C00_same_physical()
+    public void Vertical_mirroring_2400_and_2C00_same_physical()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
         console.SetPpuMirroring(Mirroring.Vertical);
-        SetPpuAddr(console, 0x2800);
-        WritePpuData(console, 0x2800, 0x33);
+        SetPpuAddr(console, 0x2400);
+        WritePpuData(console, 0x2400, 0x33);
         WritePpuData(console, 0x2C00, 0x44);
-        var at2800 = ReadPpuDataAfterSeek(console, 0x2800);
-        Assert.Equal(0x44, at2800);
+        var at2400 = ReadPpuDataAfterSeek(console, 0x2400);
+        Assert.Equal(0x44, at2400);
     }
 
     [Fact]

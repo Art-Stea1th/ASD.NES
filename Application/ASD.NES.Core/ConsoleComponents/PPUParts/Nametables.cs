@@ -30,10 +30,10 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                     bank = SingleScreenPage & 1;
                     break;
                 case Mirroring.Vertical:
-                    bank = i >> 1;
+                    bank = i & 1;   // NT0+NT2 → 0, NT1+NT3 → 1 (top/bottom pairs)
                     break;
                 case Mirroring.Horizontal:
-                    bank = i & 1;
+                    bank = i >> 1; // NT0+NT1 → 0, NT2+NT3 → 1 (left/right pairs)
                     break;
                 default:
                     bank = i;
@@ -70,7 +70,8 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                     offset = address & 0x3FF;
                     break;
                 case Mirroring.Vertical:
-                    bank = address >= 0x800 ? 1 : 0;
+                    // Same as original (rev 27bd3d2): address & 0x7FF folds $2800→$2000, $2C00→$2400; then bank = folded >> 10 → NT0+NT2→0, NT1+NT3→1
+                    bank = (address & 0x7FF) >> 10;
                     offset = address & 0x3FF;
                     break;
                 case Mirroring.Horizontal:

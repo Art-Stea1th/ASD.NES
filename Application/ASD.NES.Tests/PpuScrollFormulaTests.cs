@@ -8,6 +8,8 @@ namespace ASD.NES.Tests;
 
 /// <summary>
 /// Tests for PPU background scroll formula (NESDEV 512x480 virtual space, nametable index, map coords).
+/// Nametable mirroring expectations from Specification/Other/nestech.txt (G. Name Table Mirroring)
+/// and Specification/Other/nes.txt: Vertical => NT0+NT2 same, NT1+NT3 same; Horizontal => NT0+NT1 same, NT2+NT3 same.
 /// </summary>
 [Collection("CPU")]
 public sealed class PpuScrollFormulaTests
@@ -81,6 +83,7 @@ public sealed class PpuScrollFormulaTests
         Assert.Equal(0, mapY);
     }
 
+    /// <summary>Per nestech.txt: Horizontal has NT#0 $000, NT#1 $000 — so $2000 and $2400 are same physical; scroll 0 vs 256 reads different logical NTs, different tiles.</summary>
     [Fact]
     public void Horizontal_mirroring_scroll_0_reads_tile_from_2000_scroll_256_from_2400() {
         var console = new Console();
@@ -102,25 +105,24 @@ public sealed class PpuScrollFormulaTests
         Assert.Equal(0x22, tile1);
     }
 
+    /// <summary>Per nestech.txt: Vertical has NT#0 $000, NT#2 $000 — $2000 and $2800 same physical; scroll 0 and 240 both read that bank at (0,0), same tile.</summary>
     [Fact]
     public void Vertical_mirroring_scroll_0_reads_tile_from_top_scroll_240_from_bottom() {
         var console = new Console();
         _ = console.GetMemory(0x2002);
         console.SetPpuMirroring(Mirroring.Vertical);
+        // Vertical: $2000 (NT0) and $2800 (NT2) are the same physical bank (nestech.txt table).
         console.SetMemory(0x2006, 0x20);
         console.SetMemory(0x2006, 0x00);
         console.SetMemory(0x2007, 0x11);
-        console.SetMemory(0x2006, 0x28);
-        console.SetMemory(0x2006, 0x00);
-        console.SetMemory(0x2007, 0x33);
         ScrollFormula.GetBackgroundCoords(0, 0, 0, 0, 0, 0, out int nt0, out int mx0, out int my0);
         ScrollFormula.GetBackgroundCoords(0, 0, 0, 240, 0, 0, out int nt2, out int mx2, out int my2);
         var tileTop = PPUAddressSpace.Instance.GetNametable(nt0).GetSymbol(mx0 >> 3, my0 >> 3);
         var tileBot = PPUAddressSpace.Instance.GetNametable(nt2).GetSymbol(mx2 >> 3, my2 >> 3);
         Assert.Equal(0, nt0);
-        Assert.Equal(0x11, tileTop);
         Assert.Equal(2, nt2);
-        Assert.Equal(0x33, tileBot);
+        Assert.Equal(0x11, tileTop);
+        Assert.Equal(0x11, tileBot); // NT2 mirrors NT0 in Vertical, so same tile
     }
 
     [Fact]
