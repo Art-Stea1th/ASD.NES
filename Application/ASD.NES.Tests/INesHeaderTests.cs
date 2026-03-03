@@ -48,7 +48,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Valid_signature_creates_cartridge()
+    public void ValidSignatureCreatesCartridge()
     {
         var rom = BuildRom(1, 1);
         var cart = Cartridge.Create(rom);
@@ -56,7 +56,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Invalid_signature_throws()
+    public void InvalidSignatureThrows()
     {
         var rom = BuildRom(1, 1);
         rom[0] = 0x00;
@@ -64,7 +64,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Signature_must_be_NES_0x1A()
+    public void SignatureMustBeNES0x1A()
     {
         var rom = BuildRom(1, 1);
         rom[3] = 0x1B;
@@ -72,7 +72,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Region_NTSC_when_flags_9_and_10_not_PAL()
+    public void RegionNTSCWhenFlags9And10NotPAL()
     {
         var rom = BuildRom(1, 1, bytes8to15: new byte[8]);
         var cart = Cartridge.Create(rom);
@@ -80,7 +80,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Region_PAL_when_flag_9_bit0_set()
+    public void RegionPALWhenFlag9Bit0Set()
     {
         var rom = BuildRom(1, 1, bytes8to15: new byte[] { 0, 1, 0, 0, 0, 0, 0, 0 });
         var cart = Cartridge.Create(rom);
@@ -88,7 +88,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Region_PAL_when_flag_10_bits_0_1_equal_2()
+    public void RegionPALWhenFlag10Bits01Equal2()
     {
         var rom = BuildRom(1, 1, bytes8to15: new byte[] { 0, 0, 2, 0, 0, 0, 0, 0 });
         var cart = Cartridge.Create(rom);
@@ -96,7 +96,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void One_PRG_one_CHR_minimal_size()
+    public void OnePRGOneCHRMinimalSize()
     {
         var rom = BuildRom(1, 1);
         Assert.Equal(16 + 0x4000 + 0x2000, rom.Length);
@@ -105,7 +105,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Trainer_offset_16_plus_512()
+    public void TrainerOffset16Plus512()
     {
         var rom = BuildRom(1, 1, byte6: 0x04, withTrainer: true); // bit 2 = trainer
         Assert.True(rom.Length >= 16 + 512 + 0x4000 + 0x2000);
@@ -114,7 +114,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Two_PRG_pages_acceptable()
+    public void TwoPRGPagesAcceptable()
     {
         var rom = BuildRom(2, 1);
         var cart = Cartridge.Create(rom);
@@ -122,7 +122,7 @@ public sealed class INesHeaderTests
     }
 
     [Fact]
-    public void Zero_CHR_pages_embedded_CHR_supported()
+    public void ZeroCHRPagesEmbeddedCHRSupported()
     {
         var rom = BuildRom(1, 0);
         Assert.Equal(16 + 0x4000, rom.Length);

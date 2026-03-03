@@ -12,7 +12,7 @@ namespace ASD.NES.Tests;
 public sealed class ApuTests
 {
     [Fact]
-    public void APU_status_0x4015_write_then_read_returns_channel_enables_in_low_bits()
+    public void APUStatus0x4015WriteThenReadReturnsChannelEnablesInLowBits()
     {
         var console = new Console();
         console.SetMemory(0x4015, 0x1F);
@@ -21,7 +21,7 @@ public sealed class ApuTests
     }
 
     [Fact]
-    public void APU_status_0x4015_write_0_clears_channel_enables()
+    public void APUStatus0x4015Write0ClearsChannelEnables()
     {
         var console = new Console();
         console.SetMemory(0x4015, 0x1F);
@@ -31,7 +31,7 @@ public sealed class ApuTests
     }
 
     [Fact]
-    public void APU_status_0x4015_read_clears_frame_and_DMC_IRQ_bits()
+    public void APUStatus0x4015ReadClearsFrameAndDMCIRQBits()
     {
         var console = new Console();
         console.SetMemory(0x4015, 0x00);
@@ -41,7 +41,7 @@ public sealed class ApuTests
     }
 
     [Fact]
-    public void APU_pulse1_0x4000_0x4003_write_only_read_returns_zero()
+    public void APUPulse10x40000x4003WriteOnlyReadReturnsZero()
     {
         var console = new Console();
         console.SetMemory(0x4000, 0x8F);
@@ -51,7 +51,7 @@ public sealed class ApuTests
     }
 
     [Fact]
-    public void APU_0x4015_mirrored_read_only_status()
+    public void APU0x4015MirroredReadOnlyStatus()
     {
         var console = new Console();
         console.SetMemory(0x4015, 0x0F);

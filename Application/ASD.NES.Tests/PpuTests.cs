@@ -31,7 +31,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void PPUCTRL_0x2000_write_then_read_returns_last_value()
+    public void PPUCTRL0x2000WriteThenReadReturnsLastValue()
     {
         var console = new Console();
         console.SetMemory(0x2000, 0x85);
@@ -39,7 +39,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void PPUCTRL_mirrored_at_0x2008_0x2010_0x2018()
+    public void PPUCTRLMirroredAt0x20080x20100x2018()
     {
         var console = new Console();
         console.SetMemory(0x2008, 0xAA);
@@ -48,7 +48,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void PPUMASK_0x2001_write_then_read_returns_last_value()
+    public void PPUMASK0x2001WriteThenReadReturnsLastValue()
     {
         var console = new Console();
         console.SetMemory(0x2001, 0x1E);
@@ -56,7 +56,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void Read_PPUSTATUS_0x2002_clears_VBlank_and_scroll_addr_latch()
+    public void ReadPPUSTATUS0x2002ClearsVBlankAndScrollAddrLatch()
     {
         var console = new Console();
         console.SetMemory(0x2000, 0x80);
@@ -67,7 +67,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void OAMADDR_0x2003_write_then_read_returns_last_value()
+    public void OAMADDR0x2003WriteThenReadReturnsLastValue()
     {
         var console = new Console();
         console.SetMemory(0x2003, 0x42);
@@ -75,7 +75,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void PPUSCROLL_0x2005_first_write_X_second_write_Y()
+    public void PPUSCROLL0x2005FirstWriteXSecondWriteY()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
@@ -85,7 +85,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void PPUADDR_0x2006_two_writes_high_then_low()
+    public void PPUADDR0x2006TwoWritesHighThenLow()
     {
         var console = new Console();
         console.SetMemory(0x2006, 0x21);
@@ -96,7 +96,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void PPUDATA_0x2007_first_read_after_write_returns_written_value_from_buffer()
+    public void PPUDATA0x2007FirstReadAfterWriteReturnsWrittenValueFromBuffer()
     {
         var console = new Console();
         console.SetMemory(0x2000, 0x00);
@@ -116,7 +116,7 @@ public sealed class PpuTests
     [InlineData(0x2003, 0x2003)]
     [InlineData(0x2005, 0x2005)]
     [InlineData(0x2006, 0x2006)]
-    public void PPU_register_mirrored_every_8_bytes(ushort writeAddr, ushort readAddr)
+    public void PPURegisterMirroredEvery8Bytes(ushort writeAddr, ushort readAddr)
     {
         var console = new Console();
         var val = (byte)((writeAddr & 0x0F) | 0xA0);
@@ -136,7 +136,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void PPUADDR_increments_by_1_when_PPUCTRL_bit2_clear()
+    public void PPUADDRIncrementsBy1WhenPPUCTRLBit2Clear()
     {
         var console = new Console();
         console.SetMemory(0x2000, 0x00);
@@ -150,7 +150,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void PPUADDR_increments_by_32_when_PPUCTRL_bit2_set()
+    public void PPUADDRIncrementsBy32WhenPPUCTRLBit2Set()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
@@ -172,7 +172,7 @@ public sealed class PpuTests
     // nes.txt: "With vertical mirroring, tables 2 and 3 are the mirrors of pages 0 and 1. With horizontal mirroring, pages 1 and 3 are the mirrors of pages 0 and 2."
 
     [Fact]
-    public void Nametable_mirroring_matches_nestech_and_nes_spec()
+    public void NametableMirroringMatchesNestechAndNesSpec()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
@@ -195,7 +195,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void Vertical_mirroring_2000_and_2800_same_physical()
+    public void VerticalMirroring2000And2800SamePhysical()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
@@ -208,7 +208,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void Vertical_mirroring_2400_and_2C00_same_physical()
+    public void VerticalMirroring2400And2C00SamePhysical()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
@@ -221,7 +221,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void Horizontal_mirroring_2000_and_2800_same_physical()
+    public void HorizontalMirroring2000And2800SamePhysical()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);
@@ -234,7 +234,7 @@ public sealed class PpuTests
     }
 
     [Fact]
-    public void Horizontal_mirroring_2400_and_2C00_same_physical()
+    public void HorizontalMirroring2400And2C00SamePhysical()
     {
         var console = new Console();
         _ = console.GetMemory(0x2002);

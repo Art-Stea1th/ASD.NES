@@ -57,7 +57,7 @@ public sealed class CpuInstructionTests
 
     [Theory]
     [MemberData(nameof(AllInstructionCases))]
-    public void Each_instruction_addressing_mode_executes_correctly(InstructionTestCase t)
+    public void EachInstructionAddressingModeExecutesCorrectly(InstructionTestCase t)
     {
         var cart = Cartridge.Create(BuildMinimalRom(t.Code));
         var console = new Console();

@@ -46,7 +46,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void Minimal_ROM_has_reset_vector_at_0x3FFC()
+    public void MinimalROMHasResetVectorAt0x3FFC()
     {
         var rom = BuildMinimalRom(new byte[] { 0x00 }, 0xC000);
         Assert.Equal(0, rom[16 + 0x3FFC]);
@@ -56,7 +56,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void CPU_address_space_returns_reset_vector_after_cartridge_create()
+    public void CPUAddressSpaceReturnsResetVectorAfterCartridgeCreate()
     {
         var rom = BuildMinimalRom(new byte[] { 0x00 });
         var cart = Cartridge.Create(rom);
@@ -66,7 +66,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void Cold_boot_sets_PC_from_reset_vector()
+    public void ColdBootSetsPCFromResetVector()
     {
         var rom = BuildMinimalRom(new byte[] { 0x00 }); // BRK at 0xC000
         var cart = Cartridge.Create(rom);
@@ -79,7 +79,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void LDA_immediate_loads_A_and_sets_Z_N()
+    public void LDAImmediateLoadsAAndSetsZN()
     {
         // LDA #0 -> Z=1, N=0. LDA #$80 -> N=1, Z=0.
         var rom = BuildMinimalRom(new byte[]
@@ -102,7 +102,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void STA_zero_page_stores_A()
+    public void STAZeroPageStoresA()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -118,7 +118,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void Stack_at_0x100_and_SP_decrements_on_push()
+    public void StackAt0x100AndSPDecrementsOnPush()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -140,7 +140,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void PHP_pushes_P_with_B_and_U_bits_set_per_6502()
+    public void PHPPushesPWithBAndUBitsSetPer6502()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -159,7 +159,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void JSR_pushes_PC_plus_2_then_jumps()
+    public void JSRPushesPCPlus2ThenJumps()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -177,7 +177,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void CLC_clears_carry()
+    public void CLCClearsCarry()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -214,7 +214,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void BIT_sets_N_and_V_from_memory_bits_7_and_6()
+    public void BITSetsNAndVFromMemoryBits7And6()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -235,7 +235,7 @@ public sealed class Cpu6502Tests
 
     // --- 6502.txt: LDX, LDY, index registers, transfers ---
     [Fact]
-    public void LDX_immediate_loads_X_and_sets_Z_N()
+    public void LDXImmediateLoadsXAndSetsZN()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -257,7 +257,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void LDY_immediate_loads_Y()
+    public void LDYImmediateLoadsY()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -274,7 +274,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void TAX_transfers_A_to_X()
+    public void TAXTransfersAToX()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -292,7 +292,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void TYA_transfers_Y_to_A()
+    public void TYATransfersYToA()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -310,7 +310,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void DEX_decrements_X_and_sets_Z_at_zero()
+    public void DEXDecrementsXAndSetsZAtZero()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -330,7 +330,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void INX_increments_X_wraps_to_zero()
+    public void INXIncrementsXWrapsToZero()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -348,7 +348,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void CMP_sets_Z_when_equal_and_C_when_A_ge_M()
+    public void CMPSetsZWhenEqualAndCWhenAGeM()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -379,7 +379,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void JMP_absolute_jumps_to_address()
+    public void JMPAbsoluteJumpsToAddress()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -398,7 +398,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void NOP_advances_PC_by_one()
+    public void NOPAdvancesPCByOne()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -416,7 +416,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void EOR_immediate_xors_A_sets_N_Z()
+    public void EORImmediateXorsASetsNZ()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -434,7 +434,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void ORA_immediate_ors_A()
+    public void ORAImmediateOrsA()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -451,7 +451,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void INC_zero_page_increments_memory()
+    public void INCZeroPageIncrementsMemory()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -469,7 +469,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void DEC_zero_page_decrements_memory()
+    public void DECZeroPageDecrementsMemory()
     {
         var rom = BuildMinimalRom(new byte[]
         {
@@ -487,7 +487,7 @@ public sealed class Cpu6502Tests
     }
 
     [Fact]
-    public void PLP_restores_P_from_stack()
+    public void PLPRestoresPFromStack()
     {
         var rom = BuildMinimalRom(new byte[]
         {

@@ -1,4 +1,4 @@
-﻿<Window x:Class="ASD.NES.WPF.Views.ShellView"
+<Window x:Class="ASD.NES.WPF.Views.ShellView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:ASD.NES.WPF.ViewModels"
@@ -60,9 +60,11 @@
                     Header="{Binding TurnOnOff.Name}"
                     Command="{Binding TurnOnOff}"/>
             </MenuItem>
-            <!--<MenuItem Header="TOOLS">
-                <MenuItem Header="Options"/>
-            </MenuItem>-->
+            <MenuItem Header="SETTINGS">
+                <MenuItem
+                    Header="{Binding OpenSettings.Name}"
+                    Command="{Binding OpenSettings}"/>
+            </MenuItem>
             <MenuItem Header="HELP">
                 <MenuItem
                     Header="{Binding ViewHelp.Name}"

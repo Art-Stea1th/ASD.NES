@@ -20,7 +20,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void Scroll_0_0_scanline_0_scanpoint_0_gives_nametable_0_map_0_0() {
+    public void Scroll00Scanline0Scanpoint0GivesNametable0Map00() {
         Coords(0, 0, 0, 0, 0, 0, out int nt, out int mapX, out int mapY);
         Assert.Equal(0, nt);
         Assert.Equal(0, mapX);
@@ -28,7 +28,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void Scroll_256_0_gives_nametable_1_map_0_0() {
+    public void Scroll2560GivesNametable1Map00() {
         Coords(0, 0, 256, 0, 0, 0, out int nt, out int mapX, out int mapY);
         Assert.Equal(1, nt);
         Assert.Equal(0, mapX);
@@ -36,7 +36,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void Scroll_0_240_gives_nametable_2_map_0_0() {
+    public void Scroll0240GivesNametable2Map00() {
         Coords(0, 0, 0, 240, 0, 0, out int nt, out int mapX, out int mapY);
         Assert.Equal(2, nt);
         Assert.Equal(0, mapX);
@@ -44,7 +44,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void Scroll_260_0_scanpoint_0_gives_nametable_1_map_4_0() {
+    public void Scroll2600Scanpoint0GivesNametable1Map40() {
         Coords(0, 0, 260, 0, 0, 0, out int nt, out int mapX, out int mapY);
         Assert.Equal(1, nt);
         Assert.Equal(4, mapX);
@@ -52,7 +52,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void Scroll_0_250_scanline_0_gives_nametable_2_map_0_10() {
+    public void Scroll0250Scanline0GivesNametable2Map010() {
         Coords(0, 0, 0, 250, 0, 0, out int nt, out int mapX, out int mapY);
         Assert.Equal(2, nt);
         Assert.Equal(0, mapX);
@@ -60,7 +60,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void StartY_240_scroll_0_scanline_0_gives_nametable_2() {
+    public void StartY240Scroll0Scanline0GivesNametable2() {
         Coords(0, 240, 0, 0, 0, 0, out int nt, out int mapX, out int mapY);
         Assert.Equal(2, nt);
         Assert.Equal(0, mapX);
@@ -68,7 +68,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void Wrap_Y_250_plus_239_scanline_wraps_to_top_nametable() {
+    public void WrapY250Plus239ScanlineWrapsToTopNametable() {
         Coords(0, 0, 0, 250, 0, 239, out int nt, out int mapX, out int mapY);
         Assert.Equal(0, nt);
         Assert.Equal(0, mapX);
@@ -76,7 +76,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void Wrap_X_300_plus_256_scanpoint_wraps_to_left_nametable() {
+    public void WrapX300Plus256ScanpointWrapsToLeftNametable() {
         Coords(0, 0, 300, 0, 256, 0, out int nt, out int mapX, out int mapY);
         Assert.Equal(0, nt);
         Assert.Equal(44, mapX);
@@ -85,7 +85,7 @@ public sealed class PpuScrollFormulaTests
 
     /// <summary>Per nestech.txt: Horizontal has NT#0 $000, NT#1 $000 — so $2000 and $2400 are same physical; scroll 0 vs 256 reads different logical NTs, different tiles.</summary>
     [Fact]
-    public void Horizontal_mirroring_scroll_0_reads_tile_from_2000_scroll_256_from_2400() {
+    public void HorizontalMirroringScroll0ReadsTileFrom2000Scroll256From2400() {
         var console = new Console();
         _ = console.GetMemory(0x2002);
         console.SetPpuMirroring(Mirroring.Horizontal);
@@ -107,7 +107,7 @@ public sealed class PpuScrollFormulaTests
 
     /// <summary>Per nestech.txt: Vertical has NT#0 $000, NT#2 $000 — $2000 and $2800 same physical; scroll 0 and 240 both read that bank at (0,0), same tile.</summary>
     [Fact]
-    public void Vertical_mirroring_scroll_0_reads_tile_from_top_scroll_240_from_bottom() {
+    public void VerticalMirroringScroll0ReadsTileFromTopScroll240FromBottom() {
         var console = new Console();
         _ = console.GetMemory(0x2002);
         console.SetPpuMirroring(Mirroring.Vertical);
@@ -126,7 +126,7 @@ public sealed class PpuScrollFormulaTests
     }
 
     [Fact]
-    public void One_frame_renders_with_scroll() {
+    public void OneFrameRendersWithScroll() {
         var rom = new byte[16 + 16384 + 8192];
         rom[0] = 0x4E;
         rom[1] = 0x45;

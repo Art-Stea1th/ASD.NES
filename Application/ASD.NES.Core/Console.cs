@@ -112,10 +112,5 @@ namespace ASD.NES.Core {
         /// <summary> For tests: set PPU nametable mirroring without loading a cartridge. </summary>
         internal void SetPpuMirroring(Mirroring m) => PPUAddressSpace.Instance.NametableMirroring = m;
 
-        /// <summary> When set, one line per frame is reported (mirror, ctrl, mask, scroll, sample nt/tile). Use for debugging scroll/nametable issues. </summary>
-        public static void SetPpuScrollLog(Action<string> logLine) => PictureProcessor.PpuScrollLogLine = logLine;
-
-        /// <summary> When set, one line per sample scanline (0,8,120,239) with nt and tile at X=0 and X=128. </summary>
-        public static void SetPpuScanlineLog(Action<string> logLine) => PictureProcessor.PpuScanlineLogLine = logLine;
     }
 }

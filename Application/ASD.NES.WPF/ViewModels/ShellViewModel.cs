@@ -15,7 +15,9 @@ namespace ASD.NES.WPF.ViewModels {
     using Core;
     using DataProviders;
     using Helpers;
+    using Models;
     using Services;
+    using Views;
 
     internal sealed partial class ShellViewModel : Observable {
 
@@ -34,6 +36,7 @@ namespace ASD.NES.WPF.ViewModels {
         public ICommand ViewHelp => new RelayCommand(
             () => Process.Start("https://github.com/Art-Stea1th/ASD.NES/blob/master/README.md"),
             () => true, "View Help (Online)");
+        public ICommand OpenSettings => new RelayCommand(OpenSettingsExecute, () => true, "Settings...");
 
         private Dispatcher dispatcher;
 
@@ -41,31 +44,11 @@ namespace ASD.NES.WPF.ViewModels {
             dispatcher = Dispatcher.CurrentDispatcher;
             screen = new WriteableBitmap(256, 240, 96, 96, PixelFormats.Bgr32, null);
             console = new Console();
-            ConfigurePpuScrollLog();
             ConfigureAudioDevice();
             ConfigureControllers();
             console.NextFrameReady += UpdateScreen;
             console.PlayAudio += audioDevice.Play;
             InitializeControlCommands();
-        }
-
-        private void ConfigurePpuScrollLog() {
-            if (string.Equals(Environment.GetEnvironmentVariable("ASD_NES_PPU_SCROLL_LOG"), "1", StringComparison.OrdinalIgnoreCase)) {
-                var path = Path.Combine(Path.GetTempPath(), "ASD_NES_ppu_scroll_log.txt");
-                var pathSl = Path.Combine(Path.GetTempPath(), "ASD_NES_ppu_scanline_log.txt");
-                Console.SetPpuScrollLog(line => {
-                    try {
-                        File.AppendAllText(path, line + Environment.NewLine);
-                    }
-                    catch (Exception) { /* ignore */ }
-                });
-                Console.SetPpuScanlineLog(line => {
-                    try {
-                        File.AppendAllText(pathSl, line + Environment.NewLine);
-                    }
-                    catch (Exception) { /* ignore */ }
-                });
-            }
         }
 
         private void ConfigureAudioDevice() {
@@ -76,16 +59,27 @@ namespace ASD.NES.WPF.ViewModels {
             audioDevice.Init(waveProvider);
         }
 
-        private void ConfigureControllers() { // TODO: move to settings ViewModel
-
+        private void ConfigureControllers() {
+            var settings = AppSettingsModel.Load();
+            settings.Player1.ToKeys(out var p1L, out var p1U, out var p1R, out var p1D, out var p1Sel, out var p1St, out var p1B, out var p1A);
+            settings.Player2.ToKeys(out var p2L, out var p2U, out var p2R, out var p2D, out var p2Sel, out var p2St, out var p2B, out var p2A);
             console.PlayerOneController = new KeyboardController(dispatcher) {
-                Left = Key.A, Up = Key.W, Right = Key.D, Down = Key.S,
-                Select = Key.LeftShift, Start = Key.Enter, B = Key.K, A = Key.L
+                Left = p1L, Up = p1U, Right = p1R, Down = p1D,
+                Select = p1Sel, Start = p1St, B = p1B, A = p1A
             };
             console.PlayerTwoController = new KeyboardController(dispatcher) {
-                Left = Key.Left, Up = Key.Up, Right = Key.Right, Down = Key.Down,
-                Select = Key.RightShift, Start = Key.Enter, B = Key.Insert, A = Key.Delete
+                Left = p2L, Up = p2U, Right = p2R, Down = p2D,
+                Select = p2Sel, Start = p2St, B = p2B, A = p2A
             };
+        }
+
+        private void OpenSettingsExecute() {
+            var settingsWindow = new SettingsView {
+                Owner = Application.Current.MainWindow
+            };
+            if (settingsWindow.ShowDialog() == true) {
+                ConfigureControllers();
+            }
         }
 
         private void OpenFileCommandExecute() {
@@ -99,7 +93,6 @@ namespace ASD.NES.WPF.ViewModels {
                 oldConsole.Dispose();
 
                 console = new Console();
-                ConfigurePpuScrollLog();
                 ConfigureAudioDevice();
                 ConfigureControllers();
                 console.NextFrameReady += UpdateScreen;
