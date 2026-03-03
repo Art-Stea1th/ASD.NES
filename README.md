@@ -6,7 +6,7 @@
 #### Capabilities:
 - Almost all code - implemented as a cross-platform library .NET Standard 1.1.
 - View (WPF): so far only for a single platform (Windows 10 or 7 with the .NET Framework 4.5).
-- There are sound, all audio channels works except for "Delta Modulation Channel".
+- There are sound, all audio channels.
 - You can play together, but the ability to reassign keys is not yet available.
 
 | Joypad Button    | Player One        | Player Two         |
