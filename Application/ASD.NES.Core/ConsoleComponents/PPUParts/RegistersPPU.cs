@@ -47,18 +47,20 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
         /// <summary> PPU address register <para/>
         /// 0x2006 - (Common name: PPUADDR). Two writes: first = high byte, second = low byte. Read of $2002 resets the latch. </summary>
         public ushort PpuAddr { get; private set; }
-        private bool _ppuAddrFirstWrite = true; // true = next write to $2006 is high byte
-        private bool _scrollFirstWrite = true;   // true = next write to $2005 is X
 
         /// <summary> PPU data register <para/>
         /// 0x2007 - (Common name: PPUDATA) </summary>
         public byte PpuData { get; private set; }
 
-
-
         /// <summary> OAM DMA register (high octet) <para/>
         /// 0x4014 - (Common name: OAMDMA) </summary>
         public byte OamDmaR { get; private set; }
+
+        /// <summary> Shared write toggle for $2005 and $2006 (NESDEV: both use same w). true = next write is "first" (scroll X / addr high). </summary>
+        private bool _scrollAddrFirstWrite = true;
+
+        /// <summary> Set when $4014 is written; Console consumes and applies 511 extra PPU/APU cycles (513 total - 2 for STA). </summary>
+        internal static bool OamDmaCyclePenaltyPending;
 
         public event Action<byte> OAMDMAWritten;
 
@@ -79,8 +81,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             PpuScrl.Value = 0;
             PpuAddr = 0;
             PpuData = 0;
-            _ppuAddrFirstWrite = true;
-            _scrollFirstWrite = true;
+            _scrollAddrFirstWrite = true;
         }
 
         public byte this[int address] {
@@ -105,8 +106,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
                 var prevStatusWithData = (byte)(PpuStat.StatusOnly | (PpuData & 0b0001_1111));
                 PpuStat.VBlank = false;
-                _ppuAddrFirstWrite = true;
-                _scrollFirstWrite = true;
+                _scrollAddrFirstWrite = true;
 
                 return prevStatusWithData;
             }
@@ -152,6 +152,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
             if (address == 0x4014) {
                 OAMDMAWritten(value);
+                OamDmaCyclePenaltyPending = true; // 513 cycles total, instruction took 2 → 511 extra (NESDEV)
             }
             else {
 
@@ -167,22 +168,20 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                     OamAddr = value;
                 }
                 if (address == 5) {
-                    if (_scrollFirstWrite) {
+                    if (_scrollAddrFirstWrite) {
                         PpuScrl.X = value;
-                        _scrollFirstWrite = false;
                     } else {
                         PpuScrl.Y = value;
-                        _scrollFirstWrite = true;
                     }
+                    _scrollAddrFirstWrite = !_scrollAddrFirstWrite;
                 }
                 else if (address == 6) {
-                    if (_ppuAddrFirstWrite) {
+                    if (_scrollAddrFirstWrite) {
                         PpuAddr = (ushort)(value << 8);
-                        _ppuAddrFirstWrite = false;
                     } else {
                         PpuAddr = (ushort)((PpuAddr & 0xFF00) | value);
-                        _ppuAddrFirstWrite = true;
                     }
+                    _scrollAddrFirstWrite = !_scrollAddrFirstWrite;
                 }
                 else if (address == 7) {
 

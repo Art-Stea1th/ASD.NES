@@ -120,6 +120,9 @@ public sealed class PpuTests
     public void PPURegisterMirroredEvery8Bytes(ushort writeAddr, ushort readAddr)
     {
         var console = new Console();
+        // $2005 and $2006 share one write latch (NESDEV); reset so single write to $2006 is "first" (high byte)
+        if (writeAddr == 0x2006)
+            _ = console.GetMemory(0x2002);
         var val = (byte)((writeAddr & 0x0F) | 0xA0);
         console.SetMemory(writeAddr, val);
         Assert.Equal(val, console.GetMemory(readAddr));
@@ -140,6 +143,7 @@ public sealed class PpuTests
     public void PPUADDRIncrementsBy1WhenPPUCTRLBit2Clear()
     {
         var console = new Console();
+        _ = console.GetMemory(0x2002);
         console.SetMemory(0x2000, 0x00);
         SetPpuAddr(console, 0x2000);
         console.SetMemory(0x2007, 0xAA);

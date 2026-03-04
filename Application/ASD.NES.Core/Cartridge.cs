@@ -40,12 +40,22 @@ namespace ASD.NES.Core {
                 throw new InvalidDataException();
             }
 
-            // iNES Flags 9: bit 0 = TV system (0: NTSC; 1: PAL). Flags 10 (unofficial): bits 0-1 = 2 means PAL.
+            CleanupHeader(header);
+
+            // iNES 2.0: (byte 7 & 0x0C) == 0x08 (NESDEV).
+            var isNes2 = header.Length > 8 && (header[7] & 0x0C) == 0x08;
+
+            // Region: iNES 1.0 Flags 9 (bit 0), Flags 10 (bits 0-1 == 2); iNES 2.0 byte 12 (TV system, bit 0 = PAL).
             var palFrom9 = header.Length > 9 && (header[9] & 1) != 0;
             var palFrom10 = header.Length > 10 && (header[10] & 3) == 2;
-            Region = (palFrom9 || palFrom10) ? TvRegion.PAL : TvRegion.NTSC;
+            var palFrom12 = isNes2 && header.Length > 12 && (header[12] & 1) != 0;
+            Region = (palFrom9 || palFrom10 || palFrom12) ? TvRegion.PAL : TvRegion.NTSC;
 
-            var mapperNumber = BitOperations.MakeInt8(header[7].H(), header[6].H());
+            // Mapper: low from byte 6|7; iNES 2.0 upper bits from byte 8 (NESDEV).
+            var mapperNumber = (int)BitOperations.MakeInt8(header[7].H(), header[6].H());
+            if (isNes2 && header.Length > 8)
+                mapperNumber |= (header[8] & 0x0F) << 8;
+
             switch (mapperNumber) {
                 case 0: board = new Mapper000(); break;
                 case 1: board = new Mapper001(); break;
@@ -61,14 +71,23 @@ namespace ASD.NES.Core {
                 default: board = new Mapper000(); break; // fallback: use NROM so ROM loads without crash
             }
 
+            // PRG/CHR sizes: iNES 2.0 upper bits in byte 9 (NESDEV).
             PRGCount = header[4];
             CHRCount = header[5];
+            if (isNes2 && header.Length > 9) {
+                PRGCount |= (header[9] & 0x0F) << 8;
+                CHRCount |= (header[9] & 0xF0) << 4;
+            }
+            if (PRGCount == 0) PRGCount = 1; // avoid empty PRG
 
-            // iNES byte 6: bit 0 = mirroring (0=horizontal, 1=vertical). Many NROM dumps use bit 1; use bit 0 for mappers 1+, bit 1 for mapper 0 for compatibility.
+            // iNES byte 6: bit 0 = mirroring, bit 3 = four-screen. Mapper 7 uses SingleScreen.
             var ppu = PPUAddressSpace.Instance;
             if (mapperNumber == 7) {
                 ppu.NametableMirroring = Mirroring.SingleScreen;
                 ppu.SingleScreenPage = 0;
+            }
+            else if (header[6].HasBit(3)) {
+                ppu.NametableMirroring = Mirroring.FourScreen;
             }
             else {
                 var mirrorVertical = mapperNumber == 0 ? header[6].HasBit(1) : header[6].HasBit(0);
@@ -77,7 +96,13 @@ namespace ASD.NES.Core {
 
             var hasTrainer = header[6].HasBit(2);
             var prgStart = 16 + (hasTrainer ? 512 : 0);
+            var maxPrgByFile = Math.Max(0, (data.Length - prgStart) / 0x4000);
+            if (PRGCount > maxPrgByFile) PRGCount = maxPrgByFile;
+            if (PRGCount == 0) PRGCount = 1;
+
             var chrStart = prgStart + 0x4000 * PRGCount;
+            var maxChrByFile = Math.Max(0, (data.Length - chrStart) / 0x2000);
+            if (CHRCount > maxChrByFile) CHRCount = maxChrByFile;
 
             prg = new List<byte[]>(PRGCount);
             for (var i = 0; i < PRGCount; i++) {
@@ -100,6 +125,30 @@ namespace ASD.NES.Core {
 
             CPUAddressSpace.Instance.SetExternalMemory(board);
             PPUAddressSpace.Instance.SetExternalMemory(board);
+        }
+
+        /// <summary> Zero known garbage in header bytes 7-15 so mapper/region/sizes are correct (ines header cleanup). </summary>
+        private static void CleanupHeader(byte[] header) {
+            if (header == null || header.Length < 16) return;
+            // "DiskDude" at 7 (8 chars) or "demiforce" at 7 (9 chars) → zero 7..15
+            if (Matches(header, 7, "DiskDude") || Matches(header, 7, "demiforce")) {
+                for (var i = 7; i < 16; i++) header[i] = 0;
+                return;
+            }
+            // "Ni03" at 10: if "Dis" at 7 zero 7..15, else zero 10..15
+            if (Matches(header, 10, "Ni03")) {
+                if (Matches(header, 7, "Dis"))
+                    for (var i = 7; i < 16; i++) header[i] = 0;
+                else
+                    for (var i = 10; i < 16; i++) header[i] = 0;
+            }
+        }
+
+        private static bool Matches(byte[] h, int start, string s) {
+            if (h == null || start + s.Length > h.Length) return false;
+            for (var i = 0; i < s.Length; i++)
+                if (h[start + i] != (byte)s[i]) return false;
+            return true;
         }
     }
 }

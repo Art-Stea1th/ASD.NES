@@ -116,23 +116,7 @@ namespace ASD.NES.WPF.ViewModels {
             try {
                 dispatcher.Invoke(()
                     => screen.WritePixels(new Int32Rect(0, 0, 256, 240), data, 256 * sizeof(uint), 0));
-                DebugLogFrameIfEnabled();
             } catch (OperationCanceledException) { /* shutdown: dispatcher canceled the invoke */ }
-        }
-
-        private static int _debugFrameCount;
-        private static void DebugLogFrameIfEnabled() {
-            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASD_NES_DEBUG"))) {
-                return;
-            }
-            _debugFrameCount++;
-            if (_debugFrameCount % 300 != 0) {
-                return;
-            }
-            try {
-                var path = Path.Combine(Path.GetTempPath(), "ASD_NES_debug_frames.txt");
-                File.AppendAllText(path, $"{DateTime.UtcNow:O} frames={_debugFrameCount}{Environment.NewLine}");
-            } catch (Exception) { /* ignore */ }
         }
 
         protected override void OnDispose() {

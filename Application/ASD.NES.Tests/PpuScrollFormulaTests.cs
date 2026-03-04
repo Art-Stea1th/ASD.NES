@@ -14,9 +14,10 @@ namespace ASD.NES.Tests;
 [Collection("CPU")]
 public sealed class PpuScrollFormulaTests
 {
+    /// <summary>Uses Horizontal mirroring for 512x480 formula (generic tests).</summary>
     private static void Coords(int startX, int startY, int scrollX, int scrollY, int scanpoint, int scanline,
         out int nt, out int mapX, out int mapY) {
-        ScrollFormula.GetBackgroundCoords(startX, startY, scrollX, scrollY, scanpoint, scanline, out nt, out mapX, out mapY);
+        ScrollFormula.GetBackgroundCoords(startX, startY, scrollX, scrollY, scanpoint, scanline, Mirroring.Horizontal, out nt, out mapX, out mapY);
     }
 
     [Fact]
@@ -95,8 +96,8 @@ public sealed class PpuScrollFormulaTests
         console.SetMemory(0x2006, 0x24);
         console.SetMemory(0x2006, 0x00);
         console.SetMemory(0x2007, 0x22);
-        ScrollFormula.GetBackgroundCoords(0, 0, 0, 0, 0, 0, out int nt0, out int mx0, out int my0);
-        ScrollFormula.GetBackgroundCoords(0, 0, 256, 0, 0, 0, out int nt1, out int mx1, out int my1);
+        ScrollFormula.GetBackgroundCoords(0, 0, 0, 0, 0, 0, Mirroring.Horizontal, out int nt0, out int mx0, out int my0);
+        ScrollFormula.GetBackgroundCoords(0, 0, 256, 0, 0, 0, Mirroring.Horizontal, out int nt1, out int mx1, out int my1);
         var tile0 = PPUAddressSpace.Instance.GetNametable(nt0).GetSymbol(mx0 >> 3, my0 >> 3);
         var tile1 = PPUAddressSpace.Instance.GetNametable(nt1).GetSymbol(mx1 >> 3, my1 >> 3);
         Assert.Equal(0, nt0);
@@ -115,14 +116,83 @@ public sealed class PpuScrollFormulaTests
         console.SetMemory(0x2006, 0x20);
         console.SetMemory(0x2006, 0x00);
         console.SetMemory(0x2007, 0x11);
-        ScrollFormula.GetBackgroundCoords(0, 0, 0, 0, 0, 0, out int nt0, out int mx0, out int my0);
-        ScrollFormula.GetBackgroundCoords(0, 0, 0, 240, 0, 0, out int nt2, out int mx2, out int my2);
+        ScrollFormula.GetBackgroundCoords(0, 0, 0, 0, 0, 0, Mirroring.Vertical, out int nt0, out int mx0, out int my0);
+        ScrollFormula.GetBackgroundCoords(0, 0, 0, 240, 0, 0, Mirroring.Vertical, out int nt2, out int mx2, out int my2);
         var tileTop = PPUAddressSpace.Instance.GetNametable(nt0).GetSymbol(mx0 >> 3, my0 >> 3);
         var tileBot = PPUAddressSpace.Instance.GetNametable(nt2).GetSymbol(mx2 >> 3, my2 >> 3);
         Assert.Equal(0, nt0);
         Assert.Equal(2, nt2);
         Assert.Equal(0x11, tileTop);
         Assert.Equal(0x11, tileBot); // NT2 mirrors NT0 in Vertical, so same tile
+    }
+
+    // --- Single-screen mirroring (AxROM/Mapper 7, etc.): one 256x240 nametable, wrap at 256/240, nametableIndex always 0 ---
+
+    [Fact]
+    public void SingleScreen_Scroll0_0_GivesNametable0_Map0_0() {
+        ScrollFormula.GetBackgroundCoords(0, 0, 0, 0, 0, 0, Mirroring.SingleScreen, out int nt, out int mapX, out int mapY);
+        Assert.Equal(0, nt);
+        Assert.Equal(0, mapX);
+        Assert.Equal(0, mapY);
+    }
+
+    [Fact]
+    public void SingleScreen_Scroll256_0_WrapsToMap0_0() {
+        ScrollFormula.GetBackgroundCoords(0, 0, 256, 0, 0, 0, Mirroring.SingleScreen, out int nt, out int mapX, out int mapY);
+        Assert.Equal(0, nt);
+        Assert.Equal(0, mapX);
+        Assert.Equal(0, mapY);
+    }
+
+    [Fact]
+    public void SingleScreen_Scroll0_240_WrapsToMap0_0() {
+        ScrollFormula.GetBackgroundCoords(0, 0, 0, 240, 0, 0, Mirroring.SingleScreen, out int nt, out int mapX, out int mapY);
+        Assert.Equal(0, nt);
+        Assert.Equal(0, mapX);
+        Assert.Equal(0, mapY);
+    }
+
+    [Fact]
+    public void SingleScreen_Scroll100_50_Scanline10_GivesMap100_60() {
+        ScrollFormula.GetBackgroundCoords(0, 0, 100, 50, 0, 10, Mirroring.SingleScreen, out int nt, out int mapX, out int mapY);
+        Assert.Equal(0, nt);
+        Assert.Equal(100, mapX);
+        Assert.Equal(60, mapY);
+    }
+
+    [Fact]
+    public void SingleScreen_WrapX_256Plus100_WrapsTo100() {
+        ScrollFormula.GetBackgroundCoords(0, 0, 256 + 100, 0, 0, 0, Mirroring.SingleScreen, out int nt, out int mapX, out int mapY);
+        Assert.Equal(0, nt);
+        Assert.Equal(100, mapX);
+        Assert.Equal(0, mapY);
+    }
+
+    [Fact]
+    public void SingleScreen_WrapY_240Plus30_WrapsTo30() {
+        ScrollFormula.GetBackgroundCoords(0, 0, 0, 240 + 30, 0, 0, Mirroring.SingleScreen, out int nt, out int mapX, out int mapY);
+        Assert.Equal(0, nt);
+        Assert.Equal(0, mapX);
+        Assert.Equal(30, mapY);
+    }
+
+    /// <summary>Single-screen: one nametable; scroll 0 and scroll 256 both read from (0,0) of that nametable (wrap).</summary>
+    [Fact]
+    public void SingleScreen_TileAt2000_ReadAtScroll0AndScroll256_SameTile() {
+        var console = new Console();
+        _ = console.GetMemory(0x2002);
+        console.SetPpuMirroring(Mirroring.SingleScreen);
+        console.SetMemory(0x2006, 0x20);
+        console.SetMemory(0x2006, 0x00);
+        console.SetMemory(0x2007, 0x33);
+        ScrollFormula.GetBackgroundCoords(0, 0, 0, 0, 0, 0, Mirroring.SingleScreen, out int nt0, out int mx0, out int my0);
+        ScrollFormula.GetBackgroundCoords(0, 0, 256, 0, 0, 0, Mirroring.SingleScreen, out int nt1, out int mx1, out int my1);
+        var tile0 = PPUAddressSpace.Instance.GetNametable(nt0).GetSymbol(mx0 >> 3, my0 >> 3);
+        var tile1 = PPUAddressSpace.Instance.GetNametable(nt1).GetSymbol(mx1 >> 3, my1 >> 3);
+        Assert.Equal(0, nt0);
+        Assert.Equal(0, nt1);
+        Assert.Equal(0x33, tile0);
+        Assert.Equal(0x33, tile1);
     }
 
     [Fact]

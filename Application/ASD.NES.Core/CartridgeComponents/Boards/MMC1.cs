@@ -16,6 +16,8 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         private byte prgBank;  // $E000-$FFFF (bit 4 = PRG RAM enable on MMC1B)
 
         private readonly byte[] prgRam = new byte[0x2000]; // 8 KB at $6000-$7FFF
+        /// <summary> 8 KB CHR-RAM when iNES header reports 0 CHR banks (e.g. Bomberman II, Dynablaster). </summary>
+        private readonly byte[] chrRam = new byte[0x2000];
         private int numPrg16K;
         private int numChr8K;
 
@@ -103,7 +105,7 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
 
         public override void SetCHR(System.Collections.Generic.IReadOnlyList<byte[]> chr) {
             base.SetCHR(chr);
-            numChr8K = chr == null ? 0 : Math.Max(1, chr.Count);
+            numChr8K = (chr == null || chr.Count == 0) ? 0 : Math.Max(1, chr.Count);
         }
 
         private byte GetPrgByte(int address) {
@@ -136,7 +138,7 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
 
         public override byte ReadChr(int ppuAddress) {
             if (chr == null || chr.Count == 0) {
-                return 0;
+                return chrRam[ppuAddress & 0x1FFF];
             }
             var chr8K = (control & 0x10) == 0;
             int bank8;
@@ -155,7 +157,11 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
             return chr[bank8][offset];
         }
 
-        public override void WriteChr(int ppuAddress, byte value) { }
+        public override void WriteChr(int ppuAddress, byte value) {
+            if (chr == null || chr.Count == 0) {
+                chrRam[ppuAddress & 0x1FFF] = value;
+            }
+        }
     }
 
     internal sealed class Mapper001 : MMC1 { }

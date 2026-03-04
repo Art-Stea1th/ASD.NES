@@ -22,7 +22,7 @@ namespace ASD.NES.Core.ConsoleComponents {
 
         /// <summary> Set TV region: NTSC 262 scanlines, PAL 312 scanlines. VBlank at line 241 for both (2C07). </summary>
         internal void SetRegion(TvRegion region) {
-            scan.SetLastScanline(region == TvRegion.PAL ? 311 : 260);
+            scan.SetLastScanline(TvRegionProfile.For(region).LastScanline);
         }
 
         public void Step() {

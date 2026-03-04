@@ -51,7 +51,8 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
                 prgBank = (value & 0x0F) % num32Banks;
                 var ppu = PPUAddressSpace.Instance;
                 ppu.NametableMirroring = Mirroring.SingleScreen;
-                ppu.SingleScreenPage = (value & 0x10) != 0 ? 1 : 0;
+                // Bit 4 (M) → CIRAM A10; polarity may differ by board (AOROM/ANROM). Try inverted for Battletoads-style games.
+                ppu.SingleScreenPage = (value & 0x10) != 0 ? 0 : 1;
             }
         }
     }

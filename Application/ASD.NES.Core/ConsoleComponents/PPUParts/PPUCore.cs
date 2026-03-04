@@ -44,6 +44,7 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
                         scrollY,
                         scanpoint,
                         scanline,
+                        ppuMemory.NametableMirroring,
                         out int nametableIndex,
                         out int mapX,
                         out int mapY);

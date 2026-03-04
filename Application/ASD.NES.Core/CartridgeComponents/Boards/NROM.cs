@@ -27,11 +27,8 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         }
 
         protected override void Write(int address, byte value) {
-            // 0xFFFA-0xFFFF are vectors (NMI, RESET, IRQ) — read-only in cartridge ROM
-            if (address >= 0xFFFA) {
-                return;
-            }
-            throw new InvalidOperationException();
+            // NROM: PRG is read-only; writes to $8000-$FFFF are ignored on hardware (no bus conflict).
+            // 0xFFFA-0xFFFF are vectors; no-op for all PRG writes.
         }
 
         /// <summary> NROM has CHR-ROM; PPU writes to 0x0000-0x1FFF are no-ops on hardware. </summary>

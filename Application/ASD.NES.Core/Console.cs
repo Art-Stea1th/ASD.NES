@@ -33,10 +33,10 @@ namespace ASD.NES.Core {
 
         public void InsertCartridge(Cartridge cartridge) {
             var region = PreferRegion ?? cartridge.Region;
-            Clk.Interval = region == TvRegion.PAL
-                ? TimeSpan.FromMilliseconds(1000.0 / 50.0)
-                : TimeSpan.FromMilliseconds(1000.0 / 60.0988);
+            var profile = TvRegionProfile.For(region);
+            Clk.Interval = profile.FrameInterval;
             Ppu.SetRegion(region);
+            Apu.SetRegion(region);
             Cpu.ClearRAM();
             Ppu.ClearVideoState();
             ColdBoot();
@@ -66,6 +66,12 @@ namespace ASD.NES.Core {
                 var cycles = Cpu.Step();
                 PpuStep(cycles);
                 ApuStep(cycles);
+                // OAM DMA steals 513 CPU cycles (511 after the 2-cycle write); NESDEV
+                if (RegistersPPU.OamDmaCyclePenaltyPending) {
+                    RegistersPPU.OamDmaCyclePenaltyPending = false;
+                    PpuStep(511);
+                    ApuStep(511);
+                }
             }
             // Apu.ResetStepCounter(); // here doesn't solve unsync. apu #8 issue
             return Ppu.ActualFrame;

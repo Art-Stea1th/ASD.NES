@@ -1,8 +1,9 @@
 namespace ASD.NES.Core.ConsoleComponents.PPUParts {
 
     /// <summary>
-    /// NESDEV-style background scroll: (StartX,StartY) + (scroll.X, scroll.Y) + (scanpoint, scanline)
-    /// in 512x480 virtual space; nametable index and map coordinates for fetching the tile.
+    /// NESDEV-style background scroll: (StartX,StartY) + (scroll.X, scroll.Y) + (scanpoint, scanline).
+    /// For H/V/FourScreen: 512x480 virtual space; nametable index and map coords for the tile.
+    /// For SingleScreen (AxROM, etc.): one 256x240 nametable, wrap at 256/240 (no 2x2 quadrants).
     /// </summary>
     internal static class ScrollFormula {
 
@@ -19,12 +20,26 @@ namespace ASD.NES.Core.ConsoleComponents.PPUParts {
             int scrollY,
             int scanpoint,
             int scanline,
+            Mirroring mirroring,
             out int nametableIndex,
             out int mapX,
             out int mapY) {
 
-            var absX = (startX + scrollX + scanpoint) % VirtualWidth;
-            var absY = (startY + scrollY + scanline) % VirtualHeight;
+            if (mirroring == Mirroring.SingleScreen) {
+                // Single-screen: one 256x240 nametable; $2000 nametable bits are ignored by hardware (all 4 point to same RAM).
+                // Use only scroll + (scanpoint, scanline), wrap at 256/240 (NESDEV).
+                var ax = scrollX + scanpoint;
+                var ay = scrollY + scanline;
+                mapX = ((ax % NametableWidthPx) + NametableWidthPx) % NametableWidthPx;
+                mapY = ((ay % NametableHeightPx) + NametableHeightPx) % NametableHeightPx;
+                nametableIndex = 0;
+                return;
+            }
+
+            var vw = VirtualWidth;
+            var vh = VirtualHeight;
+            var absX = (startX + scrollX + scanpoint) % vw;
+            var absY = (startY + scrollY + scanline) % vh;
 
             nametableIndex = 0;
             mapX = absX;

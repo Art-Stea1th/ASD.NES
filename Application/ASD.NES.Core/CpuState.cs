@@ -1,6 +1,6 @@
 namespace ASD.NES.Core {
 
-    /// <summary> CPU register state for tests / debug (6502 spec). </summary>
+    /// <summary> CPU register state for tests (6502 spec). </summary>
     internal struct CpuState {
 
         public byte A;

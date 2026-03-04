@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <DirectedGraph DataVirtualized="True" FilterState="CodeMap_TestAsset,CodeMap_ExternalReference,CodeMap_ProjectReference,CodeSchema_AttributeUse,CodeSchema_ReturnTypeLink,UncategorizedRelationship" GraphDirection="LeftToRight" Layout="Sugiyama" ZoomLevel="-1" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
   <Nodes>
     <Node Id="(@13 @108 @190 Member=A)" Category="CodeSchema_Field" Bounds="12180.3870603567,952.060000000002,50,25.9599999999991" CodeSchemaProperty_IsPublic="True" CodeSchemaProperty_IsStatic="True" DelayedCrossGroupLinksState="Fetched" Label="A" />
@@ -5281,7 +5281,7 @@
       <Condition Expression="Source.HasCategory('Comment')" />
       <Setter Property="Stroke" Value="#FFE5C365" />
     </Style>
-    <Style TargetType="Node" GroupLabel="Cursor Location Changed" ValueLabel="True" Visibility="Hidden">
+    <Style TargetType="Node" GroupLabel="Current Location Changed" ValueLabel="True" Visibility="Hidden">
       <Condition Expression="IsCursorLocation" />
       <Setter Property="IndicatorWest" Value="WestIndicator" />
     </Style>

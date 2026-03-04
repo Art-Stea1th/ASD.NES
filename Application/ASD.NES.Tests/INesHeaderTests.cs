@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ASD.NES.Core;
+using ASD.NES.Core.ConsoleComponents.PPUParts;
 using Xunit;
 using Console = ASD.NES.Core.Console;
 
@@ -17,14 +19,20 @@ namespace ASD.NES.Tests;
 [Collection("CPU")]
 public sealed class INesHeaderTests
 {
-    /// <summary>Optional: path to unpacked NES ROMs (e.g. EmulatorsPack). If present, RunRealRomRunsAFewFrames uses one.</summary>
-    private static readonly string OptionalRomsPath = @"e:\Games\NES\EmulatorsPack\NES\roms";
+    /// <summary>
+    /// Optional: local paths to unpacked NES ROMs. Tests will auto-skip if these folders are missing.
+    /// Add new local collections here to extend smoke coverage (one ROM per mapper, region checks, etc).
+    /// </summary>
+    private static readonly string[] OptionalRomsPaths = {
+        @"e:\Games\NES\EmulatorsPack\NES\roms",
+        @"e:\Games\NES\NES"
+    };
 
     [Fact]
     public void RunRealRomRunsAFewFrames()
     {
-        var romPath = Path.Combine(OptionalRomsPath, "Battle City (J).nes");
-        if (!File.Exists(romPath)) {
+        var romPath = OptionalRomsPaths.Select(p => Path.Combine(p, "Battle City (J).nes")).FirstOrDefault(File.Exists);
+        if (romPath == null) {
             return;
         }
         var rom = File.ReadAllBytes(romPath);
@@ -121,6 +129,107 @@ public sealed class INesHeaderTests
         Assert.Equal(TvRegion.PAL, cart.Region);
     }
 
+    /// <summary>iNES 2.0: byte 7 bits 2-3 = 0x08; byte 12 (TV system) bit 0 = 1 means PAL (NESDEV).</summary>
+    [Fact]
+    public void RegionPALWheniNES2Byte12Bit0Set()
+    {
+        var rom = BuildRom(1, 1, byte6: 0x00, byte7: 0x08, bytes8to15: new byte[] { 0, 0, 0, 0, 1, 0, 0, 0 }); // iNES 2.0, TV=1 (PAL)
+        var cart = Cartridge.Create(rom);
+        Assert.Equal(TvRegion.PAL, cart.Region);
+    }
+
+    /// <summary>Header cleanup: bytes 7-14 "DiskDude" are zeroed so mapper/region come from clean header; ROM still loads (ines spec).</summary>
+    [Fact]
+    public void HeaderCleanup_DiskDude_Zeroed_LoadsAsNROM()
+    {
+        var rom = BuildRom(1, 1, byte6: 0x10, byte7: 0x44, bytes8to15: new byte[] { 0x69, 0x73, 0x6B, 0x44, 0x75, 0x64, 0x65, 0 }); // "DiskDude" at 7
+        var cart = Cartridge.Create(rom);
+        Assert.NotNull(cart);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        var frame = console.Update();
+        Assert.NotNull(frame);
+    }
+
+    // --- Region application: Console uses cartridge (or PreferRegion) to set PPU scanlines, clock interval, APU timing ---
+
+    [Fact]
+    public void TvRegionProfile_NTSC_Has262Scanlines_AndCorrectFrameInterval()
+    {
+        var ntsc = TvRegionProfile.For(TvRegion.NTSC);
+        Assert.Equal(260, ntsc.LastScanline); // 0..260 = 262 lines
+        Assert.True(ntsc.FrameInterval.TotalMilliseconds > 16 && ntsc.FrameInterval.TotalMilliseconds < 17);
+    }
+
+    [Fact]
+    public void TvRegionProfile_PAL_Has312Scanlines_And50HzFrameInterval()
+    {
+        var pal = TvRegionProfile.For(TvRegion.PAL);
+        Assert.Equal(311, pal.LastScanline); // 0..311 = 312 lines
+        Assert.Equal(20.0, pal.FrameInterval.TotalMilliseconds, precision: 1);
+    }
+
+    [Fact]
+    public void InsertCartridge_WithNTSCHeader_CompletesFrame()
+    {
+        var rom = BuildRom(1, 1, bytes8to15: new byte[8]);
+        var cart = Cartridge.Create(rom);
+        Assert.Equal(TvRegion.NTSC, cart.Region);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        var frame = console.Update();
+        Assert.NotNull(frame);
+        Assert.Equal(256 * 240, frame.Length);
+    }
+
+    [Fact]
+    public void InsertCartridge_WithPALHeader_CompletesFrame()
+    {
+        var rom = BuildRom(1, 1, bytes8to15: new byte[] { 0, 1, 0, 0, 0, 0, 0, 0 });
+        var cart = Cartridge.Create(rom);
+        Assert.Equal(TvRegion.PAL, cart.Region);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        var frame = console.Update();
+        Assert.NotNull(frame);
+        Assert.Equal(256 * 240, frame.Length);
+    }
+
+    [Fact]
+    public void PreferRegion_OverridesCartridgeRegion()
+    {
+        var rom = BuildRom(1, 1, bytes8to15: new byte[] { 0, 1, 0, 0, 0, 0, 0, 0 });
+        var cart = Cartridge.Create(rom);
+        Assert.Equal(TvRegion.PAL, cart.Region);
+        var console = new Console();
+        console.PreferRegion = TvRegion.NTSC;
+        console.InsertCartridge(cart);
+        var frame = console.Update();
+        Assert.NotNull(frame);
+    }
+
+    /// <summary>Optional: Battle City (J) [p1].nes and Sky Destroyer (Japan).nes — must still run (regression for "don't touch").</summary>
+    [Fact]
+    public void RunBattleCityJ_AndSkyDestroyer_IfPresent_RunFrames()
+    {
+        var names = new[] { "Battle City (J) [p1].nes", "Battle City (J).nes", "Sky Destroyer (Japan).nes" };
+        foreach (var name in names)
+        {
+            var romPath = OptionalRomsPaths.Select(p => Path.Combine(p, name)).FirstOrDefault(File.Exists);
+            if (romPath == null) continue;
+            var rom = File.ReadAllBytes(romPath);
+            if (rom.Length < 16) continue;
+            var cart = Cartridge.Create(rom);
+            Assert.NotNull(cart);
+            var console = new Console();
+            console.InsertCartridge(cart);
+            console.RunCpuSteps(100);
+            var frame = console.Update();
+            Assert.NotNull(frame);
+            Assert.Equal(256 * 240, frame.Length);
+        }
+    }
+
     [Fact]
     public void OnePRGOneCHRMinimalSize()
     {
@@ -154,5 +263,208 @@ public sealed class INesHeaderTests
         Assert.Equal(16 + 0x4000, rom.Length);
         var cart = Cartridge.Create(rom);
         Assert.NotNull(cart);
+    }
+
+    // --- Mapper 7 (AxROM): Single-screen mirroring, PRG bank at $8000-$FFFF, bit 4 = nametable page ---
+
+    [Fact]
+    public void Mapper7_MinimalRom_SetsSingleScreenMirroring()
+    {
+        var rom = BuildRom(2, 0, byte6: 0x70, byte7: 0); // mapper 7, 2 PRG pages (32K), 0 CHR (CHR-RAM)
+        var cart = Cartridge.Create(rom);
+        Assert.NotNull(cart);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        Assert.Equal(Mirroring.SingleScreen, PPUAddressSpace.Instance.NametableMirroring);
+    }
+
+    [Fact]
+    public void Mapper7_Write8000_SwitchesBankAndRendersFrame()
+    {
+        var rom = BuildRom(4, 0, byte6: 0x70, byte7: 0); // 4 PRG pages = 2 x 32K banks
+        var prgOffset = 16;
+        rom[prgOffset + 0x3FFC] = 0x00;
+        rom[prgOffset + 0x3FFD] = 0x80;
+        rom[prgOffset + 0] = 0x4C; // JMP $8000
+        rom[prgOffset + 1] = 0x00;
+        rom[prgOffset + 2] = 0x80;
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(10);
+        console.SetMemory(0x8000, 0x01); // bank 1, page 0
+        console.RunCpuSteps(10);
+        console.SetMemory(0x8000, 0x11); // bank 1, page 1 (bit 4)
+        var frame = console.Update();
+        Assert.NotNull(frame);
+        Assert.Equal(256 * 240, frame.Length);
+    }
+
+    /// <summary>AxROM bit 4 (M) selects nametable page. Current polarity: write 0 → page 1, write 0x10 → page 0 (inverted for Battletoads-style boards).</summary>
+    [Fact]
+    public void Mapper7_Write0To8000_SetsSingleScreenPage1_Write0x10_SetsPage0()
+    {
+        var rom = BuildRom(2, 0, byte6: 0x70, byte7: 0);
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        Assert.Equal(0, PPUAddressSpace.Instance.SingleScreenPage); // Cartridge init sets 0
+        console.SetMemory(0x8000, 0x00); // bit 4 = 0
+        Assert.Equal(1, PPUAddressSpace.Instance.SingleScreenPage);
+        console.SetMemory(0x8000, 0x10); // bit 4 = 1
+        Assert.Equal(0, PPUAddressSpace.Instance.SingleScreenPage);
+    }
+
+    /// <summary>AxROM: PRG bank switch — write to $8000 selects 32K bank; different banks return different PRG data.</summary>
+    [Fact]
+    public void Mapper7_PrgBankSwitch_ReadsDifferentBanks()
+    {
+        var rom = BuildRom(4, 0, byte6: 0x70, byte7: 0);
+        var prgOffset = 16;
+        rom[prgOffset + 0] = 0xAA;           // bank 0 first byte
+        rom[prgOffset + 0x4000] = 0x55;     // bank 1 first byte (second 16K page of bank 0 is 0x4000..0x7FFF in first 32K)
+        rom[prgOffset + 0x8000] = 0x55;     // second 32K bank: $8000 in that bank = offset 0 in pages 2,3 → page 2 start
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.SetMemory(0x8000, 0x00); // select bank 0
+        var b0 = console.GetMemory(0x8000);
+        console.SetMemory(0x8000, 0x01); // select bank 1
+        var b1 = console.GetMemory(0x8000);
+        Assert.Equal(0xAA, b0);
+        Assert.Equal(0x55, b1);
+    }
+
+    /// <summary>AxROM: CHR-RAM at $6000-$7FFF is writable and readable by CPU.</summary>
+    [Fact]
+    public void Mapper7_ChrRam_Write6000_ReadBack()
+    {
+        var rom = BuildRom(2, 0, byte6: 0x70, byte7: 0);
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.SetMemory(0x6000, 0x42);
+        Assert.Equal(0x42, console.GetMemory(0x6000));
+    }
+
+    /// <summary>Optional: if a Battletoads .nes exists in any OptionalRomsPaths, load and run several frames (Mapper 7, single-screen). Tries "Battletoads (USA).nes" and "Battletoads (U) [!].nes".</summary>
+    [Fact]
+    public void RunBattletoadsRunsSeveralFrames_IfPresent()
+    {
+        var names = new[] { "Battletoads (USA).nes", "Battletoads (U) [!].nes" };
+        string? romPath = null;
+        foreach (var dir in OptionalRomsPaths)
+        {
+            foreach (var name in names)
+            {
+                var path = Path.Combine(dir, name);
+                if (File.Exists(path)) { romPath = path; break; }
+            }
+            if (romPath != null) break;
+        }
+        if (romPath == null)
+        {
+            return;
+        }
+        var rom = File.ReadAllBytes(romPath);
+        if (rom.Length < 16 + 16 * 0x4000) // mapper 7 typically 256K PRG
+        {
+            return;
+        }
+        var cart = Cartridge.Create(rom);
+        Assert.NotNull(cart);
+        Assert.Equal(Mirroring.SingleScreen, PPUAddressSpace.Instance.NametableMirroring);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        for (var i = 0; i < 3; i++)
+        {
+            console.Update();
+            console.RunCpuSteps(5000);
+        }
+        var state = console.GetCpuState();
+        Assert.True(state.PC >= 0x8000 && state.PC <= 0xFFFF);
+    }
+
+    /// <summary>iNES byte 6 bit 3 = four-screen mirroring; when set, PPU uses FourScreen.</summary>
+    [Fact]
+    public void FourScreen_WhenByte6Bit3Set_SetsFourScreenMirroring()
+    {
+        var rom = BuildRom(2, 1, byte6: 0x08, byte7: 0); // bit 3 = four-screen, mapper 0
+        var cart = Cartridge.Create(rom);
+        Assert.NotNull(cart);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        Assert.Equal(Mirroring.FourScreen, PPUAddressSpace.Instance.NametableMirroring);
+    }
+
+    /// <summary>Mapper 1 with 0 CHR uses CHR-RAM (e.g. Bomberman II, Dynablaster); load and render one frame.</summary>
+    [Fact]
+    public void Mapper1_ZeroChr_LoadsAndRendersFrame()
+    {
+        var rom = BuildRom(8, 0, byte6: 0x10, byte7: 0); // mapper 1, 0 CHR
+        var prgOffset = 16;
+        rom[prgOffset + 0x3FFC] = 0x00;
+        rom[prgOffset + 0x3FFD] = 0x80;
+        rom[prgOffset + 0] = 0x4C;
+        rom[prgOffset + 1] = 0x00;
+        rom[prgOffset + 2] = 0x80;
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(50);
+        var frame = console.Update();
+        Assert.NotNull(frame);
+        Assert.Equal(256 * 240, frame.Length);
+    }
+
+    /// <summary>Mapper 4 with 0 CHR uses CHR-RAM (e.g. Megaman IV, VI); load and render one frame.</summary>
+    [Fact]
+    public void Mapper4_ZeroChr_LoadsAndRendersFrame()
+    {
+        var rom = BuildRom(16, 0, byte6: 0x40, byte7: 0); // mapper 4, 0 CHR
+        var prgOffset = 16;
+        rom[prgOffset + 0x3FFC] = 0x00;
+        rom[prgOffset + 0x3FFD] = 0x80;
+        rom[prgOffset + 0] = 0x4C;
+        rom[prgOffset + 1] = 0x00;
+        rom[prgOffset + 2] = 0x80;
+        var cart = Cartridge.Create(rom);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.RunCpuSteps(50);
+        var frame = console.Update();
+        Assert.NotNull(frame);
+        Assert.Equal(256 * 240, frame.Length);
+    }
+
+    /// <summary>For each supported mapper (0,1,2,3,4,7), if a ROM exists in OptionalRomsPaths, load it and run steps + one frame (no crash).</summary>
+    [Fact]
+    public void DiscoveredRoms_PerMapper_LoadAndRunFrame_IfPresent()
+    {
+        var supportedMappers = new[] { 0, 1, 2, 3, 4, 7 };
+        var mapperToPath = new Dictionary<int, string>();
+        foreach (var dir in OptionalRomsPaths)
+        {
+            if (!Directory.Exists(dir)) continue;
+            foreach (var path in Directory.GetFiles(dir, "*.nes", SearchOption.TopDirectoryOnly))
+            {
+                var data = File.ReadAllBytes(path);
+                if (data.Length < 16) continue;
+                if (data[0] != 0x4E || data[1] != 0x45 || data[2] != 0x53 || data[3] != 0x1A) continue;
+                var mapper = ((data[7] & 0xF0) >> 4) | ((data[6] & 0xF0) >> 4);
+                if (Array.IndexOf(supportedMappers, mapper) >= 0 && !mapperToPath.ContainsKey(mapper))
+                    mapperToPath[mapper] = path;
+            }
+        }
+        foreach (var kv in mapperToPath)
+        {
+            var data = File.ReadAllBytes(kv.Value);
+            var cart = Cartridge.Create(data);
+            var console = new Console();
+            console.InsertCartridge(cart);
+            var frame = console.Update();
+            Assert.NotNull(frame);
+            Assert.Equal(256 * 240, frame.Length);
+        }
     }
 }

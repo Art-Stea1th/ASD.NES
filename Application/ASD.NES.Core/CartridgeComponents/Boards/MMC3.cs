@@ -13,6 +13,8 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         private byte bankSelect;
         private readonly byte[] regs = new byte[8];
         private readonly byte[] prgRam = new byte[0x2000]; // 8 KB at $6000-$7FFF
+        /// <summary> 8 KB CHR-RAM when iNES header reports 0 CHR banks (e.g. Megaman IV, VI). </summary>
+        private readonly byte[] chrRam = new byte[0x2000];
         private bool prgRamEnabled;
         private bool prgRamWriteProtected;
         private int numPrg8K;
@@ -87,7 +89,7 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
 
         public override void SetCHR(IReadOnlyList<byte[]> chr) {
             base.SetCHR(chr);
-            numChr1K = chr == null ? 0 : Math.Max(1, chr.Count * 8);
+            numChr1K = (chr == null || chr.Count == 0) ? 0 : Math.Max(1, chr.Count * 8);
         }
 
         private byte GetPrgByte(int address) {
@@ -122,7 +124,7 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
 
         public override byte ReadChr(int ppuAddress) {
             if (chr == null || chr.Count == 0) {
-                return 0;
+                return chrRam[ppuAddress & 0x1FFF];
             }
             var offset = ppuAddress & 0x1FFF;
             bool chrMode = (bankSelect & 0x80) != 0;
@@ -144,6 +146,10 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
             return chunk[(bank1K % 8) * 0x400 + off1K];
         }
 
-        public override void WriteChr(int ppuAddress, byte value) { }
+        public override void WriteChr(int ppuAddress, byte value) {
+            if (chr == null || chr.Count == 0) {
+                chrRam[ppuAddress & 0x1FFF] = value;
+            }
+        }
     }
 }

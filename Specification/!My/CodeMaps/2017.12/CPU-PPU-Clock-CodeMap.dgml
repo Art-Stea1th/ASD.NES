@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <DirectedGraph DataVirtualized="True" GraphDirection="TopToBottom" Layout="Sugiyama" ZoomLevel="1" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
   <Nodes>
     <Node Id="(@1 @3 @28 Member=NextFrameReady)" Category="CodeSchema_Event" Bounds="1578.8951214455,2296.02742257113,144.163333333335,25" CodeSchemaProperty_IsPublic="True" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="Fetched" Group="Collapsed" Label="NextFrameReady" />
@@ -1176,7 +1176,7 @@
       <Condition Expression="Source.HasCategory('Comment')" />
       <Setter Property="Stroke" Value="#FFE5C365" />
     </Style>
-    <Style TargetType="Node" GroupLabel="Cursor Location Changed" ValueLabel="True" Visibility="Hidden">
+    <Style TargetType="Node" GroupLabel="Current Location Changed" ValueLabel="True" Visibility="Hidden">
       <Condition Expression="IsCursorLocation" />
       <Setter Property="IndicatorWest" Value="WestIndicator" />
     </Style>

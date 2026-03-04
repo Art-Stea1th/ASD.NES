@@ -294,9 +294,6 @@ __pycache__/
 /Application/ASD.NES.Core/ConsoleComponents/CPUParts/CPUCore-REPORT.md
 *.md
 
-# Cursor IDE rules (keep locally, do not commit)
-.cursor/
-
 # Local only: commit messages, debug logs, user settings (never commit)
 COMMIT_MSG.txt
 COMMIT_MSG*
@@ -304,3 +301,6 @@ COMMIT_MSG*
 *_ppu_scanline_log.txt
 ASD_NES_debug_frames.txt
 ASD.NES.Settings.xml
+
+# Local reference notes (paths, tool names) — do not commit
+Specification/Other/ReferenceEmulators-EmuFolder.txt

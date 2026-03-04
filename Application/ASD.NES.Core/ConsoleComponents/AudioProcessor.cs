@@ -17,23 +17,17 @@ namespace ASD.NES.Core.ConsoleComponents {
         private NoiseChannel noise;
         private DeltaModulationChannel modulation;
 
-        // NTSC: NESDEV APU Frame Counter 4-step mode — quarter/half frame at 3728, 7456, 11185, 14914 CPU cycles
-        private const int FrameCounterCycle = 14914;
-        private const int Step1 = 3728;
-        private const int Step2 = 7456;
-        private const int Step3 = 11185;
-
+        private TvRegionProfileData _profile;
         private int frameCounterAccumulator;
         private int frameCounterStep; // 0..3, which step we've last completed
 
-        private const int clockSpeed = 1789773;                         // NTSC 1.789773 MHz
         private const int sampleRate = 48000;                           // 48 kHz
-        private const double cyclesPerSample = (double)clockSpeed / sampleRate; // ~37.306 CPU cycles per sample
+        private double cyclesPerSample;                                 // depends on region CPU clock
         private double sampleCycleAccumulator;
 
-        private const int samplesPerFrame = 800;                        // ~48kHz/60Hz, one frame worth
-        private int samplesBeforeFirstPlay = samplesPerFrame;           // warmup: one frame before first PlayAudio
-        private int samplesSincePlay;                                    // invoke PlayAudio every frame worth
+        private int samplesPerFrame;                                    // from profile (NTSC ~800, PAL 960)
+        private int samplesBeforeFirstPlay;
+        private int samplesSincePlay;
 
         public IAudioBuffer Buffer { get; private set; }
         public event Action PlayAudio;
@@ -41,43 +35,61 @@ namespace ASD.NES.Core.ConsoleComponents {
         public AudioProcessor() {
             r = cpuMemory.RegistersAPU;
             Buffer = new AudioBuffer();
+            _profile = TvRegionProfile.Ntsc;
+            cyclesPerSample = (double)_profile.CpuClockHz / sampleRate;
+            samplesPerFrame = _profile.SamplesPerFrame;
+            samplesBeforeFirstPlay = samplesPerFrame;
+            InitializeChannels();
+        }
+
+        /// <summary> Set TV region (NTSC/PAL). Uses TvRegionProfile for frame counter and CPU clock; re-inits channels. </summary>
+        internal void SetRegion(TvRegion region) {
+            _profile = TvRegionProfile.For(region);
+            cyclesPerSample = (double)_profile.CpuClockHz / sampleRate;
+            samplesPerFrame = _profile.SamplesPerFrame;
+            samplesBeforeFirstPlay = samplesPerFrame;
+            frameCounterAccumulator = 0;
+            frameCounterStep = 0;
+            sampleCycleAccumulator = 0;
+            samplesSincePlay = 0;
             InitializeChannels();
         }
 
         private void InitializeChannels() {
-            pulseA = new PulseChannel(r.PulseA, clockSpeed, sampleRate);
-            pulseB = new PulseChannel(r.PulseB, clockSpeed, sampleRate);
-            triangle = new TriangleChannel(r.Triangle, clockSpeed, sampleRate);
-            noise = new NoiseChannel(r.Noise, clockSpeed, sampleRate);
-            modulation = new DeltaModulationChannel(r.Modulation, clockSpeed, sampleRate);
+            var clock = _profile.CpuClockHz;
+            pulseA = new PulseChannel(r.PulseA, clock, sampleRate);
+            pulseB = new PulseChannel(r.PulseB, clock, sampleRate);
+            triangle = new TriangleChannel(r.Triangle, clock, sampleRate);
+            noise = new NoiseChannel(r.Noise, clock, sampleRate);
+            modulation = new DeltaModulationChannel(r.Modulation, clock, sampleRate);
         }
 
-        /// <summary> Drive APU by CPU cycles: frame counter at 3728,7456,11185,14914 (NTSC 4-step); sample output at 48 kHz. </summary>
+        /// <summary> Drive APU by CPU cycles: frame counter from TvRegionProfile (NTSC/PAL); sample output at 48 kHz. </summary>
         /// <see href="https://www.nesdev.org/wiki/APU_Frame_Counter">NESDEV APU Frame Counter</see>
         /// <see href="https://www.nesdev.org/wiki/Cycle_reference_chart">NESDEV Cycle reference</see>
         public void StepCpuCycles(int cpuCycles) {
 
             frameCounterAccumulator += cpuCycles;
             while (true) {
-                if (frameCounterAccumulator >= Step1 && frameCounterStep < 1) {
+                if (frameCounterAccumulator >= _profile.ApuFrameStep1 && frameCounterStep < 1) {
                     APUFrameTick(quarterOnly: true);
                     frameCounterStep = 1;
                     continue;
                 }
-                if (frameCounterAccumulator >= Step2 && frameCounterStep < 2) {
+                if (frameCounterAccumulator >= _profile.ApuFrameStep2 && frameCounterStep < 2) {
                     APUFrameTick(quarterOnly: false);
                     frameCounterStep = 2;
                     continue;
                 }
-                if (frameCounterAccumulator >= Step3 && frameCounterStep < 3) {
+                if (frameCounterAccumulator >= _profile.ApuFrameStep3 && frameCounterStep < 3) {
                     APUFrameTick(quarterOnly: true);
                     frameCounterStep = 3;
                     continue;
                 }
-                if (frameCounterAccumulator >= FrameCounterCycle) {
+                if (frameCounterAccumulator >= _profile.ApuFrameCycle) {
                     APUFrameTick(quarterOnly: false);
                     frameCounterStep = 0;
-                    frameCounterAccumulator -= FrameCounterCycle;
+                    frameCounterAccumulator -= _profile.ApuFrameCycle;
                     continue;
                 }
                 break;
