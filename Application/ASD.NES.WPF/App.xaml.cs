@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace ASD.NES.WPF {
 
@@ -16,6 +17,14 @@ namespace ASD.NES.WPF {
                 DisposableViewModel = new ShellViewModel();
                 MainWindow = new ShellView { DataContext = DisposableViewModel };
                 MainWindow.Show();
+
+                var nesPath = Core.StartupArgsHelper.GetFirstNesPath(Environment.GetCommandLineArgs());
+                if (!string.IsNullOrEmpty(nesPath)) {
+                    Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, (Action)(() => {
+                        if (MainWindow?.DataContext is ShellViewModel vm)
+                            vm.LoadRomFromPath(nesPath);
+                    }));
+                }
             };
 
             Exit += (sender, e) => DisposableViewModel?.Dispose();

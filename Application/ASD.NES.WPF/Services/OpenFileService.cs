@@ -10,6 +10,21 @@ namespace ASD.NES.WPF.Services {
 
     internal static class OpenFileService {
 
+        /// <summary> Load cartridge from path without dialog (e.g. startup with .nes path). Returns (cartridge, filePath) or (null, null) on error. </summary>
+        public static (Cartridge cartridge, string filePath) LoadCartridgeFromPath(string path) {
+            if (string.IsNullOrWhiteSpace(path) || !path.EndsWith(".nes", StringComparison.OrdinalIgnoreCase)) {
+                return (null, null);
+            }
+            try {
+                if (!System.IO.File.Exists(path))
+                    return (null, null);
+                var data = File.ReadAllBytes(path);
+                return (Cartridge.Create(data), path);
+            } catch {
+                return (null, null);
+            }
+        }
+
         /// <summary> Returns (cartridge, filePath) or (null, null) on cancel/error. File path is used to detect PAL from "(E)" etc. </summary>
         public static (Cartridge cartridge, string filePath) OpenCartridgeFile() {
             var openFileDialog = new OpenFileDialog() {

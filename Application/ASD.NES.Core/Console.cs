@@ -115,6 +115,9 @@ namespace ASD.NES.Core {
         /// <summary> For tests: write one byte to CPU address space (e.g. PPU/APU registers at 0x2000–0x4017). </summary>
         internal void SetMemory(ushort address, byte value) => Cpu.AddressSpace[address] = value;
 
+        /// <summary> For tests: set program counter (e.g. nestest.nes start at $C000 per NESDEV). </summary>
+        internal void SetPC(ushort pc) => Cpu.SetPC(pc);
+
         /// <summary> For tests: set PPU nametable mirroring without loading a cartridge. </summary>
         internal void SetPpuMirroring(Mirroring m) => PPUAddressSpace.Instance.NametableMirroring = m;
 

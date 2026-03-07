@@ -24,9 +24,28 @@ public sealed class INesHeaderTests
     /// Add new local collections here to extend smoke coverage (one ROM per mapper, region checks, etc).
     /// </summary>
     private static readonly string[] OptionalRomsPaths = {
+        Path.Combine(Path.GetDirectoryName(typeof(INesHeaderTests).Assembly.Location) ?? ".", "..", "..", "..", "..", "..", ".."), // bin/Debug/net8.0 -> ASD (parent of ASD.NES)
+        @"D:\Art\Documents\!My\Projects\! Programming\ASD",
         @"e:\Games\NES\EmulatorsPack\NES\roms",
         @"e:\Games\NES\NES"
     };
+
+    private static string? FindRomInPaths(params string[] names)
+    {
+        foreach (var baseDir in OptionalRomsPaths)
+        {
+            var dir = baseDir;
+            if (!Path.IsPathRooted(baseDir) && typeof(INesHeaderTests).Assembly.Location is string loc)
+                dir = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(loc) ?? ".", baseDir));
+            if (!Directory.Exists(dir)) continue;
+            foreach (var name in names)
+            {
+                var path = Path.Combine(dir, name);
+                if (File.Exists(path)) return path;
+            }
+        }
+        return null;
+    }
 
     [Fact]
     public void RunRealRomRunsAFewFrames()
@@ -47,6 +66,64 @@ public sealed class INesHeaderTests
         console.RunCpuSteps(100);
         var state = console.GetCpuState();
         Assert.True(state.PC >= 0x8000 && state.PC <= 0xFFFF);
+    }
+
+    /// <summary>Optional: nestest.nes per NESDEV — start at $C000, run many steps, check $02/$03 for result (0x00 0x00 = pass).</summary>
+    [Fact]
+    public void Nestest_IfPresent_RunFromC000_Check02_03()
+    {
+        var romPath = FindRomInPaths("nestest.nes");
+        if (romPath == null) return;
+        var rom = File.ReadAllBytes(romPath);
+        if (rom.Length < 16 + 0x4000) return;
+        var cart = Cartridge.Create(rom);
+        Assert.NotNull(cart);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        console.SetPC(0xC000);
+        console.RunCpuSteps(150_000);
+        var resultLo = console.GetMemory(0x02);
+        var resultHi = console.GetMemory(0x03);
+        Assert.True(resultLo == 0x00 && resultHi == 0x00, $"nestest result $02=0x{resultLo:X2} $03=0x{resultHi:X2} (expected 0x00 0x00 = pass)");
+    }
+
+    /// <summary>Optional: blargg CPU test ROMs write result to $6000 (0x80=done); string at $6004. NROM must provide writable $6000-$7FFF.</summary>
+    [Fact]
+    public void BlarggCpuTest_IfPresent_RunThenRead6000()
+    {
+        var romPath = FindRomInPaths("instr_test.nes", "instr_test-v5.nes", "cpu_exec_space.nes", "cpu_dummy_reads.nes", "instr_misc.nes");
+        if (romPath == null) return;
+        var rom = File.ReadAllBytes(romPath);
+        if (rom.Length < 16 + 0x4000) return;
+        var cart = Cartridge.Create(rom);
+        Assert.NotNull(cart);
+        var console = new Console();
+        console.InsertCartridge(cart);
+        var maxSteps = 5_000_000;
+        var step = 0;
+        while (step < maxSteps)
+        {
+            console.RunCpuSteps(10_000);
+            step += 10_000;
+            var status = console.GetMemory(0x6000);
+            if (status == 0x80)
+            {
+                var msg = System.Text.Encoding.ASCII.GetString(ReadBytes(console, 0x6004, 64)).TrimEnd('\0');
+                Assert.True(msg.StartsWith("Pass", StringComparison.OrdinalIgnoreCase), $"blargg test failed: {msg}");
+                return;
+            }
+            if (status != 0 && status != 0x80) break;
+        }
+        var final = console.GetMemory(0x6000);
+        var finalMsg = System.Text.Encoding.ASCII.GetString(ReadBytes(console, 0x6004, 128)).TrimEnd('\0');
+        Assert.True(final == 0x80 && !string.IsNullOrEmpty(finalMsg), $"blargg test did not finish: $6000=0x{final:X2}, msg: {finalMsg}");
+    }
+
+    private static byte[] ReadBytes(Console console, int start, int count)
+    {
+        var b = new byte[count];
+        for (var i = 0; i < count; i++) b[i] = console.GetMemory((ushort)(start + i));
+        return b;
     }
 
     private static byte[] BuildRom(
@@ -95,6 +172,32 @@ public sealed class INesHeaderTests
         var rom = BuildRom(1, 1);
         rom[0] = 0x00;
         Assert.Throws<InvalidDataException>(() => Cartridge.Create(rom));
+    }
+
+    [Fact]
+    public void Cartridge_CreateFromFileBytes_LoadsValidRom()
+    {
+        var rom = BuildRom(1, 1);
+        var path = Path.Combine(Path.GetTempPath(), "ASD.NES.test." + Guid.NewGuid().ToString("N") + ".nes");
+        try
+        {
+            File.WriteAllBytes(path, rom);
+            var data = File.ReadAllBytes(path);
+            var cart = Cartridge.Create(data);
+            Assert.NotNull(cart);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Cartridge_LoadFromMissingFile_Throws()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "ASD.NES.nonexistent." + Guid.NewGuid().ToString("N") + ".nes");
+        Assert.False(File.Exists(path));
+        Assert.Throws<FileNotFoundException>(() => File.ReadAllBytes(path));
     }
 
     [Fact]

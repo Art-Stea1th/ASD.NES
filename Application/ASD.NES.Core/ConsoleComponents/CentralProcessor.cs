@@ -91,6 +91,9 @@ namespace ASD.NES.Core.ConsoleComponents {
         internal CpuState GetState() =>
             new CpuState { A = registers.A, X = registers.X, Y = registers.Y, SP = registers.SP, PC = registers.PC, P = (byte)registers.PS };
 
+        /// <summary> For tests: set PC (e.g. nestest.nes start at $C000 per NESDEV). </summary>
+        internal void SetPC(ushort pc) => registers.PC = pc;
+
         #region Helpers
         public ushort ReadX2(ushort address) {
             return BitOperations.MakeInt16(memory[address + 1], memory[address]);

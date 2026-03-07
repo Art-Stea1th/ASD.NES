@@ -84,29 +84,38 @@ namespace ASD.NES.WPF.ViewModels {
 
         private void OpenFileCommandExecute() {
             var (loadedCartridge, filePath) = OpenFileService.OpenCartridgeFile();
-            if (loadedCartridge != null) {
-                cartridge = loadedCartridge;
-                var oldConsole = console;
-                oldConsole.PowerOff();
-                console.NextFrameReady -= UpdateScreen;
-                console.PlayAudio -= audioDevice.Play;
-                oldConsole.Dispose();
+            if (loadedCartridge != null)
+                ApplyLoadedCartridge(loadedCartridge, filePath);
+        }
 
-                console = new Console();
-                ConfigureAudioDevice();
-                ConfigureControllers();
-                console.NextFrameReady += UpdateScreen;
-                console.PlayAudio += audioDevice.Play;
-                // Prefer PAL for European dumps "(E)" that often lack the PAL flag in iNES header
-                var fileName = filePath != null ? Path.GetFileName(filePath) : "";
-                console.PreferRegion = (fileName.IndexOf("(E)", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                        fileName.IndexOf("(Europe)", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                        fileName.IndexOf("(PAL)", StringComparison.OrdinalIgnoreCase) >= 0)
-                    ? TvRegion.PAL
-                    : (TvRegion?)null;
-                console.InsertCartridge(cartridge);
-                (Reset as RelayCommand).Execute();
-            }
+        /// <summary> Load and run ROM from path (e.g. when app is started by double‑clicking a .nes file). No dialog. </summary>
+        internal void LoadRomFromPath(string path) {
+            var (loadedCartridge, filePath) = OpenFileService.LoadCartridgeFromPath(path);
+            if (loadedCartridge != null)
+                ApplyLoadedCartridge(loadedCartridge, filePath ?? path);
+        }
+
+        private void ApplyLoadedCartridge(Cartridge loadedCartridge, string filePath) {
+            cartridge = loadedCartridge;
+            var oldConsole = console;
+            oldConsole.PowerOff();
+            console.NextFrameReady -= UpdateScreen;
+            console.PlayAudio -= audioDevice.Play;
+            oldConsole.Dispose();
+
+            console = new Console();
+            ConfigureAudioDevice();
+            ConfigureControllers();
+            console.NextFrameReady += UpdateScreen;
+            console.PlayAudio += audioDevice.Play;
+            var fileName = filePath != null ? Path.GetFileName(filePath) : "";
+            console.PreferRegion = (fileName.IndexOf("(E)", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    fileName.IndexOf("(Europe)", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    fileName.IndexOf("(PAL)", StringComparison.OrdinalIgnoreCase) >= 0)
+                ? TvRegion.PAL
+                : (TvRegion?)null;
+            console.InsertCartridge(cartridge);
+            (Reset as RelayCommand).Execute();
         }
 
         private void UpdateScreen(uint[] data) {
