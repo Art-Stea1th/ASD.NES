@@ -2,7 +2,9 @@ using System;
 
 namespace ASD.NES.Core.CartridgeComponents.Boards {
 
-    /// <summary> UxROM (UNROM/UOROM): PRG bank switch at $8000-$BFFF, fixed last bank at $C000-$FFFF. CHR: 8 KB ROM or 8 KB RAM when header CHR count = 0. </summary>
+    using Core;
+
+    /// <summary> UxROM (UNROM/UOROM): PRG bank switch at $8000-$BFFF, fixed last bank at $C000-$FFFF. CHR: 8 KB ROM or 8 KB RAM when header CHR count = 0. NESDEV: optional bus conflict (latch = value AND PRG byte). </summary>
     /// <see href="https://www.nesdev.org/wiki/UxROM">NESDEV UxROM</see>
     internal abstract class UxROM : Board {
 
@@ -46,8 +48,22 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
             }
             if (address >= 0x8000 && address < 0x10000) {
                 var maxBanks = prg.Count;
-                prgBank = maxBanks > 1 ? (value & 0xFF) % maxBanks : 0;
+                var effective = value & 0xFF;
+                if (EmulationOptions.UxROMBusConflict && maxBanks > 0) {
+                    var prgByte = GetPrgByteAt(address);
+                    effective = (value & prgByte) & 0xFF;
+                }
+                prgBank = maxBanks > 1 ? effective % maxBanks : 0;
             }
+        }
+
+        private byte GetPrgByteAt(int address) {
+            if (prg == null || prg.Count == 0) return 0xFF;
+            if (address < 0xC000) {
+                var b = prgBank >= prg.Count ? prg.Count - 1 : prgBank;
+                return prg[b][address - 0x8000];
+            }
+            return prg[prg.Count - 1][address - 0xC000];
         }
     }
 }

@@ -22,6 +22,8 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
         private int irqCounter;
         private byte irqLatch;
         private bool irqEnabled;
+        /// <summary> NESDEV: $C001 sets reload on NEXT A12 rising edge, not immediately. </summary>
+        private bool irqReloadPending;
 
         protected override byte Read(int address) {
             if (address < 0x6000) {
@@ -64,21 +66,21 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
                     prgRamWriteProtected = (value & 0x40) == 0;
                     return;
                 case 0xC000: irqLatch = value; return;
-                case 0xC001: irqCounter = irqLatch; return;
+                case 0xC001: irqReloadPending = true; return; // NESDEV: reload at next A12 edge, not now
                 case 0xE000: irqEnabled = false; CPUAddressSpace.Instance.Irq = false; return;
                 case 0xE001: irqEnabled = true; return;
             }
         }
 
         public override void OnScanline() {
+            if (irqReloadPending || irqCounter == 0) {
+                irqCounter = irqLatch;
+                irqReloadPending = false;
+            } else {
+                irqCounter--;
+            }
             if (irqCounter == 0 && irqEnabled) {
                 CPUAddressSpace.Instance.Irq = true;
-            }
-            if (irqCounter == 0) {
-                irqCounter = irqLatch;
-            }
-            else {
-                irqCounter--;
             }
         }
 

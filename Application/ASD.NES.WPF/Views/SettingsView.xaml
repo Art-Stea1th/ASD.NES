@@ -21,7 +21,6 @@
             <Setter Property="BorderBrush" Value="#505050"/>
             <Setter Property="Padding" Value="12,4"/>
             <Setter Property="MinWidth" Value="90"/>
-            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Template">

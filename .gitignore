@@ -292,7 +292,9 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 /Application/ASD.NES.Core/ConsoleComponents/CPUParts/CPUCore-REPORT.md
+# All markdown (local/docs, do not commit)
 *.md
+**/*.md
 
 # Local only: commit messages, debug logs, user settings (never commit)
 COMMIT_MSG.txt
@@ -304,3 +306,4 @@ ASD.NES.Settings.xml
 
 # Local reference notes (paths, tool names) — do not commit
 Specification/Other/ReferenceEmulators-EmuFolder.txt
+Specification/Other/LocalAndDebugFilesPolicy.txt

@@ -2,8 +2,10 @@ using System;
 
 namespace ASD.NES.Core.CartridgeComponents.Boards {
 
-    //https://wiki.nesdev.com/w/index.php/CNROM
-    internal abstract class CNROM : Board { // TODO: Verify
+    using Core;
+
+    // https://wiki.nesdev.com/w/index.php/CNROM — submapper 1 = no conflict, submapper 2 = AND-type bus conflict
+    internal abstract class CNROM : Board {
 
         private int bank = 0;
 
@@ -38,7 +40,12 @@ namespace ASD.NES.Core.CartridgeComponents.Boards {
                 return; // vectors are read-only
             }
             if (address >= 0x8000 && address <= 0xFFFF) {
-                bank = value & 3;
+                var effective = value & 3;
+                if (EmulationOptions.CNROMBusConflict && prg != null && prg.Count > 0) {
+                    var prgByte = address < 0xC000 ? prg[0][address - 0x8000] : prg[prg.Count - 1][address - 0xC000];
+                    effective = (value & prgByte) & 3;
+                }
+                bank = effective;
             }
         }
     }
